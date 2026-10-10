@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Estudiante - Registro Real</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<header class="barra-superior">
+    <h2>Panel del Estudiante - Prácticas Pedagógicas</h2>
+    <a href="../index.html" class="boton-salir">Cerrar Sesión</a>
+</header>
+
+<main class="contenedor-principal">
+    <h3>Mi Progreso de Práctica</h3>
+    
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Horas Realizadas</h4>
+            <p id="contador-horas" class="numero">0</p>
+            <p class="detalle">Horas acumuladas en bitácoras</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Bitácoras Cargadas</h4>
+            <p id="contador-bitacoras" class="numero">0</p>
+            <p class="detalle">Informes semanales entregados</p>
+        </div>
+    </div>
+
+    <!-- Formulario Avanzado de Registro -->
+    <div class="seccion-tabla" style="background-color: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; max-width: 600px; margin-top: 35px;">
+        <h3 style="margin-top: 0;">Registrar Nueva Bitácora Diaria</h3>
+        
+        <form id="form-bitacora-real">
+            <div class="grupo-campo">
+                <label>Fecha de la Práctica:</label>
+                <input type="date" id="fecha" mountaineer required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+
+            <div class="grupo-campo">
+                <label>Horas Desarrolladas en la Jornada:</label>
+                <input type="number" id="horas" min="1" max="8" placeholder="4" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+
+            <div class="grupo-campo">
+                <label>Descripción de Actividades Pedagógicas:</label>
+                <textarea id="descripcion" rows="3" placeholder="Detalla las actividades realizadas..." required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div class="grupo-campo">
+                <label>Evidencia de Aprendizaje (Enlace de Drive / PDF):</label>
+                <input type="url" id="evidencia" placeholder="https://google.com..." required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+
+            <button type="submit" style="background-color: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
+                Enviar Bitácora al Asesor
+            </button>
+        </form>
+    </div>
+
+    <!-- Historial de Bitácoras del Alumno -->
+    <div class="seccion-tabla">
+        <h3>Historial de mis Bitácoras Registradas</h3>
+        <table class="tabla-datos" id="tabla-mis-bitacoras">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Horas</th>
+                    <th>Descripción</th>
+                    <th>Evidencia</th>
+                    <th>Estado de Evaluación</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena dinámicamente con JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<script>
+    // CONTROLADOR DE LOGICA DEL ESTUDIANTE (Persistencia Local)
+    const form = document.getElementById('form-bitacora-real');
+    
+    // Cargar bitácoras existentes al abrir la pantalla
+    function cargarBitacoras() {
+        const bitacoras = JSON.parse(localStorage.getItem('base_bitacoras')) || [];
+        const tbody = document.querySelector('#tabla-mis-bitacoras tbody');
+        tbody.innerHTML = '';
+        
+        let totalHoras = 0;
+        
+        bitacoras.forEach((b, index) => {
+            totalHoras += parseInt(b.horas);
+            const fila = `
+                <tr>
+                    <td>${b.fecha}</td>
+                    <td>${b.horas} hrs</td>
+                    <td>${b.descripcion}</td>
+                    <td><a href="${b.evidencia}" target="_blank" style="color: #1e3a8a; font-weight:bold;">Ver Evidencia</a></td>
+                    <td><span style="font-weight:bold; color: ${b.nota ? '#0f766e' : '#b91c1c'}">${b.nota ? 'Calificado: ' + b.nota : 'Pendiente'}</span></td>
+                </tr>
+            `;
+            tbody.innerHTML += fila;
+        });
+        
+        document.getElementById('contador-horas').innerText = totalHoras;
+        document.getElementById('contador-bitacoras').innerText = bitacoras.length;
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const nuevaBitacora = {
+            id: 'BIT-' + Date.now(),
+            student: 'Edwin Fabian Quiroga', // Simulación del alumno logueado
+            fecha: document.getElementById('fecha').value,
+            horas: document.getElementById('horas').value,
+            descripcion: document.getElementById('descripcion').value,
+            evidencia: document.getElementById('evidencia').value,
+            nota: null,
+            observaciones: null
+        };
+
+        const bitacoras = JSON.parse(localStorage.getItem('base_bitacoras')) || [];
+        bitacoras.push(nuevaBitacora);
+        localStorage.setItem('base_bitacoras', JSON.stringify(bitacoras));
+        
+        form.reset();
+        cargarBitacoras();
+        alert("Bitácora registrada con éxito en el Microservicio de Seguimiento.");
+    });
+
+    window.onload = cargarBitacoras;
+</script>
+</body>
+</html>

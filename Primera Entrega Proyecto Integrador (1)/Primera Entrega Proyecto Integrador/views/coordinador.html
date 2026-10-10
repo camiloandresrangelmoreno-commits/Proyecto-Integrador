@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Coordinación - Reportes Analíticos</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<header class="barra-superior">
+    <h2>Panel de Control - Coordinador de Práctica</h2>
+    <a href="../index.html" class="boton-salir">Cerrar Sesión</a>
+</header>
+
+<main class="contenedor-principal">
+    <!-- CORRECCIÓN DEL PROFESOR: Módulo dinámico para Generar Reportes Analíticos (Antiguo "Informe") -->
+    <!-- Desmonta el concepto del informe como entidad estática de la Base de Datos -->
+    <div style="background-color: #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h4 style="margin: 0; color: #1e3a8a; font-size: 16px;">Generación Consolidada de Trazabilidad</h4>
+            <p style="margin: 5px 0 0 0; color: #475569; font-size: 13px;">Une los datos fijos del Microservicio Académico con las evidencias del Microservicio de Seguimiento.</p>
+        </div>
+        <button onclick="generarReporteDinamico()" style="background-color: #0f766e; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+            📊 Generar Reporte de Seguimiento (PDF)
+        </button>
+    </div>
+
+    <h3>Gestión y Control de Asignaciones Territoriales</h3>
+    
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Convenios por Formalizar</h4>
+            <p class="numero">3</p>
+            <p class="detalle">Colegios en lista de espera de cupos</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Estudiantes sin Asignar</h4>
+            <p class="numero">7</p>
+            <p class="detalle">Pendientes por asignación de Tutor y Aula</p>
+        </div>
+    </div>
+
+    <div class="seccion-tabla">
+        <h3>Asignación de Estudiantes a Instituciones Receptoras</h3>
+        <table class="tabla-datos">
+            <tr>
+                <th>Estudiante Licenciado</th>
+                <th>Tutor Académico Asignado</th>
+                <th>Institución Receptora (Colegio)</th>
+                <th>Acción de Control</th>
+            </tr>
+            <tr>
+                <td>Edwin Fabian Quiroga</td>
+                <td>Docente Carlos Gómez</td>
+                <td>Colegio Custodio García Rovira</td>
+                <td><span style="color: #0f766e; font-weight: bold;">Asignación Completa</span></td>
+            </tr>
+        </table>
+    </div>
+</main>
+
+<footer class="pie-pagina-institucional">
+    <img src="../images/logo1.png" alt="Logo UDI">
+</footer>
+
+<script>
+    function generarReporteDinamico() {
+        alert("Procesando consulta distribuida... Generando archivo dinámico unificando Bitácoras, Horas y Evaluaciones sin almacenar tablas intermedias.");
+    }
+</script>
+</body>
+</html>

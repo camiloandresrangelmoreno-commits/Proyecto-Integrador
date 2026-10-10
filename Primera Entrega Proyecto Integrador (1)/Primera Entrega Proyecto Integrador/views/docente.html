@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Tutor - Evaluación Activa</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<header class="barra-superior">
+    <h2>Panel de Control - Tutor Académico</h2>
+    <a href="../index.html" class="boton-salir">Cerrar Sesión</a>
+</header>
+
+<main class="contenedor-principal">
+    <h3>Revisión de Bitácoras en Tiempo Real</h3>
+
+    <div class="seccion-tabla">
+        <h3>Entregas de Alumnos por Evaluar</h3>
+        <table class="tabla-datos" id="tabla-tutor-evaluar">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Fecha Envío</th>
+                    <th>Horas</th>
+                    <th>Evidencia Adjunta</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena con las bitácoras reales creadas por el estudiante -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Formulario de Calificación -->
+    <div id="modulo-evaluacion" style="display: none; background-color: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #cbd5e1; max-width: 600px; margin-top: 35px;">
+        <h3 id="evaluando-titulo">Evaluación Pedagógica</h3>
+        <form id="form-calificar">
+            <input type="hidden" id="bitacora-id-evaluar">
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Nota Numérica (0.0 - 5.0):</label>
+                <input type="number" id="nota-input" step="0.1" min="0" max="5" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Retroalimentación Pedagógica:</label>
+                <textarea id="obs-input" rows="3" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;"></textarea>
+            </div>
+            <button type="submit" style="background-color: #0f766e; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">Registrar Nota Oficial</button>
+        </form>
+    </div>
+</main>
+
+<script>
+    function cargarEntregasTutor() {
+        const bitacoras = JSON.parse(localStorage.getItem('base_bitacoras')) || [];
+        const tbody = document.querySelector('#tabla-tutor-evaluar tbody');
+        tbody.innerHTML = '';
+
+        // Filtrar solo las que no tienen nota asignada aún
+        const pendientes = bitacoras.filter(b => b.nota === null);
+
+        if(pendientes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">No hay bitácoras pendientes por evaluar de sus alumnos.</td></tr>`;
+            return;
+        }
+
+        pendientes.forEach(b => {
+            const fila = `
+                <tr>
+                    <td>${b.student}</td>
+                    <td>${b.fecha}</td>
+                    <td>${b.horas} hrs</td>
+                    <td><a href="${b.evidencia}" target="_blank" style="color:#1e3a8a; font-weight:bold;">Revisar Soporte</a></td>
+                    <td><button onclick="abrirCajaEvaluacion('${b.id}', '${b.student}')" style="background-color:#1e3a8a; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Calificar</button></td>
+                </tr>
+            `;
+            tbody.innerHTML += fila;
+        });
+    }
+
+    function abrirCajaEvaluacion(id, estudiante) {
+        document.getElementById('modulo-evaluacion').style.display = 'block';
+        document.getElementById('bitacora-id-evaluar').value = id;
+        document.getElementById('evaluando-titulo').innerText = "Evaluación Pedagógica - " + estudiante;
+    }
+
+    document.getElementById('form-calificar').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('bitacora-id-evaluar').value;
+        const nota = document.getElementById('nota-input').value;
+        const obs = document.getElementById('obs-input').value;
+
+        let bitacoras = JSON.parse(localStorage.getItem('base_bitacoras')) || [];
+        
+        // Modificar el registro real en el arreglo buscando por su ID único
+        bitacoras = bitacoras.map(b => {
+            if(b.id === id) {
+                b.nota = nota;
+                b.observaciones = obs;
+            }
+            return b;
+        });
+
+        localStorage.setItem('base_bitacoras', JSON.stringify(bitacoras));
+        document.getElementById('modulo-evaluacion').style.display = 'none';
+        document.getElementById('form-calificar').reset();
+        
+        cargarEntregasTutor();
+        alert("Calificación guardada y sincronizada con el historial del estudiante.");
+    });
+
+    window.onload = cargarEntregasTutor;
+</script>
+</body>
+</html>

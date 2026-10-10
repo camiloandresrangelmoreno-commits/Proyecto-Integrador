@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- Conectamos con el archivo central de estilos saliendo de la carpeta views -->
+<link rel="stylesheet" href="../css/styles.css">
+
+<!-- Barra superior del panel de la institución receptora / colegio -->
+<header class="barra-superior">
+    <h2>Panel de Control - Institución Receptora</h2>
+    <!-- Enlace unificado para salir hacia el index.html de la raíz -->
+    <a href="../index.html" class="boton-salir">Cerrar Sesión</a>
+</header>
+
+<!-- Contenido principal de la interfaz de la escuela -->
+<main class="contenedor-principal">
+
+    <h3>Validación de Asistencia y Desempeño</h3>
+    
+    <!-- Tarjetas de indicadores para la supervisión del colegio -->
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Estudiantes Asignados</h4>
+            <p class="numero">2</p>
+            <p class="detalle">Alumnos realizando prácticas en esta sede</p>
+        </div>
+
+        <div class="tarjeta-indicador">
+            <h4>Validaciones Pendientes</h4>
+            <p class="numero">1</p>
+            <p class="detalle">Informes por confirmar esta semana</p>
+        </div>
+    </div>
+
+    <!-- Tabla de control operativo exigida por el requerimiento RF12 -->
+    <div class="seccion-tabla">
+        <h3>Control de Asistencia del Practicante</h3>
+        <table class="tabla-datos">
+            <tr>
+                <th>Estudiante Licenciado</th>
+                <th>Horas Reportadas</th>
+                <th>Estado de Asistencia</th>
+                <th>Acción de Validación</th>
+            </tr>
+            <tr>
+                <td>Edwin Fabian Quiroga</td>
+                <td>20 horas semanales</td>
+                <td><span style="color: #0f766e; font-weight: bold;">Confirmada</span></td>
+                <td><span style="color: #64748b;">Sin acciones pendientes</span></td>
+            </tr>
+            <tr>
+                <td>Camilo Rangel Moreno</td>
+                <td>16 horas semanales</td>
+                <!-- Simula la alerta o verificación que el colegio debe hacer en el software -->
+                <td><span style="color: #b91c1c; font-weight: bold;">Por Verificar</span></td>
+                <td><button style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Aprobar Horas</button></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Pie de página con tu logo rectangular institucional de la UDI flotando libre -->
+    <footer class="pie-pagina-institucional">
+        <img src="../images/logo1.png" alt="Logo UDI">
+    </footer>
+
+</main>
+
+</body>
+</html>

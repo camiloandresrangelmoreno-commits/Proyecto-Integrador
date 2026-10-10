@@ -1,0 +1,248 @@
+/* Estilos globales para limpiar márgenes por defecto del navegador */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Un tipo de letra moderno y legible */
+}
+/* ESTILOS GLOBALES LIMPIOS */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* El fondo ahora solo se encarga de centrar el contenido */
+.pantalla-fondo {
+    width: 100vw;              
+    min-height: 100vh;         /* Cambiamos height por min-height para que se estire si la tarjeta es larga */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 20px;             /* Espacio de amortiguación para pantallas pequeñas */
+}
+/* La tarjeta base ya no tiene color gris ni blanco, es solo un contenedor transparente */
+.tarjeta-login {
+    width: 100%;               
+    text-align: center;        
+}
+
+/* NUEVO LOGO DEL LOGIN: MÁS GRANDE Y PERFECTAMENTE CIRCULAR */
+.logo-login-circular {
+    width: 130px;              /* Lo agrandamos a 130 píxeles como querías */
+    height: 130px;             /* Altura idéntica para asegurar un cuadrado perfecto */
+    border-radius: 50%;        /* Corta las esquinas al 50% para volverlo un círculo exacto */
+    object-fit: cover;         /* Evita que la foto interna se deforme o estire */
+    border: 3px solid #ffffff; /* Le ponemos un borde blanco brillante muy elegante */
+    display: block;            /* Lo centramos en el bloque */
+    margin: 0 auto 25px auto;  /* Centra horizontalmente y deja buen espacio abajo */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra pesada para que flote sobre la caja */
+}
+
+/* 1. ORDENAR: Ponemos las etiquetas arriba y los cuadros abajo */
+.grupo-campo {
+    margin-bottom: 20px;       /* Deja un espacio libre abajo de cada campo para que no se peguen */
+    text-align: left;          /* Hace que los textos se alineen a la izquierda */
+}
+
+/* 2. PINTAR EL TEXTO: Estilo para las palabras 'Correo', 'Contraseña', etc. */
+/* Forzamos a que las etiquetas del Login brillen en color blanco */
+.grupo-campo label {
+    display: block;            
+    color: #ffffff !important;   /* El !important asegura que ningún otro estilo lo vuelva gris */
+    font-size: 14px;           
+    margin-bottom: 6px;        
+    font-weight: 600;          
+    text-align: left;
+}
+
+/* Ponemos el título del Login en un tono azul claro brillante para que resalte en la oscuridad */
+.tarjeta-login h1, .tarjeta-login h2 {
+    color: #38bdf8 !important;   /* Un azul celeste brillante muy tecnológico */
+}
+
+
+/* 3. PINTAR LAS CAJITAS: Estilo para los cuadros blancos donde se escribe y el selector */
+.grupo-campo input, 
+.grupo-campo select {
+    width: 100%;               /* Hace que la cajita ocupe todo el ancho de la tarjeta */
+    padding: 10px;             /* Hace la cajita más alta y cómoda para hacer clic por dentro */
+    border: 1px solid #cbd5e1; /* Le pone un borde gris muy delgadito */
+    border-radius: 6px;        /* Redondea las esquinas de la cajita */
+    box-sizing: border-box;    /* Truco obligatorio para que el ancho no se descuadre con el padding */
+    font-size: 14px;           /* Tamaño de la letra que escribe el usuario */
+    background-color: #f8fafc; /* Un fondo gris casi blanco para la cajita */
+}
+/* Diseñamos el botón de iniciar sesión */
+.boton-ingresar {
+    width: 100%;               /* Hace que el botón ocupe todo el ancho de la tarjeta */
+    background-color: #1e3a8a; /* Color azul oscuro, igual al título principal */
+    color: #ffffff;            /* Color de la letra en blanco para que resalte */
+    padding: 12px;             /* Hace el botón más grueso y fácil de presionar */
+    border: none;              /* Le quita el borde feo que trae por defecto */
+    border-radius: 6px;        /* Redondea las esquinas para que combine con las cajitas */
+    font-size: 16px;           /* Letra un poco más grande */
+    font-weight: 600;          /* Letra en negrita suave */
+    cursor: pointer;           /* Hace que aparezca la "manito" al pasar el mouse por encima */
+}
+
+/* Efecto visual cuando el usuario pasa el mouse por encima del botón */
+.boton-ingresar:hover {
+    background-color: #1d4ed8; /* Cambia a un azul un poco más claro para avisar que se puede hacer clic */
+}
+/* DISEÑO DE LA BARRA SUPERIOR */
+/* Esta caja se encarga de pintar y estirar la barra de arriba */
+.barra-superior {
+    background-color: #1e3a8a; /* Pintamos la barra del mismo azul institucional del login */
+    color: #ffffff;            /* Pintamos las letras del título en blanco */
+    padding: 15px 30px;        /* Damos espacio libre: 15px arriba/abajo y 30px a los lados */
+    display: flex;             /* Activamos el organizador para mover los elementos internos */
+    justify-content: space-between; /* Empuja el título a la izquierda y el botón a la derecha */
+    align-items: center;       /* Centra verticalmente el título y el botón para que queden alineados */
+}
+
+/* DISEÑO DEL BOTÓN DE CERRAR SESIÓN */
+/* Aquí maquillamos el enlace para que no parezca un texto simple, sino un botón */
+.boton-salir {
+    color: #ffffff;            /* Letras blancas */
+    text-decoration: none;     /* Quita la línea subrayada que traen los enlaces por defecto */
+    background-color: #ef4444; /* Un color rojo suave que indica 'salir' o 'alerta' */
+    padding: 8px 16px;         /* Hace el botón más gordito y cómodo para darle clic */
+    border-radius: 4px;        /* Redondea un poco las esquinas del botón */
+    font-size: 14px;           /* Tamaño de letra adecuado */
+    font-weight: bold;         /* Hace la letra un poquito más gruesa */
+}
+
+/* EFECTO DEL MOUSE EN EL BOTÓN ROJO */
+/* Cuando el director pase el mouse sobre 'Cerrar Sesión', el rojo cambiará */
+.boton-salir:hover {
+    background-color: #dc2626; /* Cambia a un rojo un poco más oscuro */
+}
+/* DISEÑO DEL CONTENIDO PRINCIPAL */
+/* Le damos espacio a todo el cuerpo de la página para que no quede pegado a los bordes del monitor */
+.contenedor-principal {
+    padding: 30px;
+    background-color: #f8fafc; /* Un fondo gris casi blanco muy elegante */
+}
+
+/* Título de la sección de resumen */
+.contenedor-principal h3 {
+    color: #334155;            /* Color gris oscuro profesional */
+    margin-bottom: 20px;       /* Espacio antes de que aparezcan las tarjetas */
+}
+
+/* INTERRUPTOR MÁGICO PARA PONER LAS TARJETAS EN FILA */
+/* Esta es la caja grande que abraza a las 3 tarjetas */
+.bloque-tarjetas {
+    display: flex;             /* Le dice a las tarjetas de adentro que se pongan en fila horizontal */
+    gap: 20px;                 /* Separa cada tarjeta por un espacio de 20 píxeles para que no se peguen */
+}
+
+/* MAQUILLAJE DE LAS TARJETAS DE INDICADORES */
+/* Como las 3 tarjetas tienen la misma clase, este diseño se le aplica a las 3 al tiempo */
+.tarjeta-indicador {
+    background-color: #ffffff; /* Fondo blanco para resaltar sobre el fondo gris */
+    padding: 20px;             /* Espacio libre por dentro de la tarjeta */
+    border-radius: 8px;        /* Bordes suavemente redondeados */
+    border: 1px solid #e2e8f0; /* Un borde gris extremadamente delgado */
+    width: 33%;                /* Hace que cada tarjeta ocupe una tercera parte del espacio disponible */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Una sombra casi invisible para darle elegancia */
+  /* Centramos todo el texto y números dentro de la tarjeta */
+    text-align: center;        
+}
+
+/* Estilo para los títulos internos de las tarjetas (Ej: Estudiantes Activos) */
+.tarjeta-indicador h4 {
+    margin: 0 0 10px 0;        /* Quita márgenes raros y deja espacio solo abajo */
+    color: #64748b;            /* Color gris suave para el texto */
+    font-size: 14px;           /* Letra pequeña y sutil */
+    text-transform: uppercase; /* Vuelve el texto a mayúsculas automáticamente */
+}
+
+/* ESTILO PARA VOLVER LOS NÚMEROS GIGANTES */
+/* Aquí buscamos la marca 'numero' que le pusimos al 45, 12 y 8 */
+.tarjeta-indicador .numero {
+    font-size: 36px;           /* Letra gigante para que salte a la vista */
+    font-weight: bold;         /* Letra en negrita gruesa */
+    color: #1e3a8a;            /* El mismo azul institucional del proyecto */
+    margin: 0 0 5px 0;         /* Espacio pequeño abajo del número */
+}
+
+/* Estilo para el texto explicativo de abajo de la tarjeta */
+.tarjeta-indicador .detalle {
+    margin: 0;
+    font-size: 13px;           /* Letra un poco más pequeña */
+    color: #94a3b8;            /* Gris claro informativo */
+}
+/* DISEÑO DEL CONTENEDOR DE LA TABLA */
+/* Dejamos un espacio arriba de la tabla para que no quede pegada a las tarjetas */
+.seccion-tabla {
+    margin-top: 35px;
+}
+
+/* MAQUILLAJE PRINCIPAL DE LA TABLA */
+.tabla-datos {
+    width: 100%;               /* Obliga a la tabla a estirarse a todo el ancho de la pantalla */
+    border-collapse: collapse; /* Une los bordes dobles en una sola línea delgada profesional */
+    background-color: #ffffff; /* Fondo blanco para las celdas */
+    border-radius: 8px;        /* Redondea las esquinas (se nota si cortamos el borde) */
+    overflow: hidden;          /* Evita que el fondo de las celdas se salga de las esquinas redondeadas */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03); /* Una sombra muy sutil debajo de la tabla */
+}
+
+/* MAQUILLAJE DE LOS TÍTULOS DE LAS COLUMNAS (Los TH) */
+.tabla-datos th {
+    background-color: #1e3a8a; /* Fondo azul oscuro institucional, igual que la barra superior */
+    color: #ffffff;            /* Letras blancas para que contraste perfectamente */
+    text-align: left;          /* Alinea los títulos de las columnas a la izquierda */
+    padding: 12px 15px;        /* Espacio libre interno para que las palabras respiren */
+    font-size: 14px;           /* Tamaño de letra adecuado */
+}
+
+/* MAQUILLAJE DE LAS CELDAS DE INFORMACIÓN (Los TD) */
+.tabla-datos td {
+    padding: 12px 15px;        /* El mismo espacio que los títulos para que queden alineados */
+    border-bottom: 1px solid #e2e8f0; /* Una línea gris muy finita debajo de cada fila para separar alumnos */
+    color: #334155;            /* Color de texto gris oscuro legible */
+    font-size: 14px;           /* Mismo tamaño de letra */
+}
+
+/* EFECTO VISUAL DE SEGUIMIENTO (Fila Resaltada) */
+/* Cuando el director pase el mouse sobre cualquier renglón, este se pintará de gris claro */
+.tabla-datos tr:hover {
+    background-color: #f1f5f9; /* Un tono gris muy suave que ayuda al ojo a no perderse de fila */
+}
+/* DISEÑO DEL LOGO EN EL LOGIN */
+.logo-sistema {
+    width: 80px;               /* Le damos un ancho fijo y cómodo de 80 píxeles */
+    height: auto;              /* El alto se calcula solo para que no se deforme la imagen */
+    margin-bottom: 15px;       /* Despeja espacio abajo del logo para que no pise el título */
+}
+/* DISEÑO DEL PIE DE PÁGINA INSTITUTIONAL (ESQUINA INFERIOR DERECHA) */
+.pie-pagina-institucional {
+    position: fixed;           /* Flota sobre la pantalla en una posición fija */
+    bottom: 15px;              /* Separación de 15 píxeles desde el suelo de la pantalla */
+    right: 20px;               /* Separación de 20 píxeles desde el borde derecho */
+    display: flex;             /* Alinea el texto y el logo uno al lado del otro */
+    align-items: center;       /* Centra verticalmente el texto con el logo */
+    gap: 10px;                 /* Espacio de separación entre el texto y la imagen */
+    background-color: rgba(255, 255, 255, 0.8); /* Fondo blanco semi-transparente por si pisa texto */
+    padding: 6px 12px;         /* Espacio interno suave */
+    border-radius: 20px;       /* Bordes muy redondeados estilo cápsula */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Sombra sutil para que resalte */
+    z-index: 1000;             /* Asegura que siempre se vea por encima de las tablas */
+}
+
+/* DISEÑO DEL MINI LOGO RECTANGULAR ADAPTADO */
+.pie-pagina-institucional img {
+    width: 140px;              /* Le damos más ancho para que quepa el texto de la UDI */
+    height: auto;              /* El alto se calcula solo de forma proporcional para no deformarlo */
+    border-radius: 4px;        /* Cambiamos el círculo por esquinas apenas redondeadas muy sutiles */
+    object-fit: contain;       /* Asegura que todo el logo quepa entero dentro de la caja sin recortarse */
+    background-color: rgba(255, 255, 255, 0.08);  /* Le ponemos fondo blanco detrás por si la barra de la ventana estorba */
+    padding: 4px 8px;          /* Espacio libre alrededor del logo para que respire de los bordes */
+    border: 1px solid #cbd5e1; /* Un borde gris delgadito para que se vea como una mini tarjeta oficial */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Mantenemos una sombra suave para el efecto flotante */
+}
+
+
