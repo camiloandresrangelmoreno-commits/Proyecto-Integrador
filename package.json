@@ -1,0 +1,19 @@
+{
+  "name": "sistema-gestion-practicas",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Prácticas",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "build": "echo 'No build step required for static site'"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

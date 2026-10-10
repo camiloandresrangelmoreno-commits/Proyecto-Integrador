@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Coordinación de Prácticas - UDI</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .pestañas-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 2px;
+            flex-wrap: wrap;
+        }
+        .btn-tab {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px 6px 0 0;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-tab.activa {
+            background: #1e3a8a;
+            color: #ffffff;
+        }
+        .contenido-tab {
+            display: none;
+        }
+        .contenido-tab.activo {
+            display: block;
+        }
+        .modal-fondo {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.65);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-caja {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+<header class="barra-superior">
+    <div>
+        <h2 style="margin: 0; font-size: 20px;">Panel de Control - Coordinador de Prácticas</h2>
+        <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando sesión...</span>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="../index.html" onclick="DB.logout(); return false;" class="boton-salir">Cerrar Sesión</a>
+    </div>
+</header>
+
+<main class="contenedor-principal">
+
+    <!-- RESUMEN DE INDICADORES OPERATIVOS -->
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Solicitudes Pendientes</h4>
+            <p id="total-solicitudes" class="numero">0</p>
+            <p class="detalle">Aspirantes por procesar alta</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Estudiantes Matriculados</h4>
+            <p id="total-estudiantes" class="numero">0</p>
+            <p class="detalle">Alumnos activos en sistema</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Docentes Asesores</h4>
+            <p id="total-tutores" class="numero">0</p>
+            <p class="detalle">Tutores académicos registrados</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Prácticas Asignadas</h4>
+            <p id="total-practicas" class="numero">0</p>
+            <p class="detalle">En curso o programadas</p>
+        </div>
+    </div>
+
+    <!-- PESTAÑAS DE CONTROL OPERATIVO DEL COORDINADOR -->
+    <div class="pestañas-nav">
+        <button class="btn-tab activa" onclick="cambiarTab('tab-matriculas')">📝 Matrícula y Aspirantes</button>
+        <button class="btn-tab" onclick="cambiarTab('tab-docentes')">👨‍🏫 Docentes Asesores (Tutores)</button>
+        <button class="btn-tab" onclick="cambiarTab('tab-practicas')">📋 Asignación de Prácticas</button>
+        <button class="btn-tab" onclick="cambiarTab('tab-estudiantes')">🎓 Gestión Estudiantes</button>
+        <button class="btn-tab" onclick="cambiarTab('tab-instituciones')">🏫 Instituciones y Convenios</button>
+        <button class="btn-tab" onclick="cambiarTab('tab-reportes')">📊 Reporte de Seguimiento</button>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: MATRICULAR USUARIOS OFICIALES Y REVISAR ASPIRANTES       -->
+    <!-- ============================================================== -->
+    <div id="tab-matriculas" class="contenido-tab activo">
+        <div style="display: grid; grid-template-columns: 1fr; gap: 25px;">
+            
+            <!-- FORMULARIO: MATRICULAR Y REGISTRAR NUEVO USUARIO -->
+            <div class="seccion-tabla" style="background-color: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #cbd5e1; max-width: 700px;">
+                <h3 style="margin-top: 0; color: #1e3a8a;">Matricular y Dar de Alta Nuevo Usuario</h3>
+                <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
+                    El Coordinador registra y asigna credenciales institucionales a estudiantes o personal académico.
+                </p>
+
+                <form id="form-matricular-oficial">
+                    <div class="grupo-campo">
+                        <label for="mat-nombre" style="color: #334155 !important;">Nombre Completo:</label>
+                        <input type="text" id="mat-nombre" placeholder="Ej: Camilo Andrés Rangel Moreno" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="mat-correo" style="color: #334155 !important;">Correo Electrónico Institucional:</label>
+                        <input type="email" id="mat-correo" placeholder="usuario@udi.edu.co" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="grupo-campo">
+                            <label for="mat-clave" style="color: #334155 !important;">Contraseña de Acceso:</label>
+                            <input type="password" id="mat-clave" placeholder="Crear contraseña" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div class="grupo-campo">
+                            <label for="mat-rol" style="color: #334155 !important;">Asignar Rol en el Sistema:</label>
+                            <select id="mat-rol" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                                <option value="">-- Seleccione Rol --</option>
+                                <option value="estudiante">Estudiante de Práctica</option>
+                                <option value="docente">Docente Asesor / Tutor Académico</option>
+                                <option value="coordinador">Coordinador de Práctica</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" style="background-color: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px;">
+                        Matricular y Guardar Credenciales
+                    </button>
+                </form>
+            </div>
+
+            <!-- TABLA: SOLICITUDES RADICADAS POR ASPIRANTES DESDE EL LOGIN -->
+            <div class="seccion-tabla">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="margin: 0; color: #0f172a;">Solicitudes de Inscripción Radicadas por Estudiantes</h3>
+                    <span style="font-size: 12px; color: #64748b;">Postulaciones automáticas recibidas desde el login</span>
+                </div>
+                <table class="tabla-datos" id="tabla-solicitudes-aspirantes">
+                    <thead>
+                        <tr>
+                            <th>Aspirante</th>
+                            <th>Correo Electrónico</th>
+                            <th>Semestre</th>
+                            <th>Fecha Radicado</th>
+                            <th>Acción Autorizada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TABLA: LISTADO DE ALUMNOS MATRICULADOS OFICIALMENTE -->
+            <div class="seccion-tabla">
+                <h3 style="margin-top: 0; color: #0f172a;">Padrón de Alumnos Matriculados</h3>
+                <table class="tabla-datos" id="tabla-alumnos-matriculados">
+                    <thead>
+                        <tr>
+                            <th>ID Estudiante</th>
+                            <th>Nombre del Alumno</th>
+                            <th>Correo</th>
+                            <th>Semestre</th>
+                            <th>Institución / Asignación</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: REGISTRAR Y GESTIONAR DOCENTE ASESOR (TUTOR ACADÉMICO)   -->
+    <!-- ============================================================== -->
+    <div id="tab-docentes" class="contenido-tab">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0; color: #0f766e;">Gestión de Docentes Asesores (Tutores Académicos)</h3>
+                <small style="color: #64748b;">UML: Entidad Tutor_Academico (documento, nombre, correo, especialidad)</small>
+            </div>
+            <button onclick="abrirModalDocente()" style="background-color: #0f766e; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                ➕ Registrar Nuevo Docente Asesor
+            </button>
+        </div>
+
+        <div class="seccion-tabla">
+            <table class="tabla-datos" id="tabla-crud-docentes">
+                <thead>
+                    <tr>
+                        <th>Documento / Cédula</th>
+                        <th>Nombre del Docente Asesor</th>
+                        <th>Correo Institucional</th>
+                        <th>Especialidad Pedagógica</th>
+                        <th>Prácticas Asignadas</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Se llena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: ASIGNACIÓN DE PRÁCTICAS                                  -->
+    <!-- ============================================================== -->
+    <div id="tab-practicas" class="contenido-tab">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Asignación de Estudiantes a Instituciones y Tutores</h3>
+            <button onclick="abrirModalAsignarPractica()" style="background-color: #1e3a8a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                ➕ Nueva Asignación de Práctica
+            </button>
+        </div>
+
+        <div class="seccion-tabla">
+            <table class="tabla-datos" id="tabla-asignaciones">
+                <thead>
+                    <tr>
+                        <th>ID Práctica</th>
+                        <th>Estudiante Licenciado</th>
+                        <th>Tutor Asesor Asignado</th>
+                        <th>Institución Receptora</th>
+                        <th>Tipo de Práctica</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Se llena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: GESTIÓN DE ESTUDIANTES (CRUD COMPLETO)                  -->
+    <!-- ============================================================== -->
+    <div id="tab-estudiantes" class="contenido-tab">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0;">Gestión de Estudiantes (CRUD Tabla Estudiante)</h3>
+                <small style="color: #64748b;">Administración directa de registros en la base de datos.</small>
+            </div>
+            <button onclick="abrirModalEstudiante()" style="background-color: #0f766e; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                ➕ Registrar Nuevo Estudiante
+            </button>
+        </div>
+
+        <div class="seccion-tabla">
+            <table class="tabla-datos" id="tabla-crud-estudiantes">
+                <thead>
+                    <tr>
+                        <th>ID Estudiante</th>
+                        <th>Nombre Completo</th>
+                        <th>Correo Institucional</th>
+                        <th>Semestre</th>
+                        <th>Acciones (CRUD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Se llena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 5: INSTITUCIONES Y CONVENIOS (CRUD)                        -->
+    <!-- ============================================================== -->
+    <div id="tab-instituciones" class="contenido-tab">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0;">Gestión de Instituciones Receptoras (CRUD Tabla Institucion)</h3>
+                <small style="color: #64748b;">Administración de sedes educativas receptoras para prácticas.</small>
+            </div>
+            <button onclick="abrirModalInstitucion()" style="background-color: #7c3aed; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                ➕ Registrar Nueva Institución
+            </button>
+        </div>
+
+        <div class="seccion-tabla">
+            <table class="tabla-datos" id="tabla-crud-instituciones">
+                <thead>
+                    <tr>
+                        <th>ID Institución</th>
+                        <th>Nombre del Colegio / Sede</th>
+                        <th>Dirección</th>
+                        <th>Contacto / Teléfono</th>
+                        <th>Acciones (CRUD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Se llena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 6: GENERAR REPORTE DE SEGUIMIENTO                          -->
+    <!-- ============================================================== -->
+    <div id="tab-reportes" class="contenido-tab">
+        <div style="background-color: #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h4 style="margin: 0; color: #1e3a8a; font-size: 17px;">Consolidado de Trazabilidad y Calidad Académica</h4>
+                <p style="margin: 5px 0 0 0; color: #475569; font-size: 13px;">Une los datos fijos de estudiantes y tutores con las evidencias y bitácoras para acreditación.</p>
+            </div>
+            <button onclick="imprimirReporte()" style="background-color: #0f766e; color: white; border: none; padding: 12px 22px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                🖨️ Imprimir / Exportar Reporte Consolidado
+            </button>
+        </div>
+
+        <div id="area-reporte-imprimible" class="seccion-tabla" style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <div style="border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin: 0; color: #1e3a8a; font-size: 20px;">UNIVERSIDAD DE INVESTIGACIÓN Y DESARROLLO - UDI</h2>
+                    <h4 style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Informe de Seguimiento a Prácticas Pedagógicas de Licenciatura</h4>
+                </div>
+                <div style="text-align: right; font-size: 12px; color: #64748b;">
+                    <div>Fecha: <strong id="rep-fecha">-</strong></div>
+                    <div>Normativa: <strong>Decreto 1075 de 2015</strong></div>
+                </div>
+            </div>
+
+            <table class="tabla-datos" id="tabla-reporte-consolidado">
+                <thead>
+                    <tr>
+                        <th>Práctica</th>
+                        <th>Estudiante</th>
+                        <th>Tutor Asesor</th>
+                        <th>Colegio</th>
+                        <th>Horas Aprobadas</th>
+                        <th>Avance %</th>
+                        <th>Calificación</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Se llena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- ============================================================== -->
+<!-- MODALES INTERACTIVOS PARA CRUD Y REGISTRO                     -->
+<!-- ============================================================== -->
+
+<!-- Modal Docente Asesor -->
+<div id="modal-crud-docente" class="modal-fondo">
+    <div class="modal-caja">
+        <h3 id="titulo-modal-docente" style="margin-top: 0; color: #0f766e;">Registrar Docente Asesor (Tutor Académico)</h3>
+        <form id="form-docente-crud">
+            <input type="hidden" id="doc-id-editar">
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Documento de Identidad / Cédula:</label>
+                <input type="text" id="doc-documento" required placeholder="Ej: DOC-1098555" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Nombre Completo del Tutor:</label>
+                <input type="text" id="doc-nombre" required placeholder="Ej: Mg. Andrés Felipe Silva" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Correo Institucional:</label>
+                <input type="email" id="doc-correo" required placeholder="andres.silva@udi.edu.co" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Especialidad / Área Pedagógica:</label>
+                <input type="text" id="doc-especialidad" placeholder="Ej: Evaluación y Didáctica de la Lengua" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Contraseña de Acceso:</label>
+                <input type="password" id="doc-clave" required value="docente123" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="cerrarModal('modal-crud-docente')" style="padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 8px 16px; background: #0f766e; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Guardar Docente</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Asignar Práctica -->
+<div id="modal-asignar-practica" class="modal-fondo">
+    <div class="modal-caja">
+        <h3 id="titulo-modal-practica" style="margin-top: 0; color: #1e3a8a;">Asignar Nueva Práctica</h3>
+        <form id="form-practica">
+            <input type="hidden" id="prac-id-editar">
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Estudiante Licenciado:</label>
+                <select id="prac-estudiante" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;"></select>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Tutor Académico Asesor:</label>
+                <select id="prac-tutor" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;"></select>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Institución Receptora (Colegio):</label>
+                <select id="prac-institucion" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;"></select>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Tipo de Práctica (UML Tipo_Practica):</label>
+                <select id="prac-tipo" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;"></select>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Estado de la Práctica:</label>
+                <select id="prac-estado" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <option value="En Curso">En Curso</option>
+                    <option value="Pendiente Aprobación">Pendiente Aprobación</option>
+                    <option value="Culminada">Culminada</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="cerrarModal('modal-asignar-practica')" style="padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 8px 16px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Guardar Práctica</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Estudiante -->
+<div id="modal-crud-estudiante" class="modal-fondo">
+    <div class="modal-caja">
+        <h3 id="titulo-modal-estudiante" style="margin-top: 0; color: #0f766e;">Registrar Estudiante</h3>
+        <form id="form-estudiante-crud">
+            <input type="hidden" id="est-id-editar">
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Nombre Completo:</label>
+                <input type="text" id="est-nombre" required placeholder="Ej: Camilo Andrés Rangel" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Correo Institucional:</label>
+                <input type="email" id="est-correo" required placeholder="usuario@udi.edu.co" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Semestre:</label>
+                <input type="number" id="est-semestre" min="1" max="10" required value="7" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Contraseña:</label>
+                <input type="password" id="est-clave" required value="estudiante123" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="cerrarModal('modal-crud-estudiante')" style="padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 8px 16px; background: #0f766e; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Institución -->
+<div id="modal-crud-institucion" class="modal-fondo">
+    <div class="modal-caja">
+        <h3 id="titulo-modal-institucion" style="margin-top: 0; color: #7c3aed;">Registrar Institución Receptora</h3>
+        <form id="form-institucion-crud">
+            <input type="hidden" id="inst-id-editar">
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Nombre del Colegio / Sede:</label>
+                <input type="text" id="inst-nombre" required placeholder="Ej: Colegio Santander Sede A" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Dirección:</label>
+                <input type="text" id="inst-direccion" required placeholder="Ej: Calle 9 # 15-40" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Correo Institucional:</label>
+                <input type="email" id="inst-correo" required placeholder="colegio@udi.edu.co" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Contacto / Teléfono:</label>
+                <input type="text" id="inst-contacto" placeholder="Lic. Martha Gómez / 607-6345000" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="cerrarModal('modal-crud-institucion')" style="padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 8px 16px; background: #7c3aed; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="pie-pagina-institucional">
+    <img src="../images/logo1.png" alt="Logo UDI">
+</footer>
+
+<!-- BASE DE DATOS VANILLA -->
+<script src="../js/db.js"></script>
+
+<script>
+    // 1. SEGURIDAD Y SESIÓN
+    const sesion = DB.requireRole(['coordinador', 'director'], '../index.html');
+    if (!sesion) {
+        // Redirigido
+    }
+    document.getElementById('usuario-sesion-badge').innerText = `Coordinador: ${sesion.nombre} (${sesion.correo})`;
+    document.getElementById('rep-fecha').innerText = new Date().toLocaleDateString('es-CO');
+
+    function cambiarTab(tabId) {
+        document.querySelectorAll('.contenido-tab').forEach(el => el.classList.remove('activo'));
+        document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('activa'));
+        
+        document.getElementById(tabId).classList.add('activo');
+        event.currentTarget.classList.add('activa');
+    }
+
+    function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // 2. CARGA DE TABLAS Y RENDERIZADO
+    function cargarTodo() {
+        const practicas = DB.getTable('Practica');
+        const estudiantes = DB.getTable('Estudiante');
+        const instituciones = DB.getTable('Institucion');
+        const tutores = DB.getTable('Tutor_Academico');
+        const tipos = DB.getTable('Tipo_Practica');
+        const actividades = DB.getTable('Actividad');
+        const evaluaciones = DB.getTable('Evaluacion');
+        const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+
+        // Tarjetas
+        document.getElementById('total-solicitudes').innerText = solicitudes.length;
+        document.getElementById('total-estudiantes').innerText = estudiantes.length;
+        document.getElementById('total-tutores').innerText = tutores.length;
+        document.getElementById('total-practicas').innerText = practicas.length;
+
+        // TAB 1: SOLICITUDES DE ASPIRANTES
+        const tbodySol = document.querySelector('#tabla-solicitudes-aspirantes tbody');
+        tbodySol.innerHTML = '';
+        if (solicitudes.length === 0) {
+            tbodySol.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 15px;">No hay solicitudes de nuevos estudiantes pendientes.</td></tr>`;
+        } else {
+            solicitudes.forEach((s, idx) => {
+                const fila = `
+                    <tr>
+                        <td><strong>${s.nombre}</strong></td>
+                        <td>${s.correo}</td>
+                        <td>Semestre ${s.semestre || '7'}</td>
+                        <td>${s.fecha || 'Reciente'}</td>
+                        <td>
+                            <button onclick="procesarAltaAspirante(${idx})" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                                ✓ Procesar Alta y Matricular
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbodySol.innerHTML += fila;
+            });
+        }
+
+        // TAB 1: PADRÓN DE ALUMNOS MATRICULADOS
+        const tbodyAlumnos = document.querySelector('#tabla-alumnos-matriculados tbody');
+        tbodyAlumnos.innerHTML = '';
+        estudiantes.forEach(est => {
+            const p = practicas.find(pr => pr.id_estudiante === est.id_estudiante);
+            const colegio = p ? instituciones.find(c => c.id_institucion === p.id_institucion) : null;
+            const asignacionTexto = p ? (colegio ? `${colegio.nombre_colegio}` : p.id_practica) : '<span style="color:#b45309; font-weight:bold;">Por Asignar Práctica</span>';
+
+            const fila = `
+                <tr>
+                    <td><strong>${est.id_estudiante}</strong></td>
+                    <td><strong>${est.nombre}</strong></td>
+                    <td>${est.correo}</td>
+                    <td>Semestre ${est.semestre}</td>
+                    <td>${asignacionTexto}</td>
+                    <td><span style="color:#15803d; font-weight:bold; background:#dcfce7; padding:4px 8px; border-radius:12px; font-size:11px;">Matriculado Oficial</span></td>
+                </tr>
+            `;
+            tbodyAlumnos.innerHTML += fila;
+        });
+
+        // TAB 2: GESTIÓN DE DOCENTES ASESORES (TUTORES)
+        const tbodyTutores = document.querySelector('#tabla-crud-docentes tbody');
+        tbodyTutores.innerHTML = '';
+        tutores.forEach(t => {
+            const countPrac = practicas.filter(p => p.documento === t.documento).length;
+            const fila = `
+                <tr>
+                    <td><strong>${t.documento}</strong></td>
+                    <td><strong>${t.nombre}</strong></td>
+                    <td>${t.correo}</td>
+                    <td>${t.especialidad || 'Didáctica General'}</td>
+                    <td><span style="font-weight: bold; color: #1e3a8a;">${countPrac} practicantes</span></td>
+                    <td>
+                        <button onclick="editarDocente('${t.documento}')" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
+                        <button onclick="eliminarDocente('${t.documento}')" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            tbodyTutores.innerHTML += fila;
+        });
+
+        // TAB 3: ASIGNACIONES DE PRÁCTICAS
+        const tbodyAsign = document.querySelector('#tabla-asignaciones tbody');
+        tbodyAsign.innerHTML = '';
+        practicas.forEach(p => {
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
+            const tut = tutores.find(t => t.documento === p.documento);
+            const inst = instituciones.find(i => i.id_institucion === p.id_institucion);
+            const tip = tipos.find(tp => tp.id_tipo === p.id_tipo);
+
+            const colorEstado = p.estado === 'En Curso' ? '#15803d' : (p.estado === 'Culminada' ? '#1e3a8a' : '#b45309');
+            const bgEstado = p.estado === 'En Curso' ? '#dcfce7' : (p.estado === 'Culminada' ? '#dbeafe' : '#fef3c7');
+
+            const fila = `
+                <tr>
+                    <td><strong>${p.id_practica}</strong></td>
+                    <td>${est ? est.nombre : p.id_estudiante}</td>
+                    <td>${tut ? tut.nombre : p.documento}</td>
+                    <td>${inst ? inst.nombre_colegio : p.id_institucion}</td>
+                    <td>${tip ? tip.descripcion : p.id_tipo}</td>
+                    <td><span style="background: ${bgEstado}; color: ${colorEstado}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">${p.estado}</span></td>
+                    <td>
+                        <button onclick="editarPractica('${p.id_practica}')" style="background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">✏️ Editar</button>
+                        <button onclick="eliminarPractica('${p.id_practica}')" style="background: #b91c1c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">🗑️</button>
+                    </td>
+                </tr>
+            `;
+            tbodyAsign.innerHTML += fila;
+        });
+
+        // TAB 4: CRUD ESTUDIANTES
+        const tbodyEst = document.querySelector('#tabla-crud-estudiantes tbody');
+        tbodyEst.innerHTML = '';
+        estudiantes.forEach(e => {
+            const fila = `
+                <tr>
+                    <td><strong>${e.id_estudiante}</strong></td>
+                    <td>${e.nombre}</td>
+                    <td>${e.correo}</td>
+                    <td><span style="font-weight: bold; color: #1e3a8a;">Semestre ${e.semestre}</span></td>
+                    <td>
+                        <button onclick="editarEstudiante('${e.id_estudiante}')" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
+                        <button onclick="eliminarEstudiante('${e.id_estudiante}')" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            tbodyEst.innerHTML += fila;
+        });
+
+        // TAB 5: CRUD INSTITUCIONES
+        const tbodyInst = document.querySelector('#tabla-crud-instituciones tbody');
+        tbodyInst.innerHTML = '';
+        instituciones.forEach(i => {
+            const fila = `
+                <tr>
+                    <td><strong>${i.id_institucion}</strong></td>
+                    <td><strong>${i.nombre_colegio}</strong></td>
+                    <td>${i.direccion}</td>
+                    <td>${i.contacto || i.telefono || '-'}</td>
+                    <td>
+                        <button onclick="editarInstitucion('${i.id_institucion}')" style="background: #7c3aed; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
+                        <button onclick="eliminarInstitucion('${i.id_institucion}')" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            tbodyInst.innerHTML += fila;
+        });
+
+        // TAB 6: REPORTE CONSOLIDADO
+        const tbodyRep = document.querySelector('#tabla-reporte-consolidado tbody');
+        tbodyRep.innerHTML = '';
+        practicas.forEach(p => {
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
+            const tut = tutores.find(t => t.documento === p.documento);
+            const inst = instituciones.find(i => i.id_institucion === p.id_institucion);
+            
+            const acts = actividades.filter(a => a.id_practica === p.id_practica && a.estado_aprovacion === 'Aprobado');
+            const horasAprobadas = acts.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+            const meta = p.horas_objetivo || 80;
+            const porcentaje = Math.min(100, Math.round((horasAprobadas / meta) * 100));
+
+            const ev = evaluaciones.find(e => e.id_practica === p.id_practica);
+            const notaTexto = ev ? `⭐ ${ev.calificacion}` : 'Pendiente';
+
+            const fila = `
+                <tr>
+                    <td><strong>${p.id_practica}</strong></td>
+                    <td>${est ? est.nombre : p.id_estudiante}</td>
+                    <td>${tut ? tut.nombre : p.documento}</td>
+                    <td>${inst ? inst.nombre_colegio : p.id_institucion}</td>
+                    <td><strong>${horasAprobadas} / ${meta} hrs</strong></td>
+                    <td>
+                        <div style="font-size: 12px; font-weight: bold; color: ${porcentaje >= 80 ? '#15803d' : '#b45309'};">${porcentaje}%</div>
+                        <div style="background: #e2e8f0; height: 6px; border-radius: 4px; width: 80px; overflow: hidden; margin-top: 3px;">
+                            <div style="background: ${porcentaje >= 80 ? '#15803d' : '#2563eb'}; height: 100%; width: ${porcentaje}%;"></div>
+                        </div>
+                    </td>
+                    <td><strong>${notaTexto}</strong></td>
+                    <td><span style="font-weight: 600; font-size: 12px;">${p.estado}</span></td>
+                </tr>
+            `;
+            tbodyRep.innerHTML += fila;
+        });
+    }
+
+    // FORMULARIO: MATRICULAR USUARIO OFICIAL (COORDINADOR)
+    document.getElementById('form-matricular-oficial').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('mat-nombre').value.trim();
+        const correo = document.getElementById('mat-correo').value.trim().toLowerCase();
+        const clave = document.getElementById('mat-clave').value;
+        const rol = document.getElementById('mat-rol').value;
+
+        if (rol === 'estudiante') {
+            const nuevoId = 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0');
+            DB.insert('Estudiante', {
+                id_estudiante: nuevoId,
+                nombre, correo, semestre: 7, clave
+            });
+            alert(`Estudiante ${nombre} (${nuevoId}) matriculado y registrado exitosamente.`);
+        } else if (rol === 'docente') {
+            const nuevoDoc = 'DOC-' + Math.floor(1000000 + Math.random() * 9000000);
+            DB.insert('Tutor_Academico', {
+                documento: nuevoDoc,
+                nombre, correo, clave, especialidad: 'Pedagogía y Práctica'
+            });
+            alert(`Docente Asesor ${nombre} (${nuevoDoc}) registrado exitosamente.`);
+        } else if (rol === 'coordinador') {
+            const nuevoCoord = 'COORD-' + String(DB.getTable('Coordinador').length + 1).padStart(3, '0');
+            DB.insert('Coordinador', {
+                id_coordinador: nuevoCoord,
+                nombre, correo, clave, departamento: 'Coordinación'
+            });
+            alert(`Coordinador ${nombre} registrado exitosamente.`);
+        }
+
+        document.getElementById('form-matricular-oficial').reset();
+        cargarTodo();
+    });
+
+    // PROCESAR ALTA DE ASPIRANTE
+    function procesarAltaAspirante(idx) {
+        let solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+        const item = solicitudes[idx];
+        if (!item) return;
+
+        if (!DB.findBy('Estudiante', 'correo', item.correo)) {
+            const nuevoId = 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0');
+            DB.insert('Estudiante', {
+                id_estudiante: nuevoId,
+                nombre: item.nombre,
+                correo: item.correo,
+                semestre: item.semestre || 7,
+                clave: 'estudiante123'
+            });
+        }
+
+        solicitudes.splice(idx, 1);
+        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudes));
+        alert(`¡Aspirante ${item.nombre} matriculado y dado de alta oficialmente!`);
+        cargarTodo();
+    }
+
+    // --- CRUD DOCENTES ASESORES ---
+    function abrirModalDocente() {
+        document.getElementById('titulo-modal-docente').innerText = 'Registrar Docente Asesor';
+        document.getElementById('doc-id-editar').value = '';
+        document.getElementById('form-docente-crud').reset();
+        document.getElementById('doc-documento').removeAttribute('readonly');
+        abrirModal('modal-crud-docente');
+    }
+
+    function editarDocente(documento) {
+        const tut = DB.findBy('Tutor_Academico', 'documento', documento);
+        if (tut) {
+            abrirModalDocente();
+            document.getElementById('titulo-modal-docente').innerText = `Editar Docente ${documento}`;
+            document.getElementById('doc-id-editar').value = tut.documento;
+            document.getElementById('doc-documento').value = tut.documento;
+            document.getElementById('doc-documento').setAttribute('readonly', 'true');
+            document.getElementById('doc-nombre').value = tut.nombre;
+            document.getElementById('doc-correo').value = tut.correo;
+            document.getElementById('doc-especialidad').value = tut.especialidad || '';
+            document.getElementById('doc-clave').value = tut.clave || 'docente123';
+        }
+    }
+
+    function eliminarDocente(documento) {
+        if (confirm(`¿Eliminar al docente asesor ${documento}?`)) {
+            DB.delete('Tutor_Academico', 'documento', documento);
+            cargarTodo();
+            alert(`Docente asesor eliminado.`);
+        }
+    }
+
+    document.getElementById('form-docente-crud').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const idEditar = document.getElementById('doc-id-editar').value;
+        const doc = document.getElementById('doc-documento').value.trim();
+        const nombre = document.getElementById('doc-nombre').value.trim();
+        const correo = document.getElementById('doc-correo').value.trim();
+        const especialidad = document.getElementById('doc-especialidad').value.trim();
+        const clave = document.getElementById('doc-clave').value;
+
+        if (idEditar) {
+            DB.update('Tutor_Academico', 'documento', idEditar, {
+                nombre, correo, especialidad, clave
+            });
+            alert(`Docente asesor actualizado exitosamente.`);
+        } else {
+            DB.insert('Tutor_Academico', {
+                documento: doc,
+                nombre, correo, especialidad, clave
+            });
+            alert(`Docente asesor ${nombre} registrado exitosamente.`);
+        }
+        cerrarModal('modal-crud-docente');
+        cargarTodo();
+    });
+
+    // --- ASIGNAR PRÁCTICA ---
+    function abrirModalAsignarPractica() {
+        document.getElementById('titulo-modal-practica').innerText = 'Asignar Nueva Práctica';
+        document.getElementById('prac-id-editar').value = '';
+        
+        const estudiantes = DB.getTable('Estudiante');
+        const tutores = DB.getTable('Tutor_Academico');
+        const instituciones = DB.getTable('Institucion');
+        const tipos = DB.getTable('Tipo_Practica');
+
+        document.getElementById('prac-estudiante').innerHTML = estudiantes.map(e => `<option value="${e.id_estudiante}">${e.nombre} (${e.id_estudiante})</option>`).join('');
+        document.getElementById('prac-tutor').innerHTML = tutores.map(t => `<option value="${t.documento}">${t.nombre} (${t.documento})</option>`).join('');
+        document.getElementById('prac-institucion').innerHTML = instituciones.map(i => `<option value="${i.id_institucion}">${i.nombre_colegio}</option>`).join('');
+        document.getElementById('prac-tipo').innerHTML = tipos.map(tp => `<option value="${tp.id_tipo}">${tp.descripcion}</option>`).join('');
+
+        abrirModal('modal-asignar-practica');
+    }
+
+    function editarPractica(idPractica) {
+        abrirModalAsignarPractica();
+        const p = DB.findBy('Practica', 'id_practica', idPractica);
+        if (p) {
+            document.getElementById('titulo-modal-practica').innerText = `Editar Práctica ${idPractica}`;
+            document.getElementById('prac-id-editar').value = p.id_practica;
+            document.getElementById('prac-estudiante').value = p.id_estudiante;
+            document.getElementById('prac-tutor').value = p.documento;
+            document.getElementById('prac-institucion').value = p.id_institucion;
+            document.getElementById('prac-tipo').value = p.id_tipo;
+            document.getElementById('prac-estado').value = p.estado;
+        }
+    }
+
+    function eliminarPractica(idPractica) {
+        if (confirm(`¿Eliminar la práctica ${idPractica}?`)) {
+            DB.delete('Practica', 'id_practica', idPractica);
+            cargarTodo();
+            alert(`Práctica eliminada.`);
+        }
+    }
+
+    document.getElementById('form-practica').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const idEditar = document.getElementById('prac-id-editar').value;
+        const est = document.getElementById('prac-estudiante').value;
+        const tut = document.getElementById('prac-tutor').value;
+        const inst = document.getElementById('prac-institucion').value;
+        const tipo = document.getElementById('prac-tipo').value;
+        const estado = document.getElementById('prac-estado').value;
+
+        if (idEditar) {
+            DB.update('Practica', 'id_practica', idEditar, {
+                id_estudiante: est, documento: tut, id_institucion: inst, id_tipo: tipo, estado: estado
+            });
+            alert(`Práctica ${idEditar} actualizada.`);
+        } else {
+            const nuevoId = 'PRAC-' + String(DB.getTable('Practica').length + 1).padStart(3, '0');
+            DB.insert('Practica', {
+                id_practica: nuevoId,
+                id_estudiante: est,
+                documento: tut,
+                id_institucion: inst,
+                id_tipo: tipo,
+                estado: estado,
+                fecha_inicio: new Date().toISOString().split('T')[0],
+                horas_objetivo: 80
+            });
+            alert(`Práctica ${nuevoId} asignada exitosamente.`);
+        }
+        cerrarModal('modal-asignar-practica');
+        cargarTodo();
+    });
+
+    // --- CRUD ESTUDIANTES ---
+    function abrirModalEstudiante() {
+        document.getElementById('titulo-modal-estudiante').innerText = 'Registrar Estudiante';
+        document.getElementById('est-id-editar').value = '';
+        document.getElementById('form-estudiante-crud').reset();
+        abrirModal('modal-crud-estudiante');
+    }
+
+    function editarEstudiante(idEstudiante) {
+        const est = DB.findBy('Estudiante', 'id_estudiante', idEstudiante);
+        if (est) {
+            abrirModalEstudiante();
+            document.getElementById('titulo-modal-estudiante').innerText = `Editar Estudiante ${idEstudiante}`;
+            document.getElementById('est-id-editar').value = est.id_estudiante;
+            document.getElementById('est-nombre').value = est.nombre;
+            document.getElementById('est-correo').value = est.correo;
+            document.getElementById('est-semestre').value = est.semestre;
+            document.getElementById('est-clave').value = est.clave || 'estudiante123';
+        }
+    }
+
+    function eliminarEstudiante(idEstudiante) {
+        if (confirm(`¿Eliminar al estudiante ${idEstudiante}?`)) {
+            DB.delete('Estudiante', 'id_estudiante', idEstudiante);
+            cargarTodo();
+            alert(`Estudiante eliminado.`);
+        }
+    }
+
+    document.getElementById('form-estudiante-crud').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const idEditar = document.getElementById('est-id-editar').value;
+        const nombre = document.getElementById('est-nombre').value.trim();
+        const correo = document.getElementById('est-correo').value.trim();
+        const semestre = parseInt(document.getElementById('est-semestre').value);
+        const clave = document.getElementById('est-clave').value;
+
+        if (idEditar) {
+            DB.update('Estudiante', 'id_estudiante', idEditar, { nombre, correo, semestre, clave });
+            alert(`Estudiante actualizado.`);
+        } else {
+            const nuevoId = 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0');
+            DB.insert('Estudiante', { id_estudiante: nuevoId, nombre, correo, semestre, clave });
+            alert(`Estudiante ${nuevoId} creado.`);
+        }
+        cerrarModal('modal-crud-estudiante');
+        cargarTodo();
+    });
+
+    // --- CRUD INSTITUCIONES ---
+    function abrirModalInstitucion() {
+        document.getElementById('titulo-modal-institucion').innerText = 'Registrar Institución';
+        document.getElementById('inst-id-editar').value = '';
+        document.getElementById('form-institucion-crud').reset();
+        abrirModal('modal-crud-institucion');
+    }
+
+    function editarInstitucion(idInst) {
+        const inst = DB.findBy('Institucion', 'id_institucion', idInst);
+        if (inst) {
+            abrirModalInstitucion();
+            document.getElementById('titulo-modal-institucion').innerText = `Editar Institución ${idInst}`;
+            document.getElementById('inst-id-editar').value = inst.id_institucion;
+            document.getElementById('inst-nombre').value = inst.nombre_colegio;
+            document.getElementById('inst-direccion').value = inst.direccion;
+            document.getElementById('inst-correo').value = inst.correo || 'colegio@udi.edu.co';
+            document.getElementById('inst-contacto').value = inst.contacto || inst.telefono || '';
+        }
+    }
+
+    function eliminarInstitucion(idInst) {
+        if (confirm(`¿Eliminar la institución ${idInst}?`)) {
+            DB.delete('Institucion', 'id_institucion', idInst);
+            cargarTodo();
+            alert(`Institución eliminada.`);
+        }
+    }
+
+    document.getElementById('form-institucion-crud').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const idEditar = document.getElementById('inst-id-editar').value;
+        const nombre = document.getElementById('inst-nombre').value.trim();
+        const direccion = document.getElementById('inst-direccion').value.trim();
+        const correo = document.getElementById('inst-correo').value.trim();
+        const contacto = document.getElementById('inst-contacto').value.trim();
+
+        if (idEditar) {
+            DB.update('Institucion', 'id_institucion', idEditar, { nombre_colegio: nombre, direccion, correo, contacto });
+            alert(`Institución actualizada.`);
+        } else {
+            const nuevoId = 'INST-' + String(DB.getTable('Institucion').length + 1).padStart(2, '0');
+            DB.insert('Institucion', {
+                id_institucion: nuevoId, nombre_colegio: nombre, direccion, correo, clave: 'colegio123', contacto
+            });
+            alert(`Institución ${nuevoId} creada.`);
+        }
+        cerrarModal('modal-crud-institucion');
+        cargarTodo();
+    });
+
+    function imprimirReporte() {
+        window.print();
+    }
+
+    window.onload = cargarTodo;
+</script>
+
+</body>
+</html>

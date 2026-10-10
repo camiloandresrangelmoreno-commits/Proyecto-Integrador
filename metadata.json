@@ -1,0 +1,7 @@
+{
+  "name": "Sistema de Gestión de Prácticas",
+  "description": "Sistema de gestión y seguimiento de prácticas pedagógicas para estudiantes, directores, coordinadores y docentes.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

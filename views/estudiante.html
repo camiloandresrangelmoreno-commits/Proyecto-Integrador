@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Estudiante - Gestión de Prácticas UDI</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+<header class="barra-superior">
+    <div>
+        <h2 style="margin: 0; font-size: 20px;">Panel del Estudiante - Prácticas Pedagógicas</h2>
+        <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando sesión...</span>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="../index.html" onclick="DB.logout(); return false;" class="boton-salir">Cerrar Sesión</a>
+    </div>
+</header>
+
+<main class="contenedor-principal">
+
+    <!-- FICHA TÉCNICA DE PRÁCTICA ASIGNADA (DIAGRAMA DE CLASES UML) -->
+    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 15px;">
+            <div>
+                <span style="font-size: 12px; font-weight: bold; color: #2563eb; text-transform: uppercase;">Práctica Académica Asignada</span>
+                <h3 id="info-practica-id" style="margin: 3px 0 0 0; color: #0f172a; font-size: 18px;">PRAC-001</h3>
+            </div>
+            <span id="badge-estado-practica" style="padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 12px; background: #dcfce7; color: #15803d;">
+                En Curso
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; font-size: 13px;">
+            <div>
+                <strong style="color: #475569; display: block;">Institución Receptora:</strong>
+                <span id="info-institucion" style="font-weight: 600; color: #1e293b;">-</span>
+                <div id="info-institucion-dir" style="color: #64748b; font-size: 12px;">-</div>
+            </div>
+            <div>
+                <strong style="color: #475569; display: block;">Tutor Académico Asignado:</strong>
+                <span id="info-tutor" style="font-weight: 600; color: #1e293b;">-</span>
+                <div id="info-tutor-email" style="color: #64748b; font-size: 12px;">-</div>
+            </div>
+            <div>
+                <strong style="color: #475569; display: block;">Modalidad de Práctica:</strong>
+                <span id="info-tipo-practica" style="font-weight: 600; color: #1e293b;">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CASO DE USO: CONSULTAR AVANCE DE PRÁCTICA -->
+    <h3>Mi Progreso de Práctica</h3>
+    
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Horas Realizadas</h4>
+            <p id="contador-horas" class="numero">0</p>
+            <p class="detalle">Horas acumuladas y aprobadas</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Meta de Horas</h4>
+            <p id="meta-horas" class="numero">80</p>
+            <p class="detalle">Exigencia normativa MEN</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Porcentaje de Cumplimiento</h4>
+            <p id="porcentaje-avance" class="numero">0%</p>
+            <div style="background: #e2e8f0; border-radius: 8px; height: 10px; width: 100%; margin-top: 8px; overflow: hidden;">
+                <div id="barra-progreso" style="background: #0f766e; height: 100%; width: 0%; transition: width 0.4s ease;"></div>
+            </div>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Bitácoras Registradas</h4>
+            <p id="contador-bitacoras" class="numero">0</p>
+            <p class="detalle">Actividades pedagógicas reportadas</p>
+        </div>
+    </div>
+
+    <!-- CASO DE USO: REGISTRAR BITÁCORA DE ACTIVIDADES (INCLUDE ASOCIAR EVIDENCIAS) -->
+    <!-- SECUENCIA UML: ingresarDatosBitacora -> adjuntarArchivoEvidencia -> presionarGuardar -->
+    <div class="seccion-tabla" style="background-color: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; max-width: 700px; margin-top: 30px;">
+        <h3 style="margin-top: 0; color: #1e3a8a;">Registrar Nueva Bitácora de Actividades</h3>
+        <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
+            Documenta las actividades pedagógicas y anexa la evidencia obligatoria (Secuencia UML: VistaBitacora &rarr; SeguimientoControl).
+        </p>
+        
+        <form id="form-bitacora-real">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="grupo-campo">
+                    <label for="fecha" style="color: #334155 !important;">Fecha de la Práctica:</label>
+                    <input type="date" id="fecha" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="horas" style="color: #334155 !important;">Horas Desarrolladas:</label>
+                    <input type="number" id="horas" min="1" max="10" placeholder="Ej: 4" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="descripcion" style="color: #334155 !important;">Descripción de Actividades Pedagógicas:</label>
+                <textarea id="descripcion" rows="3" placeholder="Detalla los objetivos, metodología pedagógica aplicada y logros alcanzados en el aula..." required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="evidencia" style="color: #334155 !important;">Enlace o Ruta del Archivo de Evidencia (PDF / Drive):</label>
+                <input type="url" id="evidencia" placeholder="https://drive.google.com/file/d/evidencia-practica.pdf" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                <small style="color: #64748b; font-size: 11px;">Relación UML: Toda Actividad incluye de forma obligatoria 1 o más registros de Evidencia.</small>
+            </div>
+
+            <button type="submit" id="btn-guardar-bitacora" style="background-color: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px;">
+                💾 Guardar Bitácora y Asociar Evidencia
+            </button>
+        </form>
+    </div>
+
+    <!-- TABLA DE HISTORIAL DE BITÁCORAS Y EVIDENCIAS -->
+    <div class="seccion-tabla" style="margin-top: 35px;">
+        <h3>Historial de Bitácoras y Estado de Aprobación</h3>
+        <table class="tabla-datos" id="tabla-mis-bitacoras">
+            <thead>
+                <tr>
+                    <th>ID Actividad</th>
+                    <th>Fecha</th>
+                    <th>Horas</th>
+                    <th>Descripción de la Actividad</th>
+                    <th>Evidencia Asociada</th>
+                    <th>Estado Aprobación</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena dinámicamente con JavaScript desde DB -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CASO DE USO: CONSULTAR EVALUACIONES DEL TUTOR -->
+    <div class="seccion-tabla" style="margin-top: 35px;">
+        <h3 style="color: #0f766e;">Evaluaciones Realizadas por el Tutor Académico</h3>
+        <table class="tabla-datos" id="tabla-evaluaciones">
+            <thead>
+                <tr>
+                    <th>ID Evaluación</th>
+                    <th>Fecha</th>
+                    <th>Tutor Evaluador</th>
+                    <th>Calificación Oficial</th>
+                    <th>Observaciones Pedagógicas</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Evaluaciones emitidas por el tutor -->
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<!-- CAPA DE PERSISTENCIA DB JAVASCRIPT VANILLA -->
+<script src="../js/db.js"></script>
+
+<script>
+    // 1. VALIDAR SEGURIDAD Y CONTROL DE SESIÓN
+    const sesion = DB.requireRole('estudiante', '../index.html');
+    if (!sesion) {
+        // Redirigido automáticamente
+    }
+
+    // Identificar el estudiante logueado
+    const estudianteId = sesion.id_estudiante || 'EST-2024-01';
+    const estudianteObj = DB.findBy('Estudiante', 'correo', sesion.correo) || DB.findBy('Estudiante', 'id_estudiante', estudianteId);
+
+    document.getElementById('usuario-sesion-badge').innerText = `Estudiante: ${sesion.nombre} (${estudianteObj ? estudianteObj.id_estudiante : estudianteId})`;
+
+    // 2. BUSCAR PRÁCTICA DEL ESTUDIANTE EN LA BASE DE DATOS
+    let practica = DB.findBy('Practica', 'id_estudiante', estudianteObj ? estudianteObj.id_estudiante : estudianteId);
+    
+    // Si no tiene práctica asignada aún, crear una por defecto para la experiencia del estudiante
+    if (!practica) {
+        practica = {
+            id_practica: 'PRAC-001',
+            id_estudiante: estudianteObj ? estudianteObj.id_estudiante : estudianteId,
+            documento: 'DOC-1098234',
+            id_institucion: 'INST-01',
+            id_tipo: 'TP-03',
+            estado: 'En Curso',
+            fecha_inicio: '2026-02-01',
+            horas_objetivo: 80
+        };
+        DB.insert('Practica', practica);
+    }
+
+    // Cargar datos relacionales en la cabecera (UML Classes)
+    const institucion = DB.findBy('Institucion', 'id_institucion', practica.id_institucion);
+    const tutor = DB.findBy('Tutor_Academico', 'documento', practica.documento);
+    const tipoPractica = DB.findBy('Tipo_Practica', 'id_tipo', practica.id_tipo);
+
+    document.getElementById('info-practica-id').innerText = `${practica.id_practica} - ${tipoPractica ? tipoPractica.descripcion : 'Práctica Integral'}`;
+    document.getElementById('badge-estado-practica').innerText = practica.estado;
+    
+    if (institucion) {
+        document.getElementById('info-institucion').innerText = institucion.nombre_colegio;
+        document.getElementById('info-institucion-dir').innerText = institucion.direccion;
+    }
+    if (tutor) {
+        document.getElementById('info-tutor').innerText = tutor.nombre;
+        document.getElementById('info-tutor-email').innerText = tutor.correo;
+    }
+    if (tipoPractica) {
+        document.getElementById('info-tipo-practica').innerText = tipoPractica.descripcion;
+    }
+
+    // 3. CARGAR ACTIVIDADES, EVIDENCIAS Y EVALUACIONES
+    function renderizarDatos() {
+        const actividades = DB.filterBy('Actividad', 'id_practica', practica.id_practica);
+        const evidencias = DB.getTable('Evidencia');
+        const evaluaciones = DB.filterBy('Evaluacion', 'id_practica', practica.id_practica);
+
+        const tbodyActividades = document.querySelector('#tabla-mis-bitacoras tbody');
+        tbodyActividades.innerHTML = '';
+
+        let horasAprobadas = 0;
+        let totalHoras = 0;
+
+        if (actividades.length === 0) {
+            tbodyActividades.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 20px;">No has registrado bitácoras aún. Diligencia el formulario arriba.</td></tr>`;
+        } else {
+            actividades.forEach(act => {
+                totalHoras += parseInt(act.horas_realizadas || 0);
+                if (act.estado_aprovacion === 'Aprobado') {
+                    horasAprobadas += parseInt(act.horas_realizadas || 0);
+                }
+
+                // Buscar evidencia asociada (Composición UML)
+                const evidencia = evidencias.find(e => e.id_actividad === act.id_actividad);
+
+                const colorEstado = act.estado_aprovacion === 'Aprobado' ? '#15803d' : (act.estado_aprovacion === 'Rechazado' ? '#b91c1c' : '#b45309');
+                const bgEstado = act.estado_aprovacion === 'Aprobado' ? '#dcfce7' : (act.estado_aprovacion === 'Rechazado' ? '#fee2e2' : '#fef3c7');
+
+                const fila = `
+                    <tr>
+                        <td><strong>${act.id_actividad}</strong></td>
+                        <td>${act.fecha}</td>
+                        <td><strong>${act.horas_realizadas} hrs</strong></td>
+                        <td>${act.descripcion}</td>
+                        <td>
+                            ${evidencia ? `<a href="${evidencia.ruta_archivo}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">🔗 Ver Evidencia</a>` : '<span style="color: #94a3b8;">Sin evidencia</span>'}
+                        </td>
+                        <td>
+                            <span style="background: ${bgEstado}; color: ${colorEstado}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">
+                                ${act.estado_aprovacion}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                tbodyActividades.innerHTML += fila;
+            });
+        }
+
+        // Actualizar indicadores
+        const meta = practica.horas_objetivo || 80;
+        const porcentaje = Math.min(100, Math.round((horasAprobadas / meta) * 100));
+
+        document.getElementById('contador-horas').innerText = `${horasAprobadas} / ${totalHoras} reg.`;
+        document.getElementById('meta-horas').innerText = `${meta} hrs`;
+        document.getElementById('porcentaje-avance').innerText = `${porcentaje}%`;
+        document.getElementById('barra-progreso').style.width = `${porcentaje}%`;
+        document.getElementById('contador-bitacoras').innerText = actividades.length;
+
+        // Renderizar Evaluaciones del Tutor
+        const tbodyEvaluaciones = document.querySelector('#tabla-evaluaciones tbody');
+        tbodyEvaluaciones.innerHTML = '';
+
+        if (evaluaciones.length === 0) {
+            tbodyEvaluaciones.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">Aún no se han emitido evaluaciones oficiales para esta práctica.</td></tr>`;
+        } else {
+            evaluaciones.forEach(ev => {
+                const filaEv = `
+                    <tr>
+                        <td><strong>${ev.id_evaluacion}</strong></td>
+                        <td>${ev.fecha_evaluacion}</td>
+                        <td>${tutor ? tutor.nombre : 'Tutor Asesor'}</td>
+                        <td><span style="font-size: 16px; font-weight: bold; color: #0f766e;">⭐ ${ev.calificacion} / 5.0</span></td>
+                        <td><em>"${ev.observaciones}"</em></td>
+                    </tr>
+                `;
+                tbodyEvaluaciones.innerHTML += filaEv;
+            });
+        }
+    }
+
+    // 4. IMPLEMENTACIÓN DEL DIAGRAMA DE SECUENCIA: REGISTRO DE BITÁCORA Y EVIDENCIA
+    // Mensajes: ingresarDatosBitacora -> adjuntarArchivoEvidencia -> presionarGuardar -> insertarRegistro -> HTTP 201 Created -> mostrarMensaje
+    document.getElementById('form-bitacora-real').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const fecha = document.getElementById('fecha').value;
+        const horas = parseInt(document.getElementById('horas').value);
+        const descripcion = document.getElementById('descripcion').value.trim();
+        const archivoEvidencia = document.getElementById('evidencia').value.trim();
+
+        // Generar IDs correlativos
+        const totalActividades = DB.getTable('Actividad').length;
+        const nuevoIdActividad = 'ACT-' + String(totalActividades + 1).padStart(3, '0');
+        const nuevoIdEvidencia = 'EVI-' + String(DB.getTable('Evidencia').length + 1).padStart(3, '0');
+
+        // Insertar Actividad (Diagrama de Clases)
+        const nuevaActividad = {
+            id_actividad: nuevoIdActividad,
+            id_practica: practica.id_practica,
+            fecha: fecha,
+            descripcion: descripcion,
+            horas_realizadas: horas,
+            estado_aprovacion: 'Pendiente'
+        };
+        DB.insert('Actividad', nuevaActividad);
+
+        // Insertar Evidencia obligatoria (<<Include>> Asociar Evidencias a Actividades)
+        const nuevaEvidencia = {
+            id_evidencia: nuevoIdEvidencia,
+            id_actividad: nuevoIdActividad,
+            id_practica: practica.id_practica,
+            ruta_archivo: archivoEvidencia
+        };
+        DB.insert('Evidencia', nuevaEvidencia);
+
+        // Limpiar formulario y refrescar vista
+        document.getElementById('form-bitacora-real').reset();
+        renderizarDatos();
+
+        // Mensaje del Diagrama de Secuencia
+        alert("Bitácora y evidencias registradas exitosamente (HTTP 201 Created). Enviada a supervisión del tutor académico.");
+    });
+
+    // Cargar los datos al iniciar la página
+    window.onload = function() {
+        // Establecer fecha de hoy en el campo fecha
+        document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        renderizarDatos();
+    };
+</script>
+
+</body>
+</html>

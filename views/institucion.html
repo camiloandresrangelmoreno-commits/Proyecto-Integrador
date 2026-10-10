@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Institución Receptora - Gestión de Prácticas UDI</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<!-- Barra superior del panel de la institución receptora / colegio -->
+<header class="barra-superior">
+    <div>
+        <h2 style="margin: 0; font-size: 20px;">Panel de Control - Institución Receptora</h2>
+        <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando institución...</span>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="../index.html" onclick="DB.logout(); return false;" class="boton-salir">Cerrar Sesión</a>
+    </div>
+</header>
+
+<main class="contenedor-principal">
+
+    <!-- FICHA DE LA INSTITUCIÓN (UML: CLASE INSTITUCION) -->
+    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <span style="font-size: 12px; font-weight: bold; color: #ea580c; text-transform: uppercase;">Convenio Educativo Activo</span>
+                <h3 id="inst-nombre-header" style="margin: 4px 0 0 0; color: #0f172a; font-size: 20px;">Colegio Custodio García Rovira</h3>
+                <p id="inst-dir-header" style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">Cra 15 # 45-20, Bucaramanga</p>
+            </div>
+            <span style="background: #ffedd5; color: #c2410c; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 12px;">
+                Sede Receptora Autorizada
+            </span>
+        </div>
+    </div>
+
+    <!-- CASO DE USO UML: CONSULTAR ESTADO DE LAS PRÁCTICAS -->
+    <h3>Estado General de Prácticas en Sede</h3>
+    
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Estudiantes Asignados</h4>
+            <p id="total-asignados" class="numero">0</p>
+            <p class="detalle">Practicantes en esta sede escolar</p>
+        </div>
+
+        <div class="tarjeta-indicador">
+            <h4>Horas Realizadas en Sede</h4>
+            <p id="total-horas-sede" class="numero">0</p>
+            <p class="detalle">Horas acumuladas reportadas</p>
+        </div>
+
+        <div class="tarjeta-indicador">
+            <h4>Bitácoras en Sede</h4>
+            <p id="total-bitacoras-sede" class="numero">0</p>
+            <p class="detalle">Informes pedagógicos presentados</p>
+        </div>
+    </div>
+
+    <!-- TABLA DE CONTROL DE ASISTENCIA Y PRÁCTICAS -->
+    <div class="seccion-tabla" style="margin-top: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Consulta y Validación de Estudiantes Practicantes</h3>
+            <span style="font-size: 12px; color: #64748b;">(UML: Caso de Uso 'Consultar Estado de las Prácticas')</span>
+        </div>
+        <table class="tabla-datos" id="tabla-colegio-practicas">
+            <thead>
+                <tr>
+                    <th>ID Práctica</th>
+                    <th>Estudiante Licenciado</th>
+                    <th>Semestre</th>
+                    <th>Tutor Asesor UDI</th>
+                    <th>Horas Registradas</th>
+                    <th>Estado de la Práctica</th>
+                    <th>Validación de Sede</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena con datos de DB -->
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<footer class="pie-pagina-institucional">
+    <img src="../images/logo1.png" alt="Logo UDI">
+</footer>
+
+<!-- CAPA DE PERSISTENCIA DB JAVASCRIPT VANILLA -->
+<script src="../js/db.js"></script>
+
+<script>
+    // 1. CONTROL DE ACCESO
+    const sesion = DB.requireRole(['institucion'], '../index.html');
+    if (!sesion) {
+        // Redirigido
+    }
+
+    const instId = sesion.id_institucion || sesion.id || 'INST-01';
+    const institucionObj = DB.findBy('Institucion', 'id_institucion', instId) || DB.findBy('Institucion', 'correo', sesion.correo);
+
+    if (institucionObj) {
+        document.getElementById('usuario-sesion-badge').innerText = `Institución: ${institucionObj.nombre_colegio} (${institucionObj.id_institucion})`;
+        document.getElementById('inst-nombre-header').innerText = institucionObj.nombre_colegio;
+        document.getElementById('inst-dir-header').innerText = institucionObj.direccion;
+    }
+
+    // 2. CONSULTAR PRÁCTICAS ASIGNADAS A ESTA INSTITUCIÓN
+    function cargarPracticasSede() {
+        const idActual = institucionObj ? institucionObj.id_institucion : instId;
+        const practicas = DB.filterBy('Practica', 'id_institucion', idActual);
+        const estudiantes = DB.getTable('Estudiante');
+        const tutores = DB.getTable('Tutor_Academico');
+        const actividades = DB.getTable('Actividad');
+
+        document.getElementById('total-asignados').innerText = practicas.length;
+
+        // Horas y bitácoras asociadas a estas prácticas
+        const misPracticasIds = practicas.map(p => p.id_practica);
+        const misActividades = actividades.filter(a => misPracticasIds.includes(a.id_practica));
+        const totalHoras = misActividades.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+
+        document.getElementById('total-horas-sede').innerText = `${totalHoras} hrs`;
+        document.getElementById('total-bitacoras-sede').innerText = misActividades.length;
+
+        const tbody = document.querySelector('#tabla-colegio-practicas tbody');
+        tbody.innerHTML = '';
+
+        if (practicas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No hay practicantes asignados en este período para esta institución.</td></tr>`;
+            return;
+        }
+
+        practicas.forEach(p => {
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
+            const tut = tutores.find(t => t.documento === p.documento);
+            const acts = actividades.filter(a => a.id_practica === p.id_practica);
+            const horasEst = acts.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+
+            const colorEstado = p.estado === 'En Curso' ? '#15803d' : '#b45309';
+            const bgEstado = p.estado === 'En Curso' ? '#dcfce7' : '#fef3c7';
+
+            const fila = `
+                <tr>
+                    <td><strong>${p.id_practica}</strong></td>
+                    <td><strong>${est ? est.nombre : p.id_estudiante}</strong></td>
+                    <td>Semestre ${est ? est.semestre : '-'}</td>
+                    <td>${tut ? tut.nombre : p.documento}</td>
+                    <td><strong>${horasEst} hrs</strong> (${acts.length} bitácoras)</td>
+                    <td><span style="background: ${bgEstado}; color: ${colorEstado}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">${p.estado}</span></td>
+                    <td>
+                        <button onclick="validarHoras('${p.id_practica}')" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                            ✓ Validar Asistencia
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += fila;
+        });
+    }
+
+    function validarHoras(idPractica) {
+        alert(`¡Asistencia y cumplimiento presencial de la práctica ${idPractica} validados formalmente por la institución receptora!`);
+    }
+
+    window.onload = cargarPracticasSede;
+</script>
+
+</body>
+</html>

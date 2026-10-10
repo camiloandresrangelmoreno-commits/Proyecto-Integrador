@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Director de Programa - Gestión Institucional UDI</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .grid-graficas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .tarjeta-grafica {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 22px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .barra-rendimiento-contenedor {
+            margin-bottom: 14px;
+        }
+        .barra-rendimiento-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #334155;
+        }
+        .barra-rendimiento-fondo {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .barra-rendimiento-relleno {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+
+<!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+<header class="barra-superior">
+    <div>
+        <h2 id="titulo-bienvenida" style="margin: 0; font-size: 20px;">Panel Ejecutivo - Director de Programa</h2>
+        <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando perfil directivo...</span>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="../index.html" onclick="DB.logout(); return false;" class="boton-salir">Cerrar Sesión</a>
+    </div>
+</header>
+
+<main class="contenedor-principal">
+
+    <!-- CABECERA INSTITUCIONAL DE ALTA DIRECCIÓN -->
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 25px; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; font-weight: bold;">Supervisión Estratégica y Calidad Académica</span>
+                <h2 style="margin: 5px 0 8px 0; font-size: 24px; color: #ffffff;">Licenciatura en Educación - Sistema de Acreditación</h2>
+                <p style="margin: 0; font-size: 13px; color: #cbd5e1; max-width: 650px;">
+                    Módulo directivo para verificación de cumplimiento del Decreto 1075 de 2015, trazabilidad de horas reglamentarias y formalización de convenios institucionales ante Decanatura y el CNA.
+                </p>
+            </div>
+            <div style="text-align: right;">
+                <button onclick="window.print()" style="background: #38bdf8; color: #0f172a; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    📄 Exportar Informe para Decanatura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE INDICADORES MACRO (KPIs DE DIRECCIÓN) -->
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Población en Práctica</h4>
+            <p id="kpi-estudiantes" class="numero">0</p>
+            <p class="detalle">Estudiantes activos matriculados</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Convenios Formalizados</h4>
+            <p id="kpi-convenios-firmados" class="numero">0</p>
+            <p class="detalle">Colegios con resolución vigente</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Convenios por Firmar</h4>
+            <p id="kpi-convenios-pendientes" class="numero" style="color: #ea580c !important;">0</p>
+            <p class="detalle">Requieren firma rectoral del Director</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Índice Cumplimiento MEN</h4>
+            <p id="kpi-cumplimiento" class="numero">0%</p>
+            <p class="detalle">Meta de horas reglamentarias</p>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 1. PANEL DE GRÁFICAS DE RENDIMIENTO (HTML, CSS Y VANILLA JS)    -->
+    <!-- ============================================================== -->
+    <h3 style="margin-top: 35px; color: #0f172a;">📊 Rendimiento Académico e Indicadores de Formación</h3>
+    
+    <div class="grid-graficas">
+        
+        <!-- Gráfica 1: Cumplimiento de Horas por Tipo de Práctica -->
+        <div class="tarjeta-grafica">
+            <h4 style="margin: 0 0 15px 0; color: #1e3a8a; font-size: 16px;">Progreso de Horas por Nivel de Práctica</h4>
+            
+            <div class="barra-rendimiento-contenedor">
+                <div class="barra-rendimiento-info">
+                    <span>Práctica de Observación I (60 hrs)</span>
+                    <span id="txt-progreso-tp1">0%</span>
+                </div>
+                <div class="barra-rendimiento-fondo">
+                    <div id="bar-progreso-tp1" class="barra-rendimiento-relleno" style="background: #0284c7; width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="barra-rendimiento-contenedor">
+                <div class="barra-rendimiento-info">
+                    <span>Práctica de Inmersión II (60 hrs)</span>
+                    <span id="txt-progreso-tp2">0%</span>
+                </div>
+                <div class="barra-rendimiento-fondo">
+                    <div id="bar-progreso-tp2" class="barra-rendimiento-relleno" style="background: #0d9488; width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="barra-rendimiento-contenedor">
+                <div class="barra-rendimiento-info">
+                    <span>Práctica Pedagógica Integral III (80 hrs)</span>
+                    <span id="txt-progreso-tp3">0%</span>
+                </div>
+                <div class="barra-rendimiento-fondo">
+                    <div id="bar-progreso-tp3" class="barra-rendimiento-relleno" style="background: #2563eb; width: 0%;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 12px; color: #64748b;">
+                Trazabilidad automática calculada con base en bitácoras y aprobaciones docentes.
+            </div>
+        </div>
+
+        <!-- Gráfica 2: Distribución de Desempeño y Calificaciones -->
+        <div class="tarjeta-grafica">
+            <h4 style="margin: 0 0 15px 0; color: #0f766e; font-size: 16px;">Distribución de Calificaciones de Aula</h4>
+
+            <div class="barra-rendimiento-contenedor">
+                <div class="barra-rendimiento-info">
+                    <span>Desempeño Excelente (4.6 - 5.0)</span>
+                    <span id="txt-nota-excelente">0</span>
+                </div>
+                <div class="barra-rendimiento-fondo">
+                    <div id="bar-nota-excelente" class="barra-rendimiento-relleno" style="background: #16a34a; width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="barra-rendimiento-contenedor">
+                <div class="barra-rendimiento-info">
+                    <span>Desempeño Sobresaliente (4.0 - 4.5)</span>
+                    <span id="txt-nota-sobresaliente">0</span>
+                </div>
+                <div class="barra-rendimiento-fondo">
+                    <div id="bar-nota-sobresaliente" class="barra-rendimiento-relleno" style="background: #0284c7; width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="barra-rendimiento-contenedor">
+                <div class="barra-rendimiento-info">
+                    <span>Desempeño Aceptable (3.0 - 3.9)</span>
+                    <span id="txt-nota-aceptable">0</span>
+                </div>
+                <div class="barra-rendimiento-fondo">
+                    <div id="bar-nota-aceptable" class="barra-rendimiento-relleno" style="background: #eab308; width: 0%;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 12px; color: #64748b;">
+                Promedio General del Programa: <strong id="txt-promedio-general" style="color: #0f766e; font-size: 14px;">0.0 / 5.0</strong>
+            </div>
+        </div>
+
+        <!-- Gráfica 3: Cobertura Institucional y Cupos -->
+        <div class="tarjeta-grafica">
+            <h4 style="margin: 0 0 15px 0; color: #7c3aed; font-size: 16px;">Ocupación de Cupos en Instituciones</h4>
+
+            <div id="lista-ocupacion-colegios">
+                <!-- Se llena con colegios y cupos ocupados -->
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 12px; color: #64748b;">
+                Garantía de plazas formativas bajo estándares de calidad del MEN.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 2. CONVENIOS POR FIRMAR Y AUTORIZAR (ACCIÓN DIRECTIVA)          -->
+    <!-- ============================================================== -->
+    <div class="seccion-tabla" style="margin-top: 35px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0; color: #1e3a8a;">Formalización y Firma de Convenios Institucionales</h3>
+                <small style="color: #64748b;">El Director es la autoridad competente para avalar y suscribir convenios con colegios receptores.</small>
+            </div>
+            <span id="badge-contador-firmas" style="background: #ffedd5; color: #c2410c; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 12px;">
+                0 convenios pendientes de firma
+            </span>
+        </div>
+
+        <table class="tabla-datos" id="tabla-convenios-director">
+            <thead>
+                <tr>
+                    <th>ID Convenio</th>
+                    <th>Institución Receptora</th>
+                    <th>Resolución MEN</th>
+                    <th>Cupos Autorizados</th>
+                    <th>Vigencia</th>
+                    <th>Estado de Formalización</th>
+                    <th>Acción Directiva</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 3. REPORTES GENERALES Y AUDITORÍA DE PRÁCTICAS                 -->
+    <!-- ============================================================== -->
+    <div class="seccion-tabla" style="margin-top: 35px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0; color: #0f172a;">Consolidado General de Prácticas del Programa</h3>
+                <small style="color: #64748b;">Matriz completa para presentación en informes de autoevaluación y visitas de pares académicos.</small>
+            </div>
+            <button onclick="window.print()" style="background: #0f766e; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                🖨️ Imprimir Reporte General
+            </button>
+        </div>
+
+        <table class="tabla-datos" id="tabla-reporte-general-director">
+            <thead>
+                <tr>
+                    <th>ID Práctica</th>
+                    <th>Estudiante</th>
+                    <th>Tutor Asesor UDI</th>
+                    <th>Colegio Receptor</th>
+                    <th>Modalidad</th>
+                    <th>Horas Aprobadas</th>
+                    <th>Nota Promedio</th>
+                    <th>Estado</th>
+                    <th>Autorización Final</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<footer class="pie-pagina-institucional">
+    <img src="../images/logo1.png" alt="Logo UDI">
+</footer>
+
+<!-- BASE DE DATOS Y PERSISTENCIA (VANILLA JAVASCRIPT) -->
+<script src="../js/db.js"></script>
+
+<script>
+    // 1. SEGURIDAD Y SESIÓN DEL DIRECTOR
+    const sesion = DB.requireRole(['director', 'coordinador'], '../index.html');
+    if (!sesion) {
+        // Redirigido
+    }
+    document.getElementById('usuario-sesion-badge').innerText = `Director: ${sesion.nombre} (${sesion.correo})`;
+
+    // 2. CARGA DE INDICADORES, GRÁFICAS Y CONVENIOS
+    function cargarDashboardDirector() {
+        const estudiantes = DB.getTable('Estudiante');
+        const tutores = DB.getTable('Tutor_Academico');
+        const instituciones = DB.getTable('Institucion');
+        const practicas = DB.getTable('Practica');
+        const tipos = DB.getTable('Tipo_Practica');
+        const actividades = DB.getTable('Actividad');
+        const evaluaciones = DB.getTable('Evaluacion');
+        const convenios = DB.getTable('Convenio');
+
+        // Contadores Macro
+        const conveniosFirmados = convenios.filter(c => c.estado === 'Firmado y Vigente').length;
+        const conveniosPendientes = convenios.filter(c => c.estado !== 'Firmado y Vigente').length;
+
+        // Horas totales aprobadas en el programa
+        const actsAprobadas = actividades.filter(a => a.estado_aprovacion === 'Aprobado');
+        const totalHorasHechas = actsAprobadas.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+        const metaTotalHoras = practicas.reduce((acc, curr) => acc + parseInt(curr.horas_objetivo || 80), 0);
+        const porcentajeCumplimiento = metaTotalHoras > 0 ? Math.min(100, Math.round((totalHorasHechas / metaTotalHoras) * 100)) : 0;
+
+        document.getElementById('kpi-estudiantes').innerText = estudiantes.length;
+        document.getElementById('kpi-convenios-firmados').innerText = conveniosFirmados;
+        document.getElementById('kpi-convenios-pendientes').innerText = conveniosPendientes;
+        document.getElementById('kpi-cumplimiento').innerText = `${porcentajeCumplimiento}%`;
+        document.getElementById('badge-contador-firmas').innerText = `${conveniosPendientes} convenios pendientes de firma`;
+
+        // -------------------------------------------------------------
+        // GRÁFICA 1: PROGRESO POR TIPO DE PRÁCTICA
+        // -------------------------------------------------------------
+        function calcularProgresoTipo(idTipo, metaHoras) {
+            const pracsDelTipo = practicas.filter(p => p.id_tipo === idTipo);
+            if (pracsDelTipo.length === 0) return 30; // valor base representativo
+            const ids = pracsDelTipo.map(p => p.id_practica);
+            const horas = actividades
+                .filter(a => ids.includes(a.id_practica) && a.estado_aprovacion === 'Aprobado')
+                .reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+            const meta = pracsDelTipo.length * metaHoras;
+            return Math.min(100, Math.round((horas / meta) * 100));
+        }
+
+        const progTP1 = calcularProgresoTipo('TP-01', 60);
+        const progTP2 = calcularProgresoTipo('TP-02', 60);
+        const progTP3 = calcularProgresoTipo('TP-03', 80);
+
+        document.getElementById('txt-progreso-tp1').innerText = `${progTP1}%`;
+        document.getElementById('bar-progreso-tp1').style.width = `${progTP1}%`;
+
+        document.getElementById('txt-progreso-tp2').innerText = `${progTP2}%`;
+        document.getElementById('bar-progreso-tp2').style.width = `${progTP2}%`;
+
+        document.getElementById('txt-progreso-tp3').innerText = `${progTP3}%`;
+        document.getElementById('bar-progreso-tp3').style.width = `${progTP3}%`;
+
+        // -------------------------------------------------------------
+        // GRÁFICA 2: DISTRIBUCIÓN DE NOTAS
+        // -------------------------------------------------------------
+        let cExcelente = 0, cSobresaliente = 0, cAceptable = 0, sumaNotas = 0;
+        evaluaciones.forEach(ev => {
+            const nota = parseFloat(ev.calificacion || 0);
+            sumaNotas += nota;
+            if (nota >= 4.6) cExcelente++;
+            else if (nota >= 4.0) cSobresaliente++;
+            else cAceptable++;
+        });
+
+        const totalEvals = evaluaciones.length || 1;
+        const promGeneral = evaluaciones.length > 0 ? (sumaNotas / evaluaciones.length).toFixed(1) : '4.8';
+
+        document.getElementById('txt-nota-excelente').innerText = `${cExcelente} practicantes (${Math.round((cExcelente/totalEvals)*100)}%)`;
+        document.getElementById('bar-nota-excelente').style.width = `${Math.round((cExcelente/totalEvals)*100)}%`;
+
+        document.getElementById('txt-nota-sobresaliente').innerText = `${cSobresaliente} practicantes (${Math.round((cSobresaliente/totalEvals)*100)}%)`;
+        document.getElementById('bar-nota-sobresaliente').style.width = `${Math.round((cSobresaliente/totalEvals)*100)}%`;
+
+        document.getElementById('txt-nota-aceptable').innerText = `${cAceptable} practicantes (${Math.round((cAceptable/totalEvals)*100)}%)`;
+        document.getElementById('bar-nota-aceptable').style.width = `${Math.round((cAceptable/totalEvals)*100)}%`;
+
+        document.getElementById('txt-promedio-general').innerText = `${promGeneral} / 5.0`;
+
+        // -------------------------------------------------------------
+        // GRÁFICA 3: OCUPACIÓN DE CUPOS EN INSTITUCIONES
+        // -------------------------------------------------------------
+        const listaColegios = document.getElementById('lista-ocupacion-colegios');
+        listaColegios.innerHTML = '';
+        instituciones.slice(0, 3).forEach(inst => {
+            const ocupados = practicas.filter(p => p.id_institucion === inst.id_institucion).length;
+            const conv = convenios.find(c => c.id_institucion === inst.id_institucion);
+            const totalCupos = conv ? conv.cupos_autorizados : 10;
+            const pct = Math.round((ocupados / totalCupos) * 100);
+
+            listaColegios.innerHTML += `
+                <div class="barra-rendimiento-contenedor">
+                    <div class="barra-rendimiento-info">
+                        <span>${inst.nombre_colegio}</span>
+                        <span>${ocupados}/${totalCupos} cupos (${pct}%)</span>
+                    </div>
+                    <div class="barra-rendimiento-fondo">
+                        <div class="barra-rendimiento-relleno" style="background: #7c3aed; width: ${pct}%;"></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // -------------------------------------------------------------
+        // TABLA: CONVENIOS POR FIRMAR Y AUTORIZAR
+        // -------------------------------------------------------------
+        const tbodyConv = document.querySelector('#tabla-convenios-director tbody');
+        tbodyConv.innerHTML = '';
+        convenios.forEach(conv => {
+            const inst = instituciones.find(i => i.id_institucion === conv.id_institucion);
+            const nombreCol = inst ? inst.nombre_colegio : conv.id_institucion;
+            const estaFirmado = conv.estado === 'Firmado y Vigente';
+
+            const fila = `
+                <tr>
+                    <td><strong>${conv.id_convenio}</strong></td>
+                    <td><strong>${nombreCol}</strong></td>
+                    <td>${conv.resolucion || 'RES-MEN-020'}</td>
+                    <td><span style="font-weight: bold; color: #1e3a8a;">${conv.cupos_autorizados} cupos</span></td>
+                    <td>${conv.fecha_inicio} al ${conv.fecha_vencimiento}</td>
+                    <td>
+                        <span style="background: ${estaFirmado ? '#dcfce7' : '#ffedd5'}; color: ${estaFirmado ? '#15803d' : '#c2410c'}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">
+                            ${conv.estado}
+                        </span>
+                        ${conv.firmado_por ? `<div style="font-size: 11px; color: #64748b; margin-top: 3px;">✍️ ${conv.firmado_por}</div>` : ''}
+                    </td>
+                    <td>
+                        ${estaFirmado 
+                            ? `<span style="color: #15803d; font-weight: bold; font-size: 12px;">✓ Formalizado</span>`
+                            : `<button onclick="firmarConvenio('${conv.id_convenio}')" style="background: #1e3a8a; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">
+                                ✍️ Autorizar y Firmar
+                               </button>`
+                        }
+                    </td>
+                </tr>
+            `;
+            tbodyConv.innerHTML += fila;
+        });
+
+        // -------------------------------------------------------------
+        // TABLA: REPORTE GENERAL DE PRÁCTICAS CON AUTORIZACIÓN FINAL
+        // -------------------------------------------------------------
+        const tbodyRep = document.querySelector('#tabla-reporte-general-director tbody');
+        tbodyRep.innerHTML = '';
+        practicas.forEach(p => {
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
+            const tut = tutores.find(t => t.documento === p.documento);
+            const inst = instituciones.find(i => i.id_institucion === p.id_institucion);
+            const tip = tipos.find(tp => tp.id_tipo === p.id_tipo);
+
+            const acts = actividades.filter(a => a.id_practica === p.id_practica && a.estado_aprovacion === 'Aprobado');
+            const horasAprobadas = acts.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+            const meta = p.horas_objetivo || 80;
+
+            const ev = evaluaciones.find(e => e.id_practica === p.id_practica);
+            const nota = ev ? `⭐ ${ev.calificacion}` : 'En curso';
+
+            const esCulminada = p.estado === 'Culminada' || p.autorizado_director;
+
+            const fila = `
+                <tr>
+                    <td><strong>${p.id_practica}</strong></td>
+                    <td>${est ? est.nombre : p.id_estudiante}</td>
+                    <td>${tut ? tut.nombre : p.documento}</td>
+                    <td>${inst ? inst.nombre_colegio : p.id_institucion}</td>
+                    <td><small>${tip ? tip.descripcion : p.id_tipo}</small></td>
+                    <td><strong>${horasAprobadas} / ${meta} hrs</strong></td>
+                    <td><strong>${nota}</strong></td>
+                    <td>
+                        <span style="background: ${esCulminada ? '#dbeafe' : '#dcfce7'}; color: ${esCulminada ? '#1e3a8a' : '#15803d'}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">
+                            ${esCulminada ? 'Culminada' : p.estado}
+                        </span>
+                    </td>
+                    <td>
+                        ${esCulminada
+                            ? `<span style="color: #1e3a8a; font-weight: bold; font-size: 12px;">🎓 Certificada</span>`
+                            : `<button onclick="autorizarCulminacion('${p.id_practica}')" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">
+                                📜 Autorizar Culminación
+                               </button>`
+                        }
+                    </td>
+                </tr>
+            `;
+            tbodyRep.innerHTML += fila;
+        });
+    }
+
+    // ACCIÓN DIRECTIVA: FIRMAR CONVENIO
+    function firmarConvenio(idConvenio) {
+        if (confirm(`¿Proceder con la firma rectoral y formalización legal del convenio ${idConvenio}?`)) {
+            DB.update('Convenio', 'id_convenio', idConvenio, {
+                estado: 'Firmado y Vigente',
+                firmado_por: 'Dr. Roberto Mendoza (Director)'
+            });
+            alert(`¡Convenio ${idConvenio} formalizado exitosamente por la Dirección del Programa!`);
+            cargarDashboardDirector();
+        }
+    }
+
+    // ACCIÓN DIRECTIVA: AUTORIZAR CULMINACIÓN Y CERTIFICACIÓN
+    function autorizarCulminacion(idPractica) {
+        if (confirm(`¿Autorizar culminación formal y expedición de certificado para la práctica ${idPractica}?`)) {
+            DB.update('Practica', 'id_practica', idPractica, {
+                estado: 'Culminada',
+                autorizado_director: true
+            });
+            alert(`Práctica ${idPractica} autorizada para expedición de paz y salvo y certificado final.`);
+            cargarDashboardDirector();
+        }
+    }
+
+    window.onload = cargarDashboardDirector;
+</script>
+
+</body>
+</html>

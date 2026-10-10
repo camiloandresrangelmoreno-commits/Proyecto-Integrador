@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Tutor Académico - Gestión de Prácticas UDI</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+<header class="barra-superior">
+    <div>
+        <h2 style="margin: 0; font-size: 20px;">Panel de Control - Tutor Académico</h2>
+        <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando sesión...</span>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="../index.html" onclick="DB.logout(); return false;" class="boton-salir">Cerrar Sesión</a>
+    </div>
+</header>
+
+<main class="contenedor-principal">
+
+    <!-- CASO DE USO UML: SUPERVISAR DESARROLLO DE PRÁCTICAS -->
+    <h3>Supervisión y Seguimiento Académico</h3>
+
+    <div class="bloque-tarjetas">
+        <div class="tarjeta-indicador">
+            <h4>Estudiantes Asignados</h4>
+            <p id="total-alumnos" class="numero">0</p>
+            <p class="detalle">Practicantes bajo mi tutoría</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Bitácoras Pendientes</h4>
+            <p id="total-pendientes" class="numero">0</p>
+            <p class="detalle">Actividades por verificar</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Horas Totales Avaladas</h4>
+            <p id="total-horas-avaladas" class="numero">0</p>
+            <p class="detalle">Horas con estado 'Aprobado'</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Evaluaciones Emitidas</h4>
+            <p id="total-evaluaciones" class="numero">0</p>
+            <p class="detalle">Calificaciones registradas</p>
+        </div>
+    </div>
+
+    <!-- CASO DE USO UML: REVISAR ACTIVIDADES Y EVIDENCIAS -->
+    <div class="seccion-tabla" style="margin-top: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Revisión de Actividades y Evidencias de Practicantes</h3>
+            <span style="font-size: 12px; color: #64748b;">(Tabla Actividad y Evidencia del Modelo Relacional)</span>
+        </div>
+        <table class="tabla-datos" id="tabla-tutor-evaluar">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Práctica</th>
+                    <th>Fecha</th>
+                    <th>Horas</th>
+                    <th>Descripción de Actividad</th>
+                    <th>Evidencia</th>
+                    <th>Estado Actual</th>
+                    <th>Acciones de Aprobación</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena con las actividades registradas en la DB -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CASO DE USO UML: EVALUAR PROCESO DE PRÁCTICA -->
+    <div class="seccion-tabla" style="margin-top: 35px; background: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #cbd5e1; max-width: 700px;">
+        <h3 style="margin-top: 0; color: #0f766e;">Emitir Evaluación Oficial de Práctica</h3>
+        <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
+            Registra una calificación numérica (0.0 a 5.0) y las observaciones pedagógicas formales (UML: Clase Evaluacion).
+        </p>
+
+        <form id="form-calificar">
+            <div class="grupo-campo">
+                <label for="eval-practica-select" style="color: #334155 !important;">Seleccionar Estudiante / Práctica a Evaluar:</label>
+                <select id="eval-practica-select" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    <option value="">-- Elige un practicante --</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="grupo-campo">
+                    <label for="nota-input" style="color: #334155 !important;">Calificación Oficial (0.0 - 5.0):</label>
+                    <input type="number" id="nota-input" step="0.1" min="0" max="5" placeholder="Ej: 4.5" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+                <div class="grupo-campo">
+                    <label for="eval-fecha" style="color: #334155 !important;">Fecha de Evaluación:</label>
+                    <input type="date" id="eval-fecha" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="obs-input" style="color: #334155 !important;">Observaciones Pedagógicas y Retroalimentación:</label>
+                <textarea id="obs-input" rows="3" placeholder="Describe los logros, fortalezas pedagógicas y recomendaciones de mejora..." required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box;"></textarea>
+            </div>
+
+            <button type="submit" style="background-color: #0f766e; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px;">
+                ⭐ Registrar Evaluación Oficial en Base de Datos
+            </button>
+        </form>
+    </div>
+
+    <!-- HISTORIAL DE EVALUACIONES EMITIDAS -->
+    <div class="seccion-tabla" style="margin-top: 35px;">
+        <h3>Historial de Evaluaciones Emitidas por mí</h3>
+        <table class="tabla-datos" id="tabla-mis-evaluaciones">
+            <thead>
+                <tr>
+                    <th>ID Evaluación</th>
+                    <th>Fecha</th>
+                    <th>Práctica Evaluada</th>
+                    <th>Estudiante</th>
+                    <th>Nota Oficial</th>
+                    <th>Observaciones Pedagógicas</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Se llena con las evaluaciones emitidas -->
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<!-- CAPA DE PERSISTENCIA DB JAVASCRIPT VANILLA -->
+<script src="../js/db.js"></script>
+
+<script>
+    // 1. VALIDAR SESIÓN
+    const sesion = DB.requireRole(['docente'], '../index.html');
+    if (!sesion) {
+        // Redirigido
+    }
+
+    const docTutor = sesion.documento || sesion.id || 'DOC-1098234';
+    const tutorObj = DB.findBy('Tutor_Academico', 'documento', docTutor) || DB.findBy('Tutor_Academico', 'correo', sesion.correo);
+
+    document.getElementById('usuario-sesion-badge').innerText = `Tutor: ${sesion.nombre} (Doc: ${tutorObj ? tutorObj.documento : docTutor})`;
+
+    // 2. CARGAR Y RENDERIZAR DATOS DEL TUTOR
+    function cargarDatosTutor() {
+        const docActual = tutorObj ? tutorObj.documento : docTutor;
+        
+        // Obtener prácticas asignadas a este tutor
+        const practicas = DB.filterBy('Practica', 'documento', docActual);
+        const estudiantes = DB.getTable('Estudiante');
+        const actividades = DB.getTable('Actividad');
+        const evidencias = DB.getTable('Evidencia');
+        const evaluaciones = DB.getTable('Evaluacion');
+
+        // Prácticas IDs
+        const misPracticasIds = practicas.map(p => p.id_practica);
+
+        // Actividades que pertenecen a estas prácticas
+        const misActividades = actividades.filter(a => misPracticasIds.includes(a.id_practica));
+
+        // Contadores
+        const totalPendientes = misActividades.filter(a => a.estado_aprovacion === 'Pendiente').length;
+        const horasAvaladas = misActividades
+            .filter(a => a.estado_aprovacion === 'Aprobado')
+            .reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+        
+        const misEvaluaciones = evaluaciones.filter(e => e.documento === docActual || misPracticasIds.includes(e.id_practica));
+
+        document.getElementById('total-alumnos').innerText = practicas.length;
+        document.getElementById('total-pendientes').innerText = totalPendientes;
+        document.getElementById('total-horas-avaladas').innerText = `${horasAvaladas} hrs`;
+        document.getElementById('total-evaluaciones').innerText = misEvaluaciones.length;
+
+        // Poblar Selector de Prácticas para Evaluar
+        const selectPractica = document.getElementById('eval-practica-select');
+        selectPractica.innerHTML = '<option value="">-- Elige un practicante --</option>';
+        practicas.forEach(p => {
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
+            const nombreEst = est ? est.nombre : p.id_estudiante;
+            selectPractica.innerHTML += `<option value="${p.id_practica}">${p.id_practica} - ${nombreEst} (${p.estado})</option>`;
+        });
+
+        // Poblar Tabla de Actividades y Evidencias
+        const tbodyAct = document.querySelector('#tabla-tutor-evaluar tbody');
+        tbodyAct.innerHTML = '';
+
+        if (misActividades.length === 0) {
+            tbodyAct.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No hay actividades registradas aún por los practicantes asignados.</td></tr>`;
+        } else {
+            misActividades.forEach(act => {
+                const practica = practicas.find(p => p.id_practica === act.id_practica);
+                const est = practica ? estudiantes.find(e => e.id_estudiante === practica.id_estudiante) : null;
+                const nombreEst = est ? est.nombre : (practica ? practica.id_estudiante : 'Desconocido');
+                const evidencia = evidencias.find(e => e.id_actividad === act.id_actividad);
+
+                const colorEstado = act.estado_aprovacion === 'Aprobado' ? '#15803d' : (act.estado_aprovacion === 'Rechazado' ? '#b91c1c' : '#b45309');
+                const bgEstado = act.estado_aprovacion === 'Aprobado' ? '#dcfce7' : (act.estado_aprovacion === 'Rechazado' ? '#fee2e2' : '#fef3c7');
+
+                const fila = `
+                    <tr>
+                        <td><strong>${nombreEst}</strong></td>
+                        <td><small style="color:#64748b;">${act.id_practica}</small></td>
+                        <td>${act.fecha}</td>
+                        <td><strong>${act.horas_realizadas} hrs</strong></td>
+                        <td>${act.descripcion}</td>
+                        <td>
+                            ${evidencia ? `<a href="${evidencia.ruta_archivo}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">🔗 Ver Soporte</a>` : '<span style="color: #94a3b8;">Sin archivo</span>'}
+                        </td>
+                        <td>
+                            <span style="background: ${bgEstado}; color: ${colorEstado}; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 11px;">
+                                ${act.estado_aprovacion}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 4px;">
+                                <button onclick="cambiarEstadoActividad('${act.id_actividad}', 'Aprobado')" style="background: #15803d; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">✓ Aprobar</button>
+                                <button onclick="cambiarEstadoActividad('${act.id_actividad}', 'Rechazado')" style="background: #b91c1c; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">✕ Rechazar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbodyAct.innerHTML += fila;
+            });
+        }
+
+        // Poblar Tabla de Historial de Evaluaciones
+        const tbodyEval = document.querySelector('#tabla-mis-evaluaciones tbody');
+        tbodyEval.innerHTML = '';
+
+        if (misEvaluaciones.length === 0) {
+            tbodyEval.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 20px;">No has emitido evaluaciones todavía.</td></tr>`;
+        } else {
+            misEvaluaciones.forEach(ev => {
+                const practica = practicas.find(p => p.id_practica === ev.id_practica);
+                const est = practica ? estudiantes.find(e => e.id_estudiante === practica.id_estudiante) : null;
+                const nombreEst = est ? est.nombre : (practica ? practica.id_estudiante : '-');
+
+                const fila = `
+                    <tr>
+                        <td><strong>${ev.id_evaluacion}</strong></td>
+                        <td>${ev.fecha_evaluacion}</td>
+                        <td>${ev.id_practica}</td>
+                        <td>${nombreEst}</td>
+                        <td><strong style="color: #0f766e; font-size: 15px;">⭐ ${ev.calificacion} / 5.0</strong></td>
+                        <td><em>"${ev.observaciones}"</em></td>
+                    </tr>
+                `;
+                tbodyEval.innerHTML += fila;
+            });
+        }
+    }
+
+    // ACCIÓN: APROBAR O RECHAZAR ACTIVIDAD
+    function cambiarEstadoActividad(idActividad, nuevoEstado) {
+        const actualizado = DB.update('Actividad', 'id_actividad', idActividad, { estado_aprovacion: nuevoEstado });
+        if (actualizado) {
+            cargarDatosTutor();
+            alert(`Actividad ${idActividad} actualizada a estado: ${nuevoEstado}.`);
+        }
+    }
+
+    // FORMULARIO: REGISTRAR EVALUACIÓN OFICIAL (UML: CLASE EVALUACION)
+    document.getElementById('form-calificar').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const idPractica = document.getElementById('eval-practica-select').value;
+        const nota = parseFloat(document.getElementById('nota-input').value);
+        const fecha = document.getElementById('eval-fecha').value;
+        const observaciones = document.getElementById('obs-input').value.trim();
+        const docActual = tutorObj ? tutorObj.documento : docTutor;
+
+        const totalEvals = DB.getTable('Evaluacion').length;
+        const nuevaEvaluacion = {
+            id_evaluacion: 'EVAL-' + String(totalEvals + 1).padStart(3, '0'),
+            id_practica: idPractica,
+            documento: docActual,
+            calificacion: nota,
+            observaciones: observaciones,
+            fecha_evaluacion: fecha
+        };
+
+        DB.insert('Evaluacion', nuevaEvaluacion);
+
+        alert(`¡Evaluación ${nuevaEvaluacion.id_evaluacion} registrada con éxito! Nota oficial asignada: ${nota}`);
+        document.getElementById('form-calificar').reset();
+        document.getElementById('eval-fecha').value = new Date().toISOString().split('T')[0];
+        cargarDatosTutor();
+    });
+
+    window.onload = function() {
+        document.getElementById('eval-fecha').value = new Date().toISOString().split('T')[0];
+        cargarDatosTutor();
+    };
+</script>
+
+</body>
+</html>

@@ -218,31 +218,54 @@ body {
     height: auto;              /* El alto se calcula solo para que no se deforme la imagen */
     margin-bottom: 15px;       /* Despeja espacio abajo del logo para que no pise el título */
 }
-/* DISEÑO DEL PIE DE PÁGINA INSTITUTIONAL (ESQUINA INFERIOR DERECHA) */
+/* DISEÑO DEL PIE DE PÁGINA INSTITUCIONAL (ESQUINA INFERIOR DERECHA) */
 .pie-pagina-institucional {
     position: fixed;           /* Flota sobre la pantalla en una posición fija */
-    bottom: 15px;              /* Separación de 15 píxeles desde el suelo de la pantalla */
-    right: 20px;               /* Separación de 20 píxeles desde el borde derecho */
-    display: flex;             /* Alinea el texto y el logo uno al lado del otro */
-    align-items: center;       /* Centra verticalmente el texto con el logo */
-    gap: 10px;                 /* Espacio de separación entre el texto y la imagen */
-    background-color: rgba(255, 255, 255, 0.8); /* Fondo blanco semi-transparente por si pisa texto */
-    padding: 6px 12px;         /* Espacio interno suave */
-    border-radius: 20px;       /* Bordes muy redondeados estilo cápsula */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Sombra sutil para que resalte */
-    z-index: 1000;             /* Asegura que siempre se vea por encima de las tablas */
+    bottom: 12px;              /* Separación de 12 píxeles desde el suelo */
+    right: 16px;               /* Separación de 16 píxeles desde el borde derecho */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.92);
+    padding: 4px 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    pointer-events: auto;
 }
 
-/* DISEÑO DEL MINI LOGO RECTANGULAR ADAPTADO */
+/* TAMAÑO EXACTO DEL LOGO UDI: PEQUEÑO, NÍTIDO Y NUNCA INVADE EL FORMULARIO */
 .pie-pagina-institucional img {
-    width: 140px;              /* Le damos más ancho para que quepa el texto de la UDI */
-    height: auto;              /* El alto se calcula solo de forma proporcional para no deformarlo */
-    border-radius: 4px;        /* Cambiamos el círculo por esquinas apenas redondeadas muy sutiles */
-    object-fit: contain;       /* Asegura que todo el logo quepa entero dentro de la caja sin recortarse */
-    background-color: rgba(255, 255, 255, 0.08);  /* Le ponemos fondo blanco detrás por si la barra de la ventana estorba */
-    padding: 4px 8px;          /* Espacio libre alrededor del logo para que respire de los bordes */
-    border: 1px solid #cbd5e1; /* Un borde gris delgadito para que se vea como una mini tarjeta oficial */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Mantenemos una sombra suave para el efecto flotante */
+    width: 130px !important;
+    max-width: 130px !important;
+    height: auto !important;
+    max-height: 42px !important;
+    border-radius: 4px;
+    object-fit: contain;
+    display: block;
 }
+
+/* PANEL SECRETO DE ACCESO RÁPIDO (SUSTENTACIÓN) */
+#panel-acceso-rapido {
+    display: none; /* Oculto por defecto hasta pulsar Ctrl + Shift + D */
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    animation: aparecerSuave 0.25s ease-in-out;
+}
+
+@keyframes aparecerSuave {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 
 

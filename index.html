@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Gestión de Prácticas</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="pantalla-fondo" style="
+    background-image: linear-gradient(rgba(15, 16, 17, 0.30), rgba(15, 23, 42, 0.50)), url('images/fondo-portada1.jpg');
+    background-size: cover;
+    background-position: center;
+">
+
+    <div style="
+        width: 90%; 
+        max-width: 480px;
+        background-color: rgba(15, 23, 42, 0.60) !important; 
+        backdrop-filter: blur(12px); 
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        box-sizing: border-box;
+    ">
+
+        <img src="images/logo.png" alt="Logo UDI" class="logo-login-circular">
+
+        <h1 style="color: #ffffff !important; font-size: 26px; margin-bottom: 10px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            Sistema de Gestión de Prácticas
+        </h1>
+        <p style="color: #e2e8f0 !important; font-size: 14px; margin-bottom: 30px;">
+            Ingresa tus credenciales autorizadas por la institución
+        </p>
+        
+        <form id="form-login">
+            <div class="grupo-campo">
+                <label for="email">Correo Electrónico:</label>
+                <input type="email" id="email" placeholder="ejemplo@udi.edu.co" required autocomplete="username">
+            </div>
+
+            <div class="grupo-campo">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" placeholder="Ingresa tu clave" required autocomplete="current-password">
+            </div>
+
+            <div class="grupo-campo">
+                <label for="rol">Selecciona tu Rol Académico:</label>
+                <select id="rol" required>
+                    <option value="">-- Elige una opción --</option>
+                    <option value="estudiante">Estudiante de Práctica</option>
+                    <option value="docente">Docente Asesor / Tutor Académico</option>
+                    <option value="coordinador">Coordinador de Práctica</option>
+                    <option value="director">Director de Programa</option>
+                    <option value="institucion">Institución Receptora</option>
+                </select>
+            </div>
+
+            <button type="submit" class="boton-ingresar" style="width: 100%; border: none; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; padding: 12px; border-radius: 6px;">
+                Iniciar Sesión
+            </button>
+
+            <!-- Acceso rápido para sustentación y video demostrativo (Oculto por defecto: Ctrl + Shift + D) -->
+            <div id="panel-acceso-rapido" style="display: none; margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.07); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.25);">
+                <div style="color: #93c5fd; font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>⚡ Acceso Rápido por Rol (Sustentación):</span>
+                    <span style="font-size: 10px; opacity: 0.7; color: #cbd5e1;">[Ctrl+Shift+D]</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <button type="button" onclick="cargarDemo('estudiante')" style="background: #2563eb; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Estudiante</button>
+                    <button type="button" onclick="cargarDemo('docente')" style="background: #0d9488; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">👨‍🏫 Tutor Académico</button>
+                    <button type="button" onclick="cargarDemo('coordinador')" style="background: #7c3aed; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">📋 Coordinador</button>
+                    <button type="button" onclick="cargarDemo('institucion')" style="background: #ea580c; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🏫 Institución</button>
+                    <button type="button" onclick="cargarDemo('director')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; grid-column: span 2; font-weight: 600;">👔 Director de Programa</button>
+                </div>
+            </div>
+
+            <!-- Radicación inicial que procesará el Coordinador / Director -->
+            <a href="#" onclick="abrirModalRadicar(event)" style="display: block; text-align: center; margin-top: 15px; color: #38bdf8 !important; text-decoration: none; font-size: 13px; font-weight: 600; opacity: 0.95;">
+                📝 ¿Eres nuevo estudiante? Radicar solicitud de práctica aquí
+            </a>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL DE RADICACIÓN DE NUEVO ESTUDIANTE (HTML Y JS VANILLA) -->
+<div id="modal-radicar" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+    <div style="background: #ffffff; color: #1e293b; max-width: 480px; width: 100%; border-radius: 12px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); text-align: left; position: relative;">
+        <h3 style="margin-top: 0; color: #1e3a8a; font-size: 20px;">Radicación de Solicitud de Práctica</h3>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
+            Diligencia tus datos para ingresar al registro de postulaciones del sistema (UML: Estudiante).
+        </p>
+        <form id="form-radicar-solicitud">
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Nombre Completo:</label>
+                <input type="text" id="sol-nombre" required placeholder="Ej: Camilo Andrés Rangel" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Correo Institucional UDI:</label>
+                <input type="email" id="sol-correo" required placeholder="ejemplo@udi.edu.co" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Semestre Académico:</label>
+                <select id="sol-semestre" required style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    <option value="6">6° Semestre - Observación Pedagógica</option>
+                    <option value="7" selected>7° Semestre - Inmersión</option>
+                    <option value="8">8° Semestre - Práctica Integral</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Contraseña para tu cuenta:</label>
+                <input type="password" id="sol-clave" required placeholder="Crea una contraseña" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="cerrarModalRadicar()" style="background: #e2e8f0; color: #475569; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="background: #1e3a8a; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">Radicar Solicitud</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="pie-pagina-institucional">
+    <img src="images/logo1.png" alt="Logo UDI" style="width: 130px; max-width: 130px; max-height: 40px; object-fit: contain;">
+</footer>
+
+<!-- BASE DE DATOS Y PERSISTENCIA (VANILLA JAVASCRIPT) -->
+<script src="js/db.js"></script>
+
+<script>
+    // DOCUMENTACIÓN: Credenciales de demostración rápida para sustentación
+    function cargarDemo(rol) {
+        const campoEmail = document.getElementById('email');
+        const campoClave = document.getElementById('password');
+        const campoRol = document.getElementById('rol');
+
+        if (rol === 'estudiante') {
+            campoEmail.value = 'estudiante@udi.edu.co';
+            campoClave.value = 'estudiante123';
+            campoRol.value = 'estudiante';
+        } else if (rol === 'docente') {
+            campoEmail.value = 'docente@udi.edu.co';
+            campoClave.value = 'docente123';
+            campoRol.value = 'docente';
+        } else if (rol === 'coordinador') {
+            campoEmail.value = 'coordinador@udi.edu.co';
+            campoClave.value = 'coordinador123';
+            campoRol.value = 'coordinador';
+        } else if (rol === 'institucion') {
+            campoEmail.value = 'colegio@udi.edu.co';
+            campoClave.value = 'colegio123';
+            campoRol.value = 'institucion';
+        } else if (rol === 'director') {
+            campoEmail.value = 'director@udi.edu.co';
+            campoClave.value = 'director123';
+            campoRol.value = 'director';
+        }
+    }
+
+    // MANEJADOR DEL FORMULARIO DE LOGIN CONECTADO A LA CAPA DB
+    document.getElementById('form-login').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const emailInput = document.getElementById('email').value.trim();
+        const passwordInput = document.getElementById('password').value;
+        const rolSeleccionado = document.getElementById('rol').value;
+
+        // Autenticación contra la capa de datos Vanilla DB
+        const resultado = DB.login(emailInput, passwordInput, rolSeleccionado);
+
+        if (resultado.success) {
+            window.location.href = resultado.redirectUrl;
+        } else {
+            alert(resultado.message || 'Credenciales incorrectas. Verifica tus datos y el rol.');
+        }
+    });
+
+    // MODAL DE RADICACIÓN DE ASPIRANTE
+    function abrirModalRadicar(e) {
+        if (e) e.preventDefault();
+        const modal = document.getElementById('modal-radicar');
+        modal.style.display = 'flex';
+    }
+
+    function cerrarModalRadicar() {
+        const modal = document.getElementById('modal-radicar');
+        modal.style.display = 'none';
+        document.getElementById('form-radicar-solicitud').reset();
+    }
+
+    // Procesa el registro de aspirante y crea la entidad Estudiante en DB
+    document.getElementById('form-radicar-solicitud').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('sol-nombre').value.trim();
+        const correo = document.getElementById('sol-correo').value.trim().toLowerCase();
+        const semestre = parseInt(document.getElementById('sol-semestre').value);
+        const clave = document.getElementById('sol-clave').value;
+
+        // Validar si el estudiante ya existe
+        const existente = DB.findBy('Estudiante', 'correo', correo);
+        if (existente) {
+            alert('Ya existe un estudiante radicado con este correo electrónico.');
+            return;
+        }
+
+        // Crear registro en la tabla Estudiante del Diagrama de Clases
+        const nuevoEstudiante = {
+            id_estudiante: 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0'),
+            nombre: nombre,
+            correo: correo,
+            semestre: semestre,
+            clave: clave
+        };
+        DB.insert('Estudiante', nuevoEstudiante);
+
+        // Crear registro asociado en Solicitudes de Aspirantes para el Director/Coordinador
+        const postulaciones = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+        postulaciones.push({
+            id: nuevoEstudiante.id_estudiante,
+            nombre: nombre,
+            correo: correo,
+            semestre: semestre,
+            fecha: new Date().toLocaleDateString('es-CO')
+        });
+        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(postulaciones));
+
+        alert(`¡Solicitud radicada con éxito! Tu ID es ${nuevoEstudiante.id_estudiante}. Ahora puedes iniciar sesión con tu correo y contraseña seleccionando el rol "Estudiante de Práctica".`);
+        cerrarModalRadicar();
+
+        // Autocompletar formulario de login
+        document.getElementById('email').value = correo;
+        document.getElementById('password').value = clave;
+        document.getElementById('rol').value = 'estudiante';
+    });
+
+    // ATENCIÓN: Atajo de teclado secreto para sustentación (Ctrl + Shift + D)
+    window.addEventListener('keydown', function(event) {
+        // Detecta exactamente la combinación Ctrl + Shift + D
+        if (event.ctrlKey && event.shiftKey && (event.key === 'D' || event.key === 'd')) {
+            event.preventDefault(); // Evita atajos predeterminados del navegador
+            const panel = document.getElementById('panel-acceso-rapido');
+            if (panel) {
+                // Alterna entre visible (block) e invisible (none)
+                if (panel.style.display === 'none' || panel.style.display === '') {
+                    panel.style.display = 'block';
+                } else {
+                    panel.style.display = 'none';
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>
