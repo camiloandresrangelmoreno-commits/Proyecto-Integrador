@@ -222,6 +222,58 @@ const DB = {
         }
         data[tableName].push(item);
         this.saveAll(data);
+
+        // Sincronización en segundo plano con el Backend Node.js y Supabase
+        try {
+            if (tableName === 'Estudiante') {
+                fetch('/api/academica/estudiantes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        documento: item.documento || item.id_estudiante,
+                        nombre: item.nombre,
+                        apellido: item.apellido || '',
+                        correo: item.correo,
+                        semestre: item.semestre || 7,
+                        telefono: item.telefono || ''
+                    })
+                }).catch(() => {});
+            } else if (tableName === 'Actividad' || tableName === 'Bitacora') {
+                fetch('/api/bitacoras', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_bitacora: item.id_actividad || item.id_bitacora,
+                        id_practica: item.id_practica || 'PRAC-001',
+                        fecha: item.fecha,
+                        descripcion: item.descripcion,
+                        horas: item.horas_realizadas || item.horas || 4,
+                        archivo: item.evidencia || item.archivo || ''
+                    })
+                }).catch(() => {});
+            } else if (tableName === 'Tutor_Academico') {
+                fetch('/api/academica/tutores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                }).catch(() => {});
+            } else if (tableName === 'Institucion') {
+                fetch('/api/academica/instituciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                }).catch(() => {});
+            } else if (tableName === 'Evaluacion') {
+                fetch('/api/seguimiento/evaluaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                }).catch(() => {});
+            }
+        } catch (e) {
+            // Failsafe silencioso
+        }
+
         return item;
     },
 
@@ -233,6 +285,24 @@ const DB = {
         if (index !== -1) {
             data[tableName][index] = { ...data[tableName][index], ...updatedFields };
             this.saveAll(data);
+
+            // Sincronización en segundo plano con el Backend y Supabase
+            try {
+                if (tableName === 'Actividad' || tableName === 'Bitacora') {
+                    fetch(`/api/seguimiento/bitacoras/${keyValue}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedFields)
+                    }).catch(() => {});
+                } else if (tableName === 'Estudiante') {
+                    fetch(`/api/academica/estudiantes/${keyValue}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedFields)
+                    }).catch(() => {});
+                }
+            } catch (e) {}
+
             return data[tableName][index];
         }
         return false;
@@ -246,6 +316,16 @@ const DB = {
         data[tableName] = data[tableName].filter(record => record[keyField] !== keyValue);
         if (data[tableName].length !== originalLength) {
             this.saveAll(data);
+
+            // Sincronización en segundo plano con el Backend y Supabase
+            try {
+                if (tableName === 'Estudiante') {
+                    fetch(`/api/academica/estudiantes/${keyValue}`, { method: 'DELETE' }).catch(() => {});
+                } else if (tableName === 'Institucion') {
+                    fetch(`/api/academica/instituciones/${keyValue}`, { method: 'DELETE' }).catch(() => {});
+                }
+            } catch (e) {}
+
             return true;
         }
         return false;

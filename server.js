@@ -2,7 +2,7 @@
  * SISTEMA INTEGRAL DE GESTIÓN DE PRÁCTICAS ACADÉMICAS - UDI
  * Servidor Backend en Node.js, Express y Nodemon
  * 
- * Gestiona 2 Bases de Datos / Esquemas Relacionales en la Nube:
+ * Gestiona 2 Bases de Datos / Esquemas Relacionales en la Nube (Supabase):
  * 1. dbAcademica (Estudiante, Tutor_Academico, Institucion, Tipo_Practica, Practica)
  * 2. dbSeguimiento (Bitacora, Evidencia, Evaluacion)
  */
@@ -21,8 +21,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
+const PORT = 3000;
+const HOST = 'localhost';
 
 // Middlewares estándar de Express
 app.use(cors());
@@ -37,135 +37,180 @@ app.use('/js', express.static(path.join(__dirname, 'js')));
 // ============================================================================
 // ENDPOINTS DE MONITOREO Y SALUD DE LAS 2 BASES DE DATOS EN LA NUBE
 // ============================================================================
-app.get('/api/estado-servidor', (req, res) => {
-    res.json({
-        sistema: 'Sistema de Gestión de Prácticas Pedagógicas UDI',
-        version: '2.0.0 (Segunda Entrega)',
-        entorno: process.env.NODE_ENV || 'development',
-        bases_datos: {
-            db_1: {
-                nombre: dbAcademica.nombre,
-                estado: dbAcademica.estado,
-                entidades: ['Estudiante', 'Tutor_Academico', 'Institucion', 'Tipo_Practica', 'Practica'],
-                total_estudiantes: dbAcademica.getEstudiantes().length,
-                total_practicas: dbAcademica.getPracticas().length
-            },
-            db_2: {
-                nombre: dbSeguimiento.nombre,
-                estado: dbSeguimiento.estado,
-                entidades: ['Bitacora', 'Evidencia', 'Evaluacion'],
-                total_bitacoras: dbSeguimiento.getBitacoras().length,
-                total_evaluaciones: dbSeguimiento.getEvaluaciones().length
+app.get('/api/estado-servidor', async (req, res) => {
+    try {
+        const estudiantes = await dbAcademica.getEstudiantes();
+        const practicas = await dbAcademica.getPracticas();
+        const bitacoras = await dbSeguimiento.getBitacoras();
+        const evaluaciones = await dbSeguimiento.getEvaluaciones();
+
+        res.json({
+            sistema: 'Sistema de Gestión de Prácticas Pedagógicas UDI',
+            version: '2.0.0 (Segunda Entrega)',
+            entorno: process.env.NODE_ENV || 'development',
+            bases_datos: {
+                db_1: {
+                    nombre: dbAcademica.nombre,
+                    estado: dbAcademica.estado,
+                    entidades: ['Estudiante', 'Tutor_Academico', 'Institucion', 'Tipo_Practica', 'Practica'],
+                    total_estudiantes: estudiantes.length,
+                    total_practicas: practicas.length
+                },
+                db_2: {
+                    nombre: dbSeguimiento.nombre,
+                    estado: dbSeguimiento.estado,
+                    entidades: ['Bitacora', 'Evidencia', 'Evaluacion'],
+                    total_bitacoras: bitacoras.length,
+                    total_evaluaciones: evaluaciones.length
+                }
             }
-        }
-    });
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // ============================================================================
-// RUTAS API: BASE DE DATOS 1 (GESTIÓN ACADÉMICA)
+// RUTAS API: BASE DE DATOS 1 (GESTIÓN ACADÉMICA - SUPABASE)
 // ============================================================================
 
 // --- Estudiantes (CRUD) ---
-app.get('/api/academica/estudiantes', (req, res) => {
-    res.json(dbAcademica.getEstudiantes());
+app.get('/api/academica/estudiantes', async (req, res) => {
+    try {
+        const estudiantes = await dbAcademica.getEstudiantes();
+        res.json(estudiantes);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post('/api/academica/estudiantes', (req, res) => {
+app.post('/api/academica/estudiantes', async (req, res) => {
     try {
         const { documento, nombre, apellido, correo, semestre, telefono } = req.body;
-        if (!documento || !nombre || !apellido || !correo || !semestre) {
-            return res.status(400).json({ error: 'Campos obligatorios incompletos' });
+        if (!documento || !nombre || !correo || !semestre) {
+            return res.status(400).json({ error: 'Campos obligatorios incompletos (documento, nombre, correo, semestre)' });
         }
-        const creado = dbAcademica.insertEstudiante({ documento, nombre, apellido, correo, semestre: parseInt(semestre), telefono });
+        const creado = await dbAcademica.insertEstudiante({
+            documento,
+            nombre,
+            apellido: apellido || '',
+            correo,
+            semestre: parseInt(semestre),
+            telefono: telefono || ''
+        });
         res.status(201).json(creado);
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
 });
 
-app.put('/api/academica/estudiantes/:documento', (req, res) => {
-    const actualizado = dbAcademica.updateEstudiante(req.params.documento, req.body);
-    if (!actualizado) return res.status(404).json({ error: 'Estudiante no encontrado' });
-    res.json(actualizado);
+app.put('/api/academica/estudiantes/:documento', async (req, res) => {
+    try {
+        const actualizado = await dbAcademica.updateEstudiante(req.params.documento, req.body);
+        if (!actualizado) return res.status(404).json({ error: 'Estudiante no encontrado' });
+        res.json(actualizado);
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
 });
 
-app.delete('/api/academica/estudiantes/:documento', (req, res) => {
-    const borrado = dbAcademica.deleteEstudiante(req.params.documento);
-    if (!borrado) return res.status(404).json({ error: 'Estudiante no encontrado' });
-    res.json({ mensaje: `Estudiante ${req.params.documento} eliminado exitosamente.` });
+app.delete('/api/academica/estudiantes/:documento', async (req, res) => {
+    try {
+        const borrado = await dbAcademica.deleteEstudiante(req.params.documento);
+        if (!borrado) return res.status(404).json({ error: 'Estudiante no encontrado' });
+        res.json({ mensaje: `Estudiante ${req.params.documento} eliminado exitosamente.` });
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
 });
 
 // --- Tutores Académicos ---
-app.get('/api/academica/tutores', (req, res) => {
-    res.json(dbAcademica.getTutores());
+app.get('/api/academica/tutores', async (req, res) => {
+    try {
+        const tutores = await dbAcademica.getTutores();
+        res.json(tutores);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post('/api/academica/tutores', (req, res) => {
-    const nuevo = dbAcademica.insertTutor(req.body);
-    res.status(201).json(nuevo);
+app.post('/api/academica/tutores', async (req, res) => {
+    try {
+        const nuevo = await dbAcademica.insertTutor(req.body);
+        res.status(201).json(nuevo);
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
 });
 
 // --- Instituciones ---
-app.get('/api/academica/instituciones', (req, res) => {
-    res.json(dbAcademica.getInstituciones());
+app.get('/api/academica/instituciones', async (req, res) => {
+    try {
+        const instituciones = await dbAcademica.getInstituciones();
+        res.json(instituciones);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post('/api/academica/instituciones', (req, res) => {
-    const nuevo = dbAcademica.insertInstitucion(req.body);
-    res.status(201).json(nuevo);
-});
-
-app.put('/api/academica/instituciones/:id', (req, res) => {
-    const actualizado = dbAcademica.updateInstitucion(req.params.id, req.body);
-    if (!actualizado) return res.status(404).json({ error: 'Institución no encontrada' });
-    res.json(actualizado);
-});
-
-app.delete('/api/academica/instituciones/:id', (req, res) => {
-    const borrado = dbAcademica.deleteInstitucion(req.params.id);
-    if (!borrado) return res.status(404).json({ error: 'Institución no encontrada' });
-    res.json({ mensaje: 'Institución eliminada' });
+app.post('/api/academica/instituciones', async (req, res) => {
+    try {
+        const nuevo = await dbAcademica.insertInstitucion(req.body);
+        res.status(201).json(nuevo);
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
 });
 
 // --- Tipos de Práctica ---
-app.get('/api/academica/tipos-practica', (req, res) => {
-    res.json(dbAcademica.getTiposPractica());
+app.get('/api/academica/tipos-practica', async (req, res) => {
+    try {
+        const tipos = await dbAcademica.getTiposPractica();
+        res.json(tipos);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // --- Prácticas (Relación Central) ---
-app.get('/api/academica/practicas', (req, res) => {
-    res.json(dbAcademica.getPracticas());
+app.get('/api/academica/practicas', async (req, res) => {
+    try {
+        const practicas = await dbAcademica.getPracticas();
+        res.json(practicas);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post('/api/academica/practicas', (req, res) => {
+app.post('/api/academica/practicas', async (req, res) => {
     try {
-        const nueva = dbAcademica.insertPractica(req.body);
+        const nueva = await dbAcademica.insertPractica(req.body);
         res.status(201).json(nueva);
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
 });
 
-app.put('/api/academica/practicas/:id', (req, res) => {
-    const act = dbAcademica.updatePractica(req.params.id, req.body);
-    if (!act) return res.status(404).json({ error: 'Práctica no encontrada' });
-    res.json(act);
-});
-
 // ============================================================================
-// RUTAS API: BASE DE DATOS 2 (SEGUIMIENTO DE PRÁCTICAS)
+// RUTAS API: BASE DE DATOS 2 (SEGUIMIENTO DE PRÁCTICAS - SUPABASE)
 // ============================================================================
 
 // --- Bitácoras (Diagrama de Secuencia UML: POST /api/bitacoras HTTP 201 Created) ---
-app.get('/api/seguimiento/bitacoras', (req, res) => {
-    res.json(dbSeguimiento.getBitacoras());
+app.get('/api/seguimiento/bitacoras', async (req, res) => {
+    try {
+        const bitacoras = await dbSeguimiento.getBitacoras();
+        res.json(bitacoras);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], (req, res) => {
+app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], async (req, res) => {
     try {
         const { id_practica, fecha, descripcion, horas, archivo } = req.body;
         
-        const total = dbSeguimiento.getBitacoras().length;
+        const bitacorasActuales = await dbSeguimiento.getBitacoras();
+        const total = bitacorasActuales.length;
         const nuevoId = req.body.id_bitacora || `BIT-${String(total + 1).padStart(3, '0')}`;
         
         const nuevaBitacora = {
@@ -177,12 +222,13 @@ app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], (req, res) => {
             id_practica: id_practica || 'PRAC-001'
         };
 
-        const creada = dbSeguimiento.insertBitacora(nuevaBitacora);
+        const creada = await dbSeguimiento.insertBitacora(nuevaBitacora);
 
         // Si se envió archivo de evidencia, se crea la entidad Evidencia asociada (Composición UML)
         if (archivo) {
-            const idEv = `EVI-${String(dbSeguimiento.getEvidencias().length + 1).padStart(3, '0')}`;
-            dbSeguimiento.insertEvidencia({
+            const evidenciasActuales = await dbSeguimiento.getEvidencias();
+            const idEv = `EVI-${String(evidenciasActuales.length + 1).padStart(3, '0')}`;
+            await dbSeguimiento.insertEvidencia({
                 id_evidencia: idEv,
                 fecha: nuevaBitacora.fecha,
                 nombre: `Evidencia_${nuevaBitacora.id_bitacora}`,
@@ -204,20 +250,29 @@ app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], (req, res) => {
     }
 });
 
-app.put('/api/seguimiento/bitacoras/:id', (req, res) => {
-    const actualizada = dbSeguimiento.updateBitacora(req.params.id, req.body);
-    if (!actualizada) return res.status(404).json({ error: 'Bitácora no encontrada' });
-    res.json(actualizada);
+app.put('/api/seguimiento/bitacoras/:id', async (req, res) => {
+    try {
+        const actualizada = await dbSeguimiento.updateBitacora(req.params.id, req.body);
+        if (!actualizada) return res.status(404).json({ error: 'Bitácora no encontrada' });
+        res.json(actualizada);
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
 });
 
 // --- Evidencias ---
-app.get('/api/seguimiento/evidencias', (req, res) => {
-    res.json(dbSeguimiento.getEvidencias());
+app.get('/api/seguimiento/evidencias', async (req, res) => {
+    try {
+        const evidencias = await dbSeguimiento.getEvidencias();
+        res.json(evidencias);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post('/api/seguimiento/evidencias', (req, res) => {
+app.post('/api/seguimiento/evidencias', async (req, res) => {
     try {
-        const nueva = dbSeguimiento.insertEvidencia(req.body);
+        const nueva = await dbSeguimiento.insertEvidencia(req.body);
         res.status(201).json(nueva);
     } catch (e) {
         res.status(400).json({ error: e.message });
@@ -225,13 +280,18 @@ app.post('/api/seguimiento/evidencias', (req, res) => {
 });
 
 // --- Evaluaciones ---
-app.get('/api/seguimiento/evaluaciones', (req, res) => {
-    res.json(dbSeguimiento.getEvaluaciones());
+app.get('/api/seguimiento/evaluaciones', async (req, res) => {
+    try {
+        const evaluaciones = await dbSeguimiento.getEvaluaciones();
+        res.json(evaluaciones);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post('/api/seguimiento/evaluaciones', (req, res) => {
+app.post('/api/seguimiento/evaluaciones', async (req, res) => {
     try {
-        const nueva = dbSeguimiento.insertEvaluacion(req.body);
+        const nueva = await dbSeguimiento.insertEvaluacion(req.body);
         res.status(201).json(nueva);
     } catch (e) {
         res.status(400).json({ error: e.message });
@@ -247,7 +307,7 @@ app.get('/', (req, res) => {
 app.listen(PORT, HOST, () => {
     console.log(`=======================================================`);
     console.log(`  SISTEMA DE GESTIÓN DE PRÁCTICAS UDI (BACKEND ACTIVO) `);
-    console.log(`  Servidor Node.js + Express en: http://${HOST}:${PORT}`);
+    console.log(`  Servidor Node.js + Express en: http://localhost:${PORT}`);
     console.log(`  BD 1: ${dbAcademica.nombre}`);
     console.log(`  BD 2: ${dbSeguimiento.nombre}`);
     console.log(`=======================================================`);
