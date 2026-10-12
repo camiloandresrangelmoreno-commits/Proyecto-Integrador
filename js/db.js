@@ -14,8 +14,8 @@
  * asíncrona bidireccional con el backend en Node.js y PostgreSQL en Supabase.
  */
 
-// Clave única para aislamiento de la memoria local en el navegador (V2 con prácticas diferenciadas por estudiante)
-const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V2';
+// Clave única para aislamiento de la memoria local en el navegador (V3 con asignación manual y explícita de prácticas)
+const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V3';
 
 // Estructura semilla inicial modelada exactamente según el Diagrama de Clases UML
 const datosSemillaInicial = {
@@ -300,32 +300,6 @@ const DB = {
                 if (!datosGuardados.Convenio) {
                     datosGuardados.Convenio = datosSemillaInicial.Convenio;
                     huboActualizaciones = true;
-                }
-                // Asegurar que las prácticas de los alumnos registrados tengan sus códigos individuales
-                if (Array.isArray(datosGuardados.Estudiante) && Array.isArray(datosGuardados.Practica)) {
-                    datosGuardados.Estudiante.forEach((est, idx) => {
-                        let prac = datosGuardados.Practica.find(p => p.id_estudiante === est.id_estudiante || p.id_estudiante === est.documento);
-                        if (!prac) {
-                            const nuevoNum = String(datosGuardados.Practica.length + 1).padStart(3, '0');
-                            const tutores = datosGuardados.Tutor_Academico || datosSemillaInicial.Tutor_Academico;
-                            const colegios = datosGuardados.Institucion || datosSemillaInicial.Institucion;
-                            const tut = tutores[idx % tutores.length] || { documento: 'DOC-1098234' };
-                            const col = colegios[idx % colegios.length] || { id_institucion: 'INST-01' };
-                            const sem = parseInt(est.semestre) || 7;
-                            prac = {
-                                id_practica: `PRAC-${nuevoNum}`,
-                                id_estudiante: est.id_estudiante,
-                                documento: tut.documento || tut.documento_tu,
-                                id_institucion: col.id_institucion,
-                                id_tipo: sem <= 4 ? 'TP-01' : (sem <= 7 ? 'TP-02' : 'TP-03'),
-                                estado: 'En Curso',
-                                fecha_inicio: '2026-03-01',
-                                horas_objetivo: sem >= 8 ? 80 : (sem >= 5 ? 60 : 50)
-                            };
-                            datosGuardados.Practica.push(prac);
-                            huboActualizaciones = true;
-                        }
-                    });
                 }
                 if (huboActualizaciones) {
                     localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosGuardados));

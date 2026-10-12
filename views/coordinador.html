@@ -146,18 +146,48 @@
                     <div class="grupo-campo" id="grupo-mat-semestre">
                         <label for="mat-semestre" style="color: #334155 !important;">Semestre (Aplica para Estudiantes):</label>
                         <select id="mat-semestre" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
-                            <option value="1">1° Semestre</option>
-                            <option value="2">2° Semestre</option>
-                            <option value="3">3° Semestre</option>
-                            <option value="4">4° Semestre</option>
-                            <option value="5">5° Semestre</option>
-                            <option value="6">6° Semestre - Observación Pedagógica</option>
-                            <option value="7" selected>7° Semestre - Inmersión Pedagógica</option>
-                            <option value="8">8° Semestre - Práctica Integral</option>
+                            <option value="6">6° Semestre - Observación Pedagógica (TP-01)</option>
+                            <option value="7" selected>7° Semestre - Inmersión Pedagógica (TP-02)</option>
+                            <option value="8">8° Semestre - Práctica Integral (TP-03)</option>
                             <option value="9">9° Semestre - Profundización</option>
                             <option value="10">10° Semestre - Grado y Culminación</option>
+                            <option value="1">1° a 5° Semestre - Ciclos Previos</option>
                         </select>
                     </div>
+
+                    <!-- ASIGNACIÓN EXPLÍCITA DE PRÁCTICA (SELECCIONADA POR EL COORDINADOR, NADA AUTOMÁTICO) -->
+                    <div id="grupo-mat-practica-config" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h4 style="margin: 0; color: #1e3a8a; font-size: 13px; text-transform: uppercase;">Asignación de Práctica (UML: Practica):</h4>
+                            <span style="font-size: 11px; color: #64748b; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">Selección Manual</span>
+                        </div>
+                        <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 12px;">
+                            Puedes asignar el tutor y colegio receptor ahora mismo, o dejarlo pendiente para asignarlo posteriormente desde la pestaña de Prácticas.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                            <div class="grupo-campo" style="margin: 0;">
+                                <label for="mat-tutor" style="color: #334155 !important; font-size: 12px; font-weight: bold;">Tutor Académico Asesor:</label>
+                                <select id="mat-tutor" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 12px;">
+                                    <option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>
+                                </select>
+                            </div>
+                            <div class="grupo-campo" style="margin: 0;">
+                                <label for="mat-institucion" style="color: #334155 !important; font-size: 12px; font-weight: bold;">Institución Receptora (Colegio):</label>
+                                <select id="mat-institucion" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 12px;">
+                                    <option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grupo-campo" style="margin: 0;">
+                            <label for="mat-tipo" style="color: #334155 !important; font-size: 12px; font-weight: bold;">Modalidad / Tipo de Práctica:</label>
+                            <select id="mat-tipo" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 12px;">
+                                <option value="TP-01">TP-01: Práctica Pedagógica de Observación</option>
+                                <option value="TP-02" selected>TP-02: Práctica Pedagógica de Inmersión</option>
+                                <option value="TP-03">TP-03: Práctica Pedagógica Integral</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <button type="submit" style="background-color: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px;">
                         Matricular y Guardar Credenciales
                     </button>
@@ -176,6 +206,7 @@
                             <th>Aspirante</th>
                             <th>Correo Electrónico</th>
                             <th>Semestre</th>
+                            <th>Colegio Preferido</th>
                             <th>Fecha Radicado</th>
                             <th>Estado</th>
                             <th>Acciones de Coordinación</th>
@@ -522,6 +553,51 @@
     </div>
 </div>
 
+<!-- Modal Aprobar Solicitud y Asignar Práctica (Manual, sin asignaciones automáticas) -->
+<div id="modal-aprobar-solicitud" class="modal-fondo">
+    <div class="modal-caja" style="max-width: 520px;">
+        <h3 style="margin-top: 0; color: #0f766e; display: flex; align-items: center; gap: 8px;">
+            <span>✓ Aprobar Postulación y Asignar Práctica</span>
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin-top: -6px; margin-bottom: 16px;">
+            El Coordinador revisa los datos del aspirante y designa de forma deliberada el tutor y colegio receptor. Nada se asigna solo.
+        </p>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; line-height: 1.6;">
+            <div><strong>Aspirante:</strong> <span id="aprob-info-nombre">-</span></div>
+            <div><strong>Correo UDI:</strong> <span id="aprob-info-correo">-</span></div>
+            <div><strong>Semestre:</strong> <span id="aprob-info-semestre">-</span></div>
+            <div><strong>Colegio Solicitado / Preferencia:</strong> <span id="aprob-info-preferencia" style="color: #1e3a8a; font-weight: bold;">-</span></div>
+        </div>
+        <form id="form-aprobar-solicitud">
+            <input type="hidden" id="aprob-idx">
+            <div class="grupo-campo">
+                <label style="color: #334155 !important; font-weight: bold; font-size: 12px;">Tutor Académico Asesor Asignado:</label>
+                <select id="aprob-tutor" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                    <option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>
+                </select>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important; font-weight: bold; font-size: 12px;">Institución Receptora (Colegio Asignado):</label>
+                <select id="aprob-institucion" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                    <option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>
+                </select>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important; font-weight: bold; font-size: 12px;">Modalidad de Práctica Pedagógica:</label>
+                <select id="aprob-tipo" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                    <option value="TP-01">TP-01: Observación Pedagógica</option>
+                    <option value="TP-02" selected>TP-02: Inmersión Pedagógica</option>
+                    <option value="TP-03">TP-03: Práctica Integral</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="cerrarModal('modal-aprobar-solicitud')" style="padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 8px 18px; background: #0f766e; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Confirmar y Matricular</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <footer class="pie-pagina-institucional">
     <img src="../images/logo1.png" alt="Logo UDI">
 </footer>
@@ -615,24 +691,49 @@
         document.getElementById('total-tutores').innerText = tutores.length;
         document.getElementById('total-practicas').innerText = practicas.length;
 
-        // TAB 1: SOLICITUDES DE ASPIRANTES
+        // Cargar opciones en el formulario de matrícula oficial para asignación manual
+        const selMatTutor = document.getElementById('mat-tutor');
+        if (selMatTutor) {
+            const valPrevio = selMatTutor.value;
+            selMatTutor.innerHTML = '<option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>' + 
+                tutores.map(t => `<option value="${t.documento}">${t.nombre} (${t.documento})</option>`).join('');
+            if (valPrevio) selMatTutor.value = valPrevio;
+        }
+
+        const selMatInst = document.getElementById('mat-institucion');
+        if (selMatInst) {
+            const valPrevioInst = selMatInst.value;
+            selMatInst.innerHTML = '<option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>' + 
+                instituciones.map(i => `<option value="${i.id_institucion}">${i.nombre_colegio}</option>`).join('');
+            if (valPrevioInst) selMatInst.value = valPrevioInst;
+        }
+
+        // TAB 1: SOLICITUDES DE ASPIRANTES (Con colegio preferido y revisión manual)
         const tbodySol = document.querySelector('#tabla-solicitudes-aspirantes tbody');
         tbodySol.innerHTML = '';
         if (solicitudes.length === 0) {
-            tbodySol.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 15px;">No hay solicitudes de nuevos estudiantes pendientes de aprobación.</td></tr>`;
+            tbodySol.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 15px;">No hay solicitudes de nuevos estudiantes pendientes de aprobación.</td></tr>`;
         } else {
             solicitudes.forEach((s, idx) => {
+                const instPref = instituciones.find(i => i.id_institucion === s.id_institucion_preferencia);
+                const textoPref = instPref 
+                    ? `<span style="color:#1e3a8a; font-weight:600;">${instPref.nombre_colegio}</span>` 
+                    : (s.id_institucion_preferencia === 'POR_ASIGNAR' 
+                        ? '<span style="color:#64748b; font-style:italic;">A criterio Coordinador</span>' 
+                        : (s.id_institucion_preferencia || '<span style="color:#94a3b8;">Sin preferencia</span>'));
+
                 const fila = `
                     <tr>
                         <td><strong>${s.nombre}</strong></td>
                         <td>${s.correo}</td>
                         <td>Semestre ${s.semestre || '7'}</td>
+                        <td>${textoPref}</td>
                         <td>${s.fecha || 'Reciente'}</td>
                         <td><span style="background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">⏳ En Espera</span></td>
                         <td>
                             <div style="display: flex; gap: 6px;">
-                                <button onclick="procesarAltaAspirante(${idx})" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
-                                    ✓ Aceptar y Matricular
+                                <button onclick="abrirModalAprobarAspirante(${idx})" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                                    ✓ Revisar y Aprobar
                                 </button>
                                 <button onclick="rechazarSolicitudAspirante(${idx})" style="background-color: #b91c1c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
                                     ✕ Rechazar
@@ -651,7 +752,9 @@
         estudiantes.forEach(est => {
             const p = practicas.find(pr => pr.id_estudiante === est.id_estudiante || pr.id_estudiante === est.documento);
             const colegio = p ? instituciones.find(c => c.id_institucion === p.id_institucion) : null;
-            const asignacionTexto = p ? `<span style="font-weight:bold; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${p.id_practica}</span> <small style="display:block; color:#475569;">${colegio ? colegio.nombre_colegio : p.id_institucion}</small>` : '<span style="color:#b45309; font-weight:bold;">Por Asignar Práctica</span>';
+            const asignacionTexto = p 
+                ? `<span style="font-weight:bold; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${p.id_practica}</span> <small style="display:block; color:#475569;">${colegio ? colegio.nombre_colegio : p.id_institucion}</small>` 
+                : `<div style="display:inline-flex; align-items:center; gap:6px;"><span style="color:#b45309; font-weight:bold; font-size:12px;">Por Asignar Práctica</span><button type="button" onclick="abrirModalAsignarPracticaParaEstudiante('${est.id_estudiante}')" style="background:#2563eb; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">➕ Asignar</button></div>`;
 
             const fila = `
                 <tr>
@@ -810,27 +913,28 @@
                 nombre, correo, semestre: semestreSel, clave
             });
 
-            // Asignar práctica individual y única automáticamente al estudiante matriculado
-            const practicas = DB.getTable('Practica');
-            const nuevoIdPrac = 'PRAC-' + String(practicas.length + 1).padStart(3, '0');
-            const tutores = DB.getTable('Tutor_Academico');
-            const instituciones = DB.getTable('Institucion');
-            const tut = tutores[practicas.length % (tutores.length || 1)] || { documento: 'DOC-1098234' };
-            const col = instituciones[practicas.length % (instituciones.length || 1)] || { id_institucion: 'INST-01' };
-            const idTipo = semestreSel <= 4 ? 'TP-01' : (semestreSel <= 7 ? 'TP-02' : 'TP-03');
+            // Asignación explícita seleccionada por el usuario (NADA AUTOMÁTICO)
+            const tutorSeleccionado = document.getElementById('mat-tutor').value;
+            const institucionSeleccionada = document.getElementById('mat-institucion').value;
+            const tipoSeleccionado = document.getElementById('mat-tipo').value || (semestreSel <= 6 ? 'TP-01' : (semestreSel === 7 ? 'TP-02' : 'TP-03'));
 
-            DB.insert('Practica', {
-                id_practica: nuevoIdPrac,
-                id_estudiante: nuevoId,
-                documento: tut.documento || tut.documento_tu || 'DOC-1098234',
-                id_institucion: col.id_institucion || 'INST-01',
-                id_tipo: idTipo,
-                estado: 'En Curso',
-                fecha_inicio: new Date().toISOString().split('T')[0],
-                horas_objetivo: semestreSel >= 8 ? 80 : (semestreSel >= 5 ? 60 : 50)
-            });
-
-            alert(`Estudiante ${nombre} (${nuevoId}) matriculado exitosamente con código de práctica ${nuevoIdPrac} en Semestre ${semestreSel}.`);
+            if (tutorSeleccionado && institucionSeleccionada) {
+                const practicas = DB.getTable('Practica');
+                const nuevoIdPrac = 'PRAC-' + String(practicas.length + 1).padStart(3, '0');
+                DB.insert('Practica', {
+                    id_practica: nuevoIdPrac,
+                    id_estudiante: nuevoId,
+                    documento: tutorSeleccionado,
+                    id_institucion: institucionSeleccionada,
+                    id_tipo: tipoSeleccionado,
+                    estado: 'En Curso',
+                    fecha_inicio: new Date().toISOString().split('T')[0],
+                    horas_objetivo: semestreSel >= 8 ? 80 : (semestreSel >= 7 ? 60 : 50)
+                });
+                alert(`Estudiante ${nombre} (${nuevoId}) matriculado exitosamente con código de práctica ${nuevoIdPrac}.\nTutor: ${tutorSeleccionado}\nColegio: ${institucionSeleccionada}`);
+            } else {
+                alert(`Estudiante ${nombre} (${nuevoId}) matriculado exitosamente en el sistema.\n\n⚠️ Estado: Pendiente de asignación de práctica. Puedes asignarle tutor y colegio en cualquier momento desde la pestaña "Asignación de Prácticas".`);
+            }
         } else if (rol === 'docente') {
             const nuevoDoc = 'DOC-' + Math.floor(1000000 + Math.random() * 9000000);
             DB.insert('Tutor_Academico', {
@@ -848,24 +952,78 @@
         }
 
         document.getElementById('form-matricular-oficial').reset();
+        const grupoSem = document.getElementById('grupo-mat-semestre');
+        const grupoPrac = document.getElementById('grupo-mat-practica-config');
+        if (grupoSem) grupoSem.style.display = 'block';
+        if (grupoPrac) grupoPrac.style.display = 'block';
         cargarTodo();
     });
 
+    // Alternar campos de práctica y semestre según rol seleccionado en formulario de matrícula
+    document.getElementById('mat-rol').addEventListener('change', function() {
+        const esEstudiante = this.value === 'estudiante';
+        const grupoSem = document.getElementById('grupo-mat-semestre');
+        const grupoPrac = document.getElementById('grupo-mat-practica-config');
+        if (grupoSem) grupoSem.style.display = esEstudiante ? 'block' : 'none';
+        if (grupoPrac) grupoPrac.style.display = esEstudiante ? 'block' : 'none';
+    });
+
     /**
-     * Procesa y acepta la solicitud de un aspirante en espera.
-     * Inserta formalmente al alumno en la tabla Estudiante asignándole un ID institucional
-     * y conservando la clave que él mismo definió para que ahora sí pueda ingresar al sistema.
+     * Despliega el modal de aprobación de solicitud para que el Coordinador
+     * asigne deliberadamente tutor y colegio receptor (sin automatismos).
      * 
-     * @function procesarAltaAspirante
-     * @param {number} idx - Índice de la solicitud dentro del arreglo almacenado.
+     * @function abrirModalAprobarAspirante
+     * @param {number} idx - Índice de la solicitud en solicitudes_aspirantes.
      * @returns {void}
      */
-    function procesarAltaAspirante(idx) {
+    function abrirModalAprobarAspirante(idx) {
         let solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
         const item = solicitudes[idx];
         if (!item) return;
 
-        // Validar si por alguna razón ya existe en la tabla Estudiante
+        document.getElementById('aprob-idx').value = idx;
+        document.getElementById('aprob-info-nombre').innerText = item.nombre;
+        document.getElementById('aprob-info-correo').innerText = item.correo;
+        document.getElementById('aprob-info-semestre').innerText = `Semestre ${item.semestre || '7'}`;
+
+        const instituciones = DB.getTable('Institucion');
+        const tutores = DB.getTable('Tutor_Academico');
+
+        const instPref = instituciones.find(i => i.id_institucion === item.id_institucion_preferencia);
+        const textoPref = instPref 
+            ? `${instPref.nombre_colegio} (${instPref.id_institucion})` 
+            : (item.id_institucion_preferencia === 'POR_ASIGNAR' 
+                ? 'A criterio del Coordinador' 
+                : (item.id_institucion_preferencia || 'Sin preferencia especificada'));
+        document.getElementById('aprob-info-preferencia').innerText = textoPref;
+
+        // Llenar selectores del modal de aprobación
+        const selTutor = document.getElementById('aprob-tutor');
+        selTutor.innerHTML = '<option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>' + 
+            tutores.map(t => `<option value="${t.documento}">${t.nombre} (${t.documento})</option>`).join('');
+
+        const selInst = document.getElementById('aprob-institucion');
+        selInst.innerHTML = '<option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>' + 
+            instituciones.map(i => `<option value="${i.id_institucion}" ${i.id_institucion === item.id_institucion_preferencia ? 'selected' : ''}>${i.nombre_colegio} (${i.id_institucion})</option>`).join('');
+
+        const selTipo = document.getElementById('aprob-tipo');
+        const sem = parseInt(item.semestre) || 7;
+        selTipo.value = sem <= 6 ? 'TP-01' : (sem === 7 ? 'TP-02' : 'TP-03');
+
+        abrirModal('modal-aprobar-solicitud');
+    }
+
+    /**
+     * Manejador de confirmación del modal de aprobación de solicitud.
+     */
+    document.getElementById('form-aprobar-solicitud').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const idx = parseInt(document.getElementById('aprob-idx').value);
+        let solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+        const item = solicitudes[idx];
+        if (!item) return;
+
+        // 1. Dar de alta en tabla Estudiante
         let estudiante = DB.findBy('Estudiante', 'correo', item.correo);
         let idAsignado = '';
         if (!estudiante) {
@@ -875,49 +1033,68 @@
                 id_estudiante: nuevoId,
                 nombre: item.nombre,
                 correo: item.correo,
-                semestre: item.semestre || 7,
+                semestre: parseInt(item.semestre) || 7,
                 clave: item.clave || 'estudiante123'
             });
         } else {
             idAsignado = estudiante.id_estudiante;
         }
 
-        // Retirar de la lista de solicitudes en espera
+        // 2. Retirar de solicitudes en espera
         const idEliminar = item.id_solicitud || item.id || item.correo;
         fetch('/api/solicitudes/' + encodeURIComponent(idEliminar), { method: 'DELETE' }).catch(() => {});
         solicitudes.splice(idx, 1);
         localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudes));
 
-        // Asignar práctica individual y única automáticamente al estudiante aprobado
-        const practicas = DB.getTable('Practica');
-        let pracExistente = practicas.find(p => p.id_estudiante === idAsignado);
-        let idPracticaAsignada = '';
-        if (!pracExistente) {
+        // 3. Asignación deliberada según lo escogido en el modal
+        const tutorSel = document.getElementById('aprob-tutor').value;
+        const instSel = document.getElementById('aprob-institucion').value;
+        const tipoSel = document.getElementById('aprob-tipo').value;
+
+        if (tutorSel && instSel) {
+            const practicas = DB.getTable('Practica');
             const nuevoIdPrac = 'PRAC-' + String(practicas.length + 1).padStart(3, '0');
-            idPracticaAsignada = nuevoIdPrac;
-            const tutores = DB.getTable('Tutor_Academico');
-            const instituciones = DB.getTable('Institucion');
-            const tut = tutores[practicas.length % (tutores.length || 1)] || { documento: 'DOC-1098234' };
-            const col = instituciones[practicas.length % (instituciones.length || 1)] || { id_institucion: 'INST-01' };
             const sem = parseInt(item.semestre) || 7;
-            const idTipo = sem <= 4 ? 'TP-01' : (sem <= 7 ? 'TP-02' : 'TP-03');
 
             DB.insert('Practica', {
                 id_practica: nuevoIdPrac,
                 id_estudiante: idAsignado,
-                documento: tut.documento || tut.documento_tu || 'DOC-1098234',
-                id_institucion: col.id_institucion || 'INST-01',
-                id_tipo: idTipo,
+                documento: tutorSel,
+                id_institucion: instSel,
+                id_tipo: tipoSel,
                 estado: 'En Curso',
                 fecha_inicio: new Date().toISOString().split('T')[0],
-                horas_objetivo: sem >= 8 ? 80 : (sem >= 5 ? 60 : 50)
+                horas_objetivo: sem >= 8 ? 80 : (sem >= 7 ? 60 : 50)
             });
+
+            alert(`¡Solicitud de ${item.nombre} APROBADA con éxito!\n\nEstudiante matriculado (ID: ${idAsignado}) con código de práctica ${nuevoIdPrac}.\nTutor Asignado: ${tutorSel}\nInstitución Receptora: ${instSel}\n\nEl estudiante ya puede iniciar sesión en la plataforma con sus credenciales.`);
         } else {
-            idPracticaAsignada = pracExistente.id_practica;
+            alert(`¡Solicitud de ${item.nombre} APROBADA con éxito!\n\nEstudiante matriculado (ID: ${idAsignado}).\n⚠️ Estado: Pendiente de asignación de tutor y colegio receptor.\nPuedes asignarlos formalmente cuando desees desde la pestaña "Asignación de Prácticas".\n\nEl estudiante ya puede iniciar sesión en la plataforma.`);
         }
 
-        alert(`¡Solicitud de ${item.nombre} APROBADA con éxito!\n\nEl estudiante ha sido matriculado formalmente (ID: ${idAsignado}) con su código de práctica individual ${idPracticaAsignada} y ahora ya puede iniciar sesión en la plataforma con su correo y contraseña.`);
+        cerrarModal('modal-aprobar-solicitud');
         cargarTodo();
+    });
+
+    /**
+     * Abre el modal de asignación de práctica preseleccionando al estudiante.
+     * 
+     * @function abrirModalAsignarPracticaParaEstudiante
+     * @param {string} idEstudiante - Identificador del estudiante (ej: EST-2024-05).
+     * @returns {void}
+     */
+    function abrirModalAsignarPracticaParaEstudiante(idEstudiante) {
+        cambiarTab('tab-practicas');
+        abrirModalAsignarPractica();
+        const selEst = document.getElementById('prac-estudiante');
+        if (selEst) selEst.value = idEstudiante;
+    }
+
+    /**
+     * Compatibilidad: Procesa y acepta la solicitud directamente abriendo el modal.
+     */
+    function procesarAltaAspirante(idx) {
+        abrirModalAprobarAspirante(idx);
     }
 
     /**

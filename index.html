@@ -109,17 +109,26 @@
             <div style="margin-bottom: 12px;">
                 <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Semestre Académico:</label>
                 <select id="sol-semestre" required style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
-                    <option value="1">1° Semestre</option>
-                    <option value="2">2° Semestre</option>
-                    <option value="3">3° Semestre</option>
-                    <option value="4">4° Semestre</option>
-                    <option value="5">5° Semestre</option>
-                    <option value="6">6° Semestre - Observación Pedagógica</option>
-                    <option value="7" selected>7° Semestre - Inmersión Pedagógica</option>
-                    <option value="8">8° Semestre - Práctica Integral</option>
+                    <option value="6">6° Semestre - Observación Pedagógica (TP-01)</option>
+                    <option value="7" selected>7° Semestre - Inmersión Pedagógica (TP-02)</option>
+                    <option value="8">8° Semestre - Práctica Integral (TP-03)</option>
                     <option value="9">9° Semestre - Profundización</option>
                     <option value="10">10° Semestre - Grado y Culminación</option>
+                    <option value="1">1° a 5° Semestre - Ciclo Básico Previo</option>
                 </select>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Institución Receptora de Preferencia:</label>
+                <select id="sol-institucion" required style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    <option value="INST-01">Colegio Custodio García Rovira (Bucaramanga)</option>
+                    <option value="INST-02">Colegio Integrado del Carare (Cimitarra)</option>
+                    <option value="INST-03">Escuela Normal Superior de Bucaramanga</option>
+                    <option value="INST-04">Institución Educativa Aurelio Martínez Mutis</option>
+                    <option value="POR_ASIGNAR">A designar por el Coordinador de Prácticas</option>
+                </select>
+                <small style="display: block; color: #64748b; font-size: 11px; margin-top: 3px;">
+                    El Coordinador evaluará tu solicitud y asignará formalmente el colegio y el tutor asesor.
+                </small>
             </div>
             <div style="margin-bottom: 18px;">
                 <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Contraseña para tu cuenta:</label>
@@ -247,6 +256,7 @@
         const nombre = document.getElementById('sol-nombre').value.trim();
         const correo = document.getElementById('sol-correo').value.trim().toLowerCase();
         const semestre = parseInt(document.getElementById('sol-semestre').value);
+        const institucionPref = document.getElementById('sol-institucion').value;
         const clave = document.getElementById('sol-clave').value;
 
         // 1. Validar si ya existe como estudiante matriculado y activo en el sistema
@@ -272,6 +282,7 @@
             nombre: nombre,
             correo: correo,
             semestre: semestre,
+            id_institucion_preferencia: institucionPref,
             clave: clave,
             estado: 'Pendiente',
             fecha: new Date().toLocaleDateString('es-CO')
