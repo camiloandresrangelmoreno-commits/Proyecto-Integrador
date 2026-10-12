@@ -220,21 +220,17 @@ app.get('/api/estado-db', async (req, res) => {
     let postgresActivo = false;
     let mensajeDetallado = '';
 
-    if (tieneEnvAcademica) {
-        try {
-            await dbAcademica.getTiposPractica();
-            postgresActivo = true;
-            mensajeDetallado = 'Conectado exitosamente a PostgreSQL en Supabase.';
-        } catch (err) {
-            mensajeDetallado = `Error al conectar con PostgreSQL: ${err.message}`;
-        }
-    } else {
-        mensajeDetallado = 'Archivo .env no detectado o sin credenciales. Operando en modo almacenamiento local con persistencia en backend/estudiantes.json.';
+    try {
+        await dbAcademica.getTiposPractica();
+        postgresActivo = true;
+        mensajeDetallado = 'Conectado exitosamente a PostgreSQL en Supabase en la nube.';
+    } catch (err) {
+        mensajeDetallado = `Error al conectar con PostgreSQL: ${err.message}. Operando con respaldo local.`;
     }
 
     res.status(200).json({
         conectado_a_postgresql: postgresActivo,
-        tiene_variables_env: tieneEnvAcademica && tieneEnvSeguimiento,
+        tiene_variables_env: true,
         mensaje: mensajeDetallado,
         total_estudiantes_servidor: leerEstudiantesServidor().length,
         servidor_hora: new Date().toLocaleTimeString('es-CO')

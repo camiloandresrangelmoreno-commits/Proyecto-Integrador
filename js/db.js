@@ -14,8 +14,8 @@
  * asíncrona bidireccional con el backend en Node.js y PostgreSQL en Supabase.
  */
 
-// Clave única para aislamiento de la memoria local en el navegador (V4 con 5 estudiantes sincronizados)
-const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V4';
+// Clave única para aislamiento de la memoria local en el navegador (V5 con 5 estudiantes oficiales normalizados)
+const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V5';
 
 // Estructura semilla inicial modelada exactamente según el Diagrama de Clases UML
 const datosSemillaInicial = {
@@ -24,7 +24,7 @@ const datosSemillaInicial = {
         { id_estudiante: 'EST-2024-02', documento: '1098234502', nombre: 'Edwin Fabián Quiroga Díaz', correo: 'edwin.quiroga@udi.edu.co', semestre: 8, clave: 'edwin123' },
         { id_estudiante: 'EST-2024-03', documento: '1098234503', nombre: 'Laura Valentina Morales Gómez', correo: 'laura.morales@udi.edu.co', semestre: 6, clave: 'laura123' },
         { id_estudiante: 'EST-2024-04', documento: '1098234504', nombre: 'María Camila Sotomayor Peña', correo: 'marias@udi.edu.co', semestre: 6, clave: 'estudiante123' },
-        { id_estudiante: 'EST-2024-05', documento: 'EST-2024-05', nombre: 'María Fernanda (Aspirante Aprobada)', correo: 'maria@udi.edu.co', semestre: 7, clave: 'estudiante123' }
+        { id_estudiante: 'EST-2024-05', documento: '1098234505', nombre: 'María Fernanda Vargas Suárez', correo: 'maria@udi.edu.co', semestre: 7, clave: 'estudiante123' }
     ],
     Tutor_Academico: [
         { documento: 'DOC-1098234', documento_tu: 'DOC-1098234', nombre: 'Mg. Carlos Alberto Gómez Silva', correo: 'docente@udi.edu.co', clave: 'docente123', especialidad: 'Didáctica de la Lengua' },

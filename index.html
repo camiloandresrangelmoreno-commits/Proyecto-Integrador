@@ -86,6 +86,14 @@
             <a href="#" onclick="abrirModalRadicar(event)" style="display: block; text-align: center; margin-top: 15px; color: #38bdf8 !important; text-decoration: none; font-size: 13px; font-weight: 600; opacity: 0.95;">
                 📝 ¿Eres nuevo estudiante? Radicar solicitud de práctica aquí
             </a>
+
+            <!-- Indicador en vivo de conexión con Base de Datos en la Nube -->
+            <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: center;">
+                <button type="button" onclick="verificarEstadoBaseDatos(true)" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.22); color: #e2e8f0; padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.2s ease;" title="Haz clic para diagnosticar la conexión con PostgreSQL en la nube">
+                    <span id="login-db-icono">⚪</span>
+                    <span id="login-db-texto">Verificando BD...</span>
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -321,6 +329,48 @@
                 }
             }
         }
+    });
+
+    /**
+     * Comprueba en tiempo real si el servidor está conectado a PostgreSQL en Supabase
+     * o en modo local, actualizando el distintivo visual del inicio de sesión.
+     */
+    async function verificarEstadoBaseDatos(mostrarAlerta = false) {
+        const badgeIcono = document.getElementById('login-db-icono');
+        const badgeTexto = document.getElementById('login-db-texto');
+        try {
+            const res = await fetch('/api/estado-db');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.conectado_a_postgresql) {
+                    if (badgeIcono) badgeIcono.innerText = '🟢';
+                    if (badgeTexto) badgeTexto.innerText = 'Supabase PostgreSQL (Conectado)';
+                    if (mostrarAlerta) {
+                        alert(`✅ BASE DE DATOS EN LA NUBE CONECTADA\n\nMotor: PostgreSQL en Supabase\nEstado: Conexión ACTIVA y lista para sustentación\nAlumnos registrados: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}`);
+                    }
+                } else {
+                    if (badgeIcono) badgeIcono.innerText = '🟡';
+                    if (badgeTexto) badgeTexto.innerText = 'Modo Local (Sin .env)';
+                    if (mostrarAlerta) {
+                        alert(`ℹ️ ESTADO ACTUAL DE LA BASE DE DATOS\n\n${data.mensaje}\n\nEstudiantes en disco: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}\n\n👉 Para conectar PostgreSQL en la nube:\n1. Duplica el archivo .env.example como .env\n2. Ingresa tus credenciales de Supabase\n3. Reinicia el servidor con npm run dev`);
+                    }
+                }
+            } else {
+                if (badgeIcono) badgeIcono.innerText = '🔴';
+                if (badgeTexto) badgeTexto.innerText = 'Servidor sin respuesta';
+            }
+        } catch (e) {
+            if (badgeIcono) badgeIcono.innerText = '🟡';
+            if (badgeTexto) badgeTexto.innerText = 'Modo Navegador Local';
+            if (mostrarAlerta) {
+                alert('No se pudo comunicar con el servidor backend en /api/estado-db. Asegúrate de haber iniciado el servidor con: npm run dev');
+            }
+        }
+    }
+
+    // Ejecutar diagnóstico automático al cargar la página de inicio
+    document.addEventListener('DOMContentLoaded', function() {
+        verificarEstadoBaseDatos(false);
     });
 </script>
 </body>

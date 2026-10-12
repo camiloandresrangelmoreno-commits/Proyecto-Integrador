@@ -22,9 +22,11 @@ dotenv.config();
 
 const { Pool } = pg;
 
+const SUPABASE_DEFAULT_URL = 'postgresql://postgres:Integrador123%23@db.ywadbrsmyswfgmvkfxjn.supabase.co:5432/postgres';
+
 /// Pool de conexiones reutilizables con soporte SSL obligatorio para Supabase
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL_ACADEMICA,
+    connectionString: process.env.DATABASE_URL_ACADEMICA || SUPABASE_DEFAULT_URL,
     ssl: { rejectUnauthorized: false }
 });
 

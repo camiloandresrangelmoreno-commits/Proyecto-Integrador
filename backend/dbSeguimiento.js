@@ -20,9 +20,11 @@ dotenv.config();
 
 const { Pool } = pg;
 
+const SUPABASE_DEFAULT_URL = 'postgresql://postgres:Integrador123%23@db.ywadbrsmyswfgmvkfxjn.supabase.co:5432/postgres';
+
 // Pool de conexiones para el esquema de seguimiento de prácticas
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL_SEGUIMIENTO,
+    connectionString: process.env.DATABASE_URL_SEGUIMIENTO || SUPABASE_DEFAULT_URL,
     ssl: { rejectUnauthorized: false }
 });
 
