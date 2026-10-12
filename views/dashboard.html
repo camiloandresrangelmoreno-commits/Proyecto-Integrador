@@ -276,14 +276,30 @@
 <script src="../js/db.js"></script>
 
 <script>
-    // 1. SEGURIDAD Y SESIÓN DEL DIRECTOR
+    // ========================================================================
+    // 1. SEGURIDAD Y SESIÓN DEL DIRECTOR DE PROGRAMA
+    // ========================================================================
+
+    // Garantiza que solo el director o usuarios autorizados accedan a la vista ejecutiva
     const sesion = DB.requireRole(['director', 'coordinador'], '../index.html');
     if (!sesion) {
-        // Redirigido
+        // Redirigido por la guardia de seguridad
     }
     document.getElementById('usuario-sesion-badge').innerText = `Director: ${sesion.nombre} (${sesion.correo})`;
 
+    // ========================================================================
     // 2. CARGA DE INDICADORES, GRÁFICAS Y CONVENIOS
+    // ========================================================================
+
+    /**
+     * Carga y renderiza el panel ejecutivo del Director de Programa.
+     * Computa KPIs macro (estudiantes matriculados, convenios firmados vs pendientes,
+     * porcentaje general de horas MEN), actualiza las tres gráficas visuales en Vanilla JS,
+     * y genera las tablas de gestión de convenios y autorizaciones finales.
+     * 
+     * @function cargarDashboardDirector
+     * @returns {void}
+     */
     function cargarDashboardDirector() {
         const estudiantes = DB.getTable('Estudiante');
         const tutores = DB.getTable('Tutor_Academico');
@@ -471,7 +487,14 @@
         });
     }
 
-    // ACCIÓN DIRECTIVA: FIRMAR CONVENIO
+    /**
+     * Acción directiva de nivel jerárquico superior: formaliza legalmente un convenio interinstitucional
+     * estampando la firma digital rectoral del Director de Programa en el registro persistido.
+     * 
+     * @function firmarConvenio
+     * @param {string} idConvenio - Código único del convenio a firmar (ej: CONV-2026-02).
+     * @returns {void}
+     */
     function firmarConvenio(idConvenio) {
         if (confirm(`¿Proceder con la firma rectoral y formalización legal del convenio ${idConvenio}?`)) {
             DB.update('Convenio', 'id_convenio', idConvenio, {
@@ -483,7 +506,14 @@
         }
     }
 
-    // ACCIÓN DIRECTIVA: AUTORIZAR CULMINACIÓN Y CERTIFICACIÓN
+    /**
+     * Acción de autorización final: valida la culminación satisfactoria de las horas
+     * y avala la expedición del certificado oficial y paz y salvo de práctica formativa.
+     * 
+     * @function autorizarCulminacion
+     * @param {string} idPractica - Código de la práctica académica a culminar.
+     * @returns {void}
+     */
     function autorizarCulminacion(idPractica) {
         if (confirm(`¿Autorizar culminación formal y expedición de certificado para la práctica ${idPractica}?`)) {
             DB.update('Practica', 'id_practica', idPractica, {
@@ -495,6 +525,7 @@
         }
     }
 
+    // Inicialización del panel de dirección al cargar la ventana
     window.onload = cargarDashboardDirector;
 </script>
 

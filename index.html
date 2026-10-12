@@ -131,7 +131,14 @@
 <script src="js/db.js"></script>
 
 <script>
-    // DOCUMENTACIÓN: Credenciales de demostración rápida para sustentación
+    /**
+     * Carga credenciales y perfiles de prueba en los campos de formulario
+     * para facilitar la sustentación y demostración rápida ante jurados de la UDI.
+     * 
+     * @function cargarDemo
+     * @param {string} rol - Perfil a emular ('estudiante', 'docente', 'coordinador', 'director', 'institucion').
+     * @returns {void}
+     */
     function cargarDemo(rol) {
         const campoEmail = document.getElementById('email');
         const campoClave = document.getElementById('password');
@@ -160,7 +167,11 @@
         }
     }
 
-    // MANEJADOR DEL FORMULARIO DE LOGIN CONECTADO A LA CAPA DB
+    /**
+     * Manejador del evento de envío del formulario de inicio de sesión.
+     * Captura las credenciales ingresadas, invoca el método DB.login() y redirige
+     * a la vista correspondiente según el rol autorizado o alerta al usuario si fallan.
+     */
     document.getElementById('form-login').addEventListener('submit', function(event) {
         event.preventDefault();
 
@@ -178,20 +189,36 @@
         }
     });
 
-    // MODAL DE RADICACIÓN DE ASPIRANTE
+    /**
+     * Despliega la ventana modal de radicación de solicitud para nuevos aspirantes.
+     * 
+     * @function abrirModalRadicar
+     * @param {Event} [e] - Evento de clic en el enlace para prevenir la navegación por defecto.
+     * @returns {void}
+     */
     function abrirModalRadicar(e) {
         if (e) e.preventDefault();
         const modal = document.getElementById('modal-radicar');
         modal.style.display = 'flex';
     }
 
+    /**
+     * Cierra la ventana modal de radicación y restablece los campos del formulario.
+     * 
+     * @function cerrarModalRadicar
+     * @returns {void}
+     */
     function cerrarModalRadicar() {
         const modal = document.getElementById('modal-radicar');
         modal.style.display = 'none';
         document.getElementById('form-radicar-solicitud').reset();
     }
 
-    // Procesa el registro de aspirante y crea la entidad Estudiante en DB
+    /**
+     * Manejador del formulario de radicación de aspirantes.
+     * Registra un nuevo estudiante en el modelo relacional (Clase Estudiante) y
+     * encola la postulación para su posterior alta oficial por parte del Coordinador.
+     */
     document.getElementById('form-radicar-solicitud').addEventListener('submit', function(e) {
         e.preventDefault();
         const nombre = document.getElementById('sol-nombre').value.trim();
@@ -230,13 +257,17 @@
         alert(`¡Solicitud radicada con éxito! Tu ID es ${nuevoEstudiante.id_estudiante}. Ahora puedes iniciar sesión con tu correo y contraseña seleccionando el rol "Estudiante de Práctica".`);
         cerrarModalRadicar();
 
-        // Autocompletar formulario de login
+        // Autocompletar formulario de login para agilizar la entrada
         document.getElementById('email').value = correo;
         document.getElementById('password').value = clave;
         document.getElementById('rol').value = 'estudiante';
     });
 
-    // ATENCIÓN: Atajo de teclado secreto para sustentación (Ctrl + Shift + D)
+    /**
+     * Escuchador global de teclado en la ventana (Window EventListener).
+     * Oculta o muestra el panel 'Acceso Rápido por Rol' únicamente al presionar la
+     * combinación estricta de teclas: Ctrl + Shift + D.
+     */
     window.addEventListener('keydown', function(event) {
         // Detecta exactamente la combinación Ctrl + Shift + D
         if (event.ctrlKey && event.shiftKey && (event.key === 'D' || event.key === 'd')) {

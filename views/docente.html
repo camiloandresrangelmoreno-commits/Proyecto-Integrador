@@ -135,10 +135,14 @@
 <script src="../js/db.js"></script>
 
 <script>
-    // 1. VALIDAR SESIÓN
+    // ========================================================================
+    // 1. VALIDACIÓN DE SESIÓN Y CONTROL DE ACCESO
+    // ========================================================================
+
+    // Garantiza que únicamente docentes/tutores académicos autenticados accedan a este módulo
     const sesion = DB.requireRole(['docente'], '../index.html');
     if (!sesion) {
-        // Redirigido
+        // Redirigido por la guardia de seguridad
     }
 
     const docTutor = sesion.documento || sesion.id || 'DOC-1098234';
@@ -146,7 +150,18 @@
 
     document.getElementById('usuario-sesion-badge').innerText = `Tutor: ${sesion.nombre} (Doc: ${tutorObj ? tutorObj.documento : docTutor})`;
 
-    // 2. CARGAR Y RENDERIZAR DATOS DEL TUTOR
+    // ========================================================================
+    // 2. CARGA Y RENDERIZADO DE DATOS DEL TUTOR ACADÉMICO
+    // ========================================================================
+
+    /**
+     * Consulta las prácticas bajo la tutoría del docente autenticado,
+     * totaliza horas avaladas y bitácoras pendientes, y renderiza tanto la
+     * tabla de revisión de actividades como el historial de evaluaciones emitidas.
+     * 
+     * @function cargarDatosTutor
+     * @returns {void}
+     */
     function cargarDatosTutor() {
         const docActual = tutorObj ? tutorObj.documento : docTutor;
         
@@ -255,7 +270,15 @@
         }
     }
 
-    // ACCIÓN: APROBAR O RECHAZAR ACTIVIDAD
+    /**
+     * Acción pedagógica del tutor: aprueba o rechaza una bitácora de actividad.
+     * Actualiza el registro en la tabla Actividad y sincroniza con el backend.
+     * 
+     * @function cambiarEstadoActividad
+     * @param {string} idActividad - Identificador único de la actividad (ej: ACT-001).
+     * @param {string} nuevoEstado - Estado asignado ('Aprobado' o 'Rechazado').
+     * @returns {void}
+     */
     function cambiarEstadoActividad(idActividad, nuevoEstado) {
         const actualizado = DB.update('Actividad', 'id_actividad', idActividad, { estado_aprovacion: nuevoEstado });
         if (actualizado) {
@@ -264,7 +287,10 @@
         }
     }
 
-    // FORMULARIO: REGISTRAR EVALUACIÓN OFICIAL (UML: CLASE EVALUACION)
+    /**
+     * Manejador del formulario de calificación pedagógica (UML: Clase Evaluacion).
+     * Registra la nota cuantitativa (0.0 - 5.0) y las observaciones pedagógicas formales.
+     */
     document.getElementById('form-calificar').addEventListener('submit', function(e) {
         e.preventDefault();
 

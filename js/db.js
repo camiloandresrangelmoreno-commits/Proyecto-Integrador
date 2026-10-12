@@ -1,25 +1,32 @@
 /**
- * SISTEMA INTEGRAL DE GESTIÓN DE PRÁCTICAS ACADÉMICAS - UDI
- * Capa de Datos y Persistencia (JavaScript Vanilla Puro - localStorage)
+ * ============================================================================
+ * SISTEMA INTEGRAL DE GESTIÓN DE PRÁCTICAS ACADÉMICAS (UDI)
+ * CAPA DE DATOS Y PERSISTENCIA CLIENTE (JAVASCRIPT VANILLA PURO)
+ * ============================================================================
  * 
- * Basado estrictamente en los Diagramas UML:
- * - Diagrama de Casos de Uso (Estudiante, Tutor Académico, Coordinador, Institución Receptora)
- * - Diagrama de Clases (Estudiante, Tutor_Academico, Coordinador, Institucion, Tipo_Practica, Practica, Actividad, Evidencia, Evaluacion)
- * - Diagrama de Secuencia (Registro de Bitácora y Evidencia)
+ * Basado estrictamente en los diagramas UML del proyecto:
+ * - Diagrama de Casos de Uso (Estudiante, Tutor Académico, Coordinador, Institución)
+ * - Diagrama de Secuencia (Registro de Bitácora y Evidencia: HTTP 201 Created)
+ * - Diagrama de Clases (Estudiante, Tutor, Institución, Tipo, Práctica, Actividad, Evidencia, Evaluación)
+ * 
+ * Funcionalidad:
+ * Provee almacenamiento local de contingencia (localStorage) y sincronización
+ * asíncrona bidireccional con el backend en Node.js y PostgreSQL en Supabase.
  */
 
-const DB_KEY = 'SIGP_DATABASE_UDI_V1';
+// Clave única para aislamiento de la memoria local en el navegador
+const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V1';
 
-// Estructura inicial semilla alineada 100% al Diagrama de Clases
-const initialData = {
+// Estructura semilla inicial modelada exactamente según el Diagrama de Clases UML
+const datosSemillaInicial = {
     Estudiante: [
-        { id_estudiante: 'EST-2024-01', nombre: 'Camilo Andrés Rangel Moreno', correo: 'estudiante@udi.edu.co', semestre: 7, clave: 'estudiante123' },
-        { id_estudiante: 'EST-2024-02', nombre: 'Edwin Fabián Quiroga', correo: 'edwin.quiroga@udi.edu.co', semestre: 8, clave: 'edwin123' },
-        { id_estudiante: 'EST-2024-03', nombre: 'Laura Valentina Morales', correo: 'laura.morales@udi.edu.co', semestre: 6, clave: 'laura123' }
+        { id_estudiante: 'EST-2024-01', documento: '1098234501', nombre: 'Camilo Andrés Rangel Moreno', correo: 'estudiante@udi.edu.co', semestre: 7, clave: 'estudiante123' },
+        { id_estudiante: 'EST-2024-02', documento: '1098234502', nombre: 'Edwin Fabián Quiroga Díaz', correo: 'edwin.quiroga@udi.edu.co', semestre: 8, clave: 'edwin123' },
+        { id_estudiante: 'EST-2024-03', documento: '1098234503', nombre: 'Laura Valentina Morales Gómez', correo: 'laura.morales@udi.edu.co', semestre: 6, clave: 'laura123' }
     ],
     Tutor_Academico: [
-        { documento: 'DOC-1098234', nombre: 'Mg. Carlos Alberto Gómez', correo: 'docente@udi.edu.co', clave: 'docente123', especialidad: 'Didáctica de la Lengua' },
-        { documento: 'DOC-1098567', nombre: 'Dra. Sandra Milena Peña', correo: 'sandra.pena@udi.edu.co', clave: 'sandra123', especialidad: 'Pedagogía Infantil' }
+        { documento: 'DOC-1098234', documento_tu: 'DOC-1098234', nombre: 'Mg. Carlos Alberto Gómez Silva', correo: 'docente@udi.edu.co', clave: 'docente123', especialidad: 'Didáctica de la Lengua' },
+        { documento: 'DOC-1098567', documento_tu: 'DOC-1098567', nombre: 'Dra. Sandra Milena Peña Castillo', correo: 'sandra.pena@udi.edu.co', clave: 'sandra123', especialidad: 'Pedagogía Infantil' }
     ],
     Coordinador: [
         { id_coordinador: 'COORD-001', nombre: 'Dra. María Elena Torres', correo: 'coordinador@udi.edu.co', clave: 'coordinador123', departamento: 'Coordinación de Prácticas Pedagógicas' },
@@ -171,215 +178,290 @@ const initialData = {
     ]
 };
 
-// Objeto de control de Base de Datos en JavaScript puro
+/**
+ * Objeto singleton que encapsula las operaciones de datos, sesiones y sincronización.
+ */
 const DB = {
-    // Inicializar almacén en localStorage si no existe
+    /**
+     * Inicializa el almacén en localStorage si no existe o sincroniza tablas nuevas.
+     */
     init() {
-        if (!localStorage.getItem(DB_KEY)) {
-            localStorage.setItem(DB_KEY, JSON.stringify(initialData));
+        if (!localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL)) {
+            localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosSemillaInicial));
         } else {
-            // Asegurar que existan tablas nuevas como Convenio
             try {
-                const actual = JSON.parse(localStorage.getItem(DB_KEY));
-                if (!actual.Convenio) {
-                    actual.Convenio = initialData.Convenio;
-                    localStorage.setItem(DB_KEY, JSON.stringify(actual));
+                const datosGuardados = JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL));
+                if (!datosGuardados.Convenio) {
+                    datosGuardados.Convenio = datosSemillaInicial.Convenio;
+                    localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosGuardados));
                 }
-            } catch (e) {
-                localStorage.setItem(DB_KEY, JSON.stringify(initialData));
+            } catch (error) {
+                localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosSemillaInicial));
             }
         }
     },
 
-    // Obtener toda la base de datos
+    /**
+     * Lee y retorna todas las colecciones de datos almacenadas.
+     * @returns {Object} Objeto completo con todas las tablas.
+     */
     getAll() {
         this.init();
         try {
-            return JSON.parse(localStorage.getItem(DB_KEY)) || initialData;
-        } catch (e) {
-            console.error('Error al leer base de datos, restaurando inicial:', e);
-            localStorage.setItem(DB_KEY, JSON.stringify(initialData));
-            return initialData;
+            return JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL)) || datosSemillaInicial;
+        } catch (error) {
+            console.error('Error al parsear base de datos local:', error);
+            return datosSemillaInicial;
         }
     },
 
-    // Guardar toda la base de datos
-    saveAll(data) {
-        localStorage.setItem(DB_KEY, JSON.stringify(data));
+    /**
+     * Persiste el objeto completo en localStorage.
+     * @param {Object} datos - Estructura de datos a guardar.
+     */
+    saveAll(datos) {
+        localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datos));
     },
 
-    // Obtener lista de una tabla (Colección)
-    getTable(tableName) {
-        const data = this.getAll();
-        return data[tableName] || [];
+    /**
+     * Retorna el arreglo de registros correspondiente a una tabla específica.
+     * @param {string} nombreTabla - Nombre de la entidad (ej: 'Estudiante', 'Practica').
+     * @returns {Array<Object>} Arreglo de registros.
+     */
+    getTable(nombreTabla) {
+        const datos = this.getAll();
+        return datos[nombreTabla] || [];
     },
 
-    // Insertar un registro (CREATE)
-    insert(tableName, item) {
-        const data = this.getAll();
-        if (!data[tableName]) {
-            data[tableName] = [];
+    /**
+     * Inserta un nuevo registro en una tabla y dispara sincronización con la API en la nube.
+     * @param {string} nombreTabla - Nombre de la entidad destino.
+     * @param {Object} nuevoRegistro - Datos a insertar.
+     * @returns {Object} Registro insertado.
+     */
+    insert(nombreTabla, nuevoRegistro) {
+        const datos = this.getAll();
+        if (!datos[nombreTabla]) {
+            datos[nombreTabla] = [];
         }
-        data[tableName].push(item);
-        this.saveAll(data);
+        datos[nombreTabla].push(nuevoRegistro);
+        this.saveAll(datos);
 
-        // Sincronización en segundo plano con el Backend Node.js y Supabase
+        // Sincronización asíncrona en segundo plano con la base de datos PostgreSQL en Supabase
         try {
-            if (tableName === 'Estudiante') {
+            if (nombreTabla === 'Estudiante') {
                 fetch('/api/academica/estudiantes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        documento: item.documento || item.id_estudiante,
-                        nombre: item.nombre,
-                        apellido: item.apellido || '',
-                        correo: item.correo,
-                        semestre: item.semestre || 7,
-                        telefono: item.telefono || ''
+                        documento: nuevoRegistro.documento || nuevoRegistro.id_estudiante,
+                        nombre: nuevoRegistro.nombre,
+                        apellido: nuevoRegistro.apellido || '',
+                        correo: nuevoRegistro.correo,
+                        semestre: nuevoRegistro.semestre || 7,
+                        telefono: nuevoRegistro.telefono || ''
                     })
                 }).catch(() => {});
-            } else if (tableName === 'Actividad' || tableName === 'Bitacora') {
+            } else if (nombreTabla === 'Actividad' || nombreTabla === 'Bitacora') {
                 fetch('/api/bitacoras', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        id_bitacora: item.id_actividad || item.id_bitacora,
-                        id_practica: item.id_practica || 'PRAC-001',
-                        fecha: item.fecha,
-                        descripcion: item.descripcion,
-                        horas: item.horas_realizadas || item.horas || 4,
-                        archivo: item.evidencia || item.archivo || ''
+                        id_bitacora: nuevoRegistro.id_actividad || nuevoRegistro.id_bitacora,
+                        id_practica: nuevoRegistro.id_practica || 'PRAC-001',
+                        fecha: nuevoRegistro.fecha,
+                        descripcion: nuevoRegistro.descripcion,
+                        horas: nuevoRegistro.horas_realizadas || nuevoRegistro.horas || 4,
+                        archivo: nuevoRegistro.evidencia || nuevoRegistro.archivo || ''
                     })
                 }).catch(() => {});
-            } else if (tableName === 'Tutor_Academico') {
+            } else if (nombreTabla === 'Tutor_Academico') {
                 fetch('/api/academica/tutores', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(item)
+                    body: JSON.stringify(nuevoRegistro)
                 }).catch(() => {});
-            } else if (tableName === 'Institucion') {
+            } else if (nombreTabla === 'Institucion') {
                 fetch('/api/academica/instituciones', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(item)
+                    body: JSON.stringify(nuevoRegistro)
                 }).catch(() => {});
-            } else if (tableName === 'Evaluacion') {
+            } else if (nombreTabla === 'Practica') {
+                fetch('/api/academica/practicas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_practica: nuevoRegistro.id_practica,
+                        fecha_ini: nuevoRegistro.fecha_inicio || nuevoRegistro.fecha_ini || '2026-02-01',
+                        fecha_fin: nuevoRegistro.fecha_fin || '2026-06-15',
+                        horas_cumplidas: nuevoRegistro.horas_cumplidas || 0,
+                        estado: nuevoRegistro.estado || 'En Curso',
+                        nombre_prac: nuevoRegistro.nombre_prac || 'Práctica Pedagógica Integral',
+                        documento: nuevoRegistro.id_estudiante || nuevoRegistro.documento || '1098234501',
+                        documento_tu: nuevoRegistro.documento || nuevoRegistro.documento_tu || 'DOC-1098234',
+                        id_institucion: nuevoRegistro.id_institucion || 'INST-01',
+                        id_tipo: nuevoRegistro.id_tipo || 'TP-01'
+                    })
+                }).catch(() => {});
+            } else if (nombreTabla === 'Evaluacion') {
                 fetch('/api/seguimiento/evaluaciones', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(item)
+                    body: JSON.stringify(nuevoRegistro)
                 }).catch(() => {});
             }
-        } catch (e) {
-            // Failsafe silencioso
+        } catch (error) {
+            // Failsafe silencioso para garantizar operatividad offline
         }
 
-        return item;
+        return nuevoRegistro;
     },
 
-    // Actualizar un registro (UPDATE)
-    update(tableName, keyField, keyValue, updatedFields) {
-        const data = this.getAll();
-        if (!data[tableName]) return false;
-        const index = data[tableName].findIndex(record => record[keyField] === keyValue);
-        if (index !== -1) {
-            data[tableName][index] = { ...data[tableName][index], ...updatedFields };
-            this.saveAll(data);
+    /**
+     * Actualiza un registro existente buscando por su campo identificador clave.
+     * @param {string} nombreTabla - Entidad a modificar.
+     * @param {string} campoClave - Nombre del campo clave (ej: 'id_estudiante', 'id_practica').
+     * @param {*} valorClave - Valor del identificador.
+     * @param {Object} camposActualizados - Nuevos valores a combinar.
+     * @returns {Object|boolean} Registro modificado o false si no fue encontrado.
+     */
+    update(nombreTabla, campoClave, valorClave, camposActualizados) {
+        const datos = this.getAll();
+        if (!datos[nombreTabla]) return false;
+        const indice = datos[nombreTabla].findIndex(item => item[campoClave] === valorClave);
+        if (indice !== -1) {
+            datos[nombreTabla][indice] = { ...datos[nombreTabla][indice], ...camposActualizados };
+            this.saveAll(datos);
 
             // Sincronización en segundo plano con el Backend y Supabase
             try {
-                if (tableName === 'Actividad' || tableName === 'Bitacora') {
-                    fetch(`/api/seguimiento/bitacoras/${keyValue}`, {
+                if (nombreTabla === 'Actividad' || nombreTabla === 'Bitacora') {
+                    fetch(`/api/seguimiento/bitacoras/${valorClave}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updatedFields)
+                        body: JSON.stringify(camposActualizados)
                     }).catch(() => {});
-                } else if (tableName === 'Estudiante') {
-                    fetch(`/api/academica/estudiantes/${keyValue}`, {
+                } else if (nombreTabla === 'Estudiante') {
+                    fetch(`/api/academica/estudiantes/${valorClave}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updatedFields)
+                        body: JSON.stringify(camposActualizados)
                     }).catch(() => {});
                 }
-            } catch (e) {}
+            } catch (error) {}
 
-            return data[tableName][index];
+            return datos[nombreTabla][indice];
         }
         return false;
     },
 
-    // Eliminar un registro (DELETE)
-    delete(tableName, keyField, keyValue) {
-        const data = this.getAll();
-        if (!data[tableName]) return false;
-        const originalLength = data[tableName].length;
-        data[tableName] = data[tableName].filter(record => record[keyField] !== keyValue);
-        if (data[tableName].length !== originalLength) {
-            this.saveAll(data);
+    /**
+     * Elimina un registro de una tabla por su identificador clave.
+     * @param {string} nombreTabla - Entidad de la cual eliminar.
+     * @param {string} campoClave - Nombre del campo identificador.
+     * @param {*} valorClave - Valor único a eliminar.
+     * @returns {boolean} Verdadero si fue eliminado, falso si no existía.
+     */
+    delete(nombreTabla, campoClave, valorClave) {
+        const datos = this.getAll();
+        if (!datos[nombreTabla]) return false;
+        const longitudOriginal = datos[nombreTabla].length;
+        datos[nombreTabla] = datos[nombreTabla].filter(item => item[campoClave] !== valorClave);
+        if (datos[nombreTabla].length !== longitudOriginal) {
+            this.saveAll(datos);
 
-            // Sincronización en segundo plano con el Backend y Supabase
+            // Sincronización de borrado con la nube
             try {
-                if (tableName === 'Estudiante') {
-                    fetch(`/api/academica/estudiantes/${keyValue}`, { method: 'DELETE' }).catch(() => {});
-                } else if (tableName === 'Institucion') {
-                    fetch(`/api/academica/instituciones/${keyValue}`, { method: 'DELETE' }).catch(() => {});
+                if (nombreTabla === 'Estudiante') {
+                    fetch(`/api/academica/estudiantes/${valorClave}`, { method: 'DELETE' }).catch(() => {});
+                } else if (nombreTabla === 'Institucion') {
+                    fetch(`/api/academica/instituciones/${valorClave}`, { method: 'DELETE' }).catch(() => {});
                 }
-            } catch (e) {}
+            } catch (error) {}
 
             return true;
         }
         return false;
     },
 
-    // Búsqueda de un registro por campo y valor (READ)
-    findBy(tableName, field, value) {
-        const table = this.getTable(tableName);
-        return table.find(r => r[field] === value) || null;
+    /**
+     * Busca el primer registro que coincida con un campo y valor específico.
+     * @param {string} nombreTabla - Entidad donde buscar.
+     * @param {string} campo - Nombre del atributo.
+     * @param {*} valor - Valor buscado.
+     * @returns {Object|null} Objeto encontrado o null.
+     */
+    findBy(nombreTabla, campo, valor) {
+        const tabla = this.getTable(nombreTabla);
+        return tabla.find(item => item[campo] === valor) || null;
     },
 
-    // Filtro de múltiples registros por campo y valor
-    filterBy(tableName, field, value) {
-        const table = this.getTable(tableName);
-        return table.filter(r => r[field] === value);
+    /**
+     * Filtra y retorna todos los registros que coincidan con un campo y valor.
+     * @param {string} nombreTabla - Entidad a filtrar.
+     * @param {string} campo - Nombre del atributo.
+     * @param {*} valor - Valor a comparar.
+     * @returns {Array<Object>} Arreglo con los registros coincidentes.
+     */
+    filterBy(nombreTabla, campo, valor) {
+        const tabla = this.getTable(nombreTabla);
+        return tabla.filter(item => item[campo] === valor);
     },
 
-    // Reiniciar base de datos a valores de fábrica
-    reset() {
-        localStorage.setItem(DB_KEY, JSON.stringify(initialData));
-        return true;
-    },
+    // ========================================================================
+    // AUTENTICACIÓN Y CONTROL DE SESIONES POR ROL ACADÉMICO
+    // ========================================================================
 
-    // -------------------------------------------------------------
-    // LÓGICA DE NEGOCIO Y AUTENTICACIÓN
-    // -------------------------------------------------------------
-    login(email, password, rol) {
-        const data = this.getAll();
-        let user = null;
-        let redirectUrl = '';
+    /**
+     * Autentica credenciales contra la base de datos y genera la sesión activa.
+     * @param {string} correo - Correo institucional UDI.
+     * @param {string} password - Contraseña ingresada.
+     * @param {string} rol - Rol seleccionado ('estudiante', 'docente', 'coordinador', 'director', 'institucion').
+     * @returns {Object} Resultado con indicador success, datos de usuario y URL de redirección.
+     */
+    login(correo, password, rol) {
+        const datos = this.getAll();
+        let usuarioValido = null;
+        let urlDestino = '';
 
-        const cleanEmail = (email || '').trim().toLowerCase();
-        const cleanPass = (password || '').trim();
+        const correoLimpio = String(correo || '').trim().toLowerCase();
+        const claveLimpia = String(password || '').trim();
 
-        if (rol === 'coordinador' || rol === 'director') {
-            const coord = (data.Coordinador || []).find(c => 
-                c.correo.toLowerCase() === cleanEmail && c.clave === cleanPass
+        if (rol === 'director') {
+            const director = (datos.Coordinador || []).find(c => 
+                c.correo.toLowerCase() === correoLimpio && c.clave === claveLimpia && c.id_coordinador.startsWith('DIR')
             );
-            if (coord) {
-                user = {
-                    id: coord.id_coordinador,
-                    nombre: coord.nombre,
-                    correo: coord.correo,
-                    rol: coord.id_coordinador.startsWith('DIR') ? 'director' : 'coordinador',
-                    departamento: coord.departamento
+            if (director) {
+                usuarioValido = {
+                    id: director.id_coordinador,
+                    nombre: director.nombre,
+                    correo: director.correo,
+                    rol: 'director',
+                    departamento: director.departamento
                 };
-                redirectUrl = user.rol === 'director' ? 'views/dashboard.html' : 'views/coordinador.html';
+                urlDestino = 'views/dashboard.html';
+            }
+        } else if (rol === 'coordinador') {
+            const coordinador = (datos.Coordinador || []).find(c => 
+                c.correo.toLowerCase() === correoLimpio && c.clave === claveLimpia && !c.id_coordinador.startsWith('DIR')
+            );
+            if (coordinador) {
+                usuarioValido = {
+                    id: coordinador.id_coordinador,
+                    nombre: coordinador.nombre,
+                    correo: coordinador.correo,
+                    rol: 'coordinador',
+                    departamento: coordinador.departamento
+                };
+                urlDestino = 'views/coordinador.html';
             }
         } else if (rol === 'docente') {
-            const tutor = (data.Tutor_Academico || []).find(t => 
-                t.correo.toLowerCase() === cleanEmail && t.clave === cleanPass
+            const tutor = (datos.Tutor_Academico || []).find(t => 
+                t.correo.toLowerCase() === correoLimpio && t.clave === claveLimpia
             );
             if (tutor) {
-                user = {
+                usuarioValido = {
                     id: tutor.documento,
                     documento: tutor.documento,
                     nombre: tutor.nombre,
@@ -387,86 +469,99 @@ const DB = {
                     rol: 'docente',
                     especialidad: tutor.especialidad
                 };
-                redirectUrl = 'views/docente.html';
+                urlDestino = 'views/docente.html';
             }
         } else if (rol === 'estudiante') {
-            const est = (data.Estudiante || []).find(e => 
-                e.correo.toLowerCase() === cleanEmail && e.clave === cleanPass
+            const estudiante = (datos.Estudiante || []).find(e => 
+                e.correo.toLowerCase() === correoLimpio && e.clave === claveLimpia
             );
-            if (est) {
-                user = {
-                    id: est.id_estudiante,
-                    id_estudiante: est.id_estudiante,
-                    nombre: est.nombre,
-                    correo: est.correo,
+            if (estudiante) {
+                usuarioValido = {
+                    id: estudiante.id_estudiante,
+                    id_estudiante: estudiante.id_estudiante,
+                    documento: estudiante.documento,
+                    nombre: estudiante.nombre,
+                    correo: estudiante.correo,
                     rol: 'estudiante',
-                    semestre: est.semestre
+                    semestre: estudiante.semestre
                 };
-                redirectUrl = 'views/estudiante.html';
+                urlDestino = 'views/estudiante.html';
             }
         } else if (rol === 'institucion') {
-            const inst = (data.Institucion || []).find(i => 
-                i.correo.toLowerCase() === cleanEmail && i.clave === cleanPass
+            const institucion = (datos.Institucion || []).find(i => 
+                i.correo.toLowerCase() === correoLimpio && i.clave === claveLimpia
             );
-            if (inst) {
-                user = {
-                    id: inst.id_institucion,
-                    id_institucion: inst.id_institucion,
-                    nombre: inst.nombre_colegio,
-                    correo: inst.correo,
+            if (institucion) {
+                usuarioValido = {
+                    id: institucion.id_institucion,
+                    id_institucion: institucion.id_institucion,
+                    nombre: institucion.nombre_colegio,
+                    correo: institucion.correo,
                     rol: 'institucion',
-                    direccion: inst.direccion
+                    direccion: institucion.direccion
                 };
-                redirectUrl = 'views/institucion.html';
+                urlDestino = 'views/institucion.html';
             }
         }
 
-        if (user) {
-            localStorage.setItem('SIGP_SESION_ACTIVA', JSON.stringify(user));
-            // Mantenemos retrocompatibilidad con llaves antiguas
-            localStorage.setItem('sesion_usuario', user.correo);
-            localStorage.setItem('sesion_rol', user.rol);
-            localStorage.setItem('sesion_nombre', user.nombre);
-            return { success: true, user, redirectUrl };
-        } else {
-            return { success: false, message: 'Credenciales inválidas para el rol seleccionado.' };
+        if (usuarioValido) {
+            localStorage.setItem('SIGP_SESION_ACTIVA', JSON.stringify(usuarioValido));
+            localStorage.setItem('sesion_usuario', usuarioValido.correo);
+            localStorage.setItem('sesion_rol', usuarioValido.rol);
+            localStorage.setItem('sesion_nombre', usuarioValido.nombre);
+            return { success: true, user: usuarioValido, redirectUrl: urlDestino };
         }
+
+        return { success: false, message: 'Credenciales inválidas para el rol académico seleccionado.' };
     },
 
+    /**
+     * Obtiene el objeto de sesión del usuario actualmente autenticado.
+     * @returns {Object|null} Objeto con datos del usuario en sesión o null.
+     */
     getSession() {
         try {
-            const raw = localStorage.getItem('SIGP_SESION_ACTIVA');
-            return raw ? JSON.parse(raw) : null;
-        } catch (e) {
+            const sesionSerializada = localStorage.getItem('SIGP_SESION_ACTIVA');
+            return sesionSerializada ? JSON.parse(sesionSerializada) : null;
+        } catch (error) {
             return null;
         }
     },
 
-    logout(relativeRedirectPath = '../index.html') {
+    /**
+     * Cierra la sesión activa y redirige al portal de login.
+     * @param {string} [rutaRedireccion='../index.html'] - Destino tras el cierre.
+     */
+    logout(rutaRedireccion = '../index.html') {
         localStorage.removeItem('SIGP_SESION_ACTIVA');
         localStorage.removeItem('sesion_usuario');
         localStorage.removeItem('sesion_rol');
         localStorage.removeItem('sesion_nombre');
-        window.location.href = relativeRedirectPath;
+        window.location.href = rutaRedireccion;
     },
 
-    // Comprobador de seguridad para proteger vistas según rol
-    requireRole(expectedRoles, fallbackPath = '../index.html') {
-        const session = this.getSession();
-        if (!session) {
+    /**
+     * Guardia de seguridad que protege vistas validando roles autorizados.
+     * @param {string|Array<string>} rolesEsperados - Roles que tienen acceso a la vista.
+     * @param {string} [rutaRetorno='../index.html'] - Ruta hacia donde expulsar si no está autorizado.
+     * @returns {Object|null} Objeto de sesión válido o null si es rechazado.
+     */
+    requireRole(rolesEsperados, rutaRetorno = '../index.html') {
+        const sesion = this.getSession();
+        if (!sesion) {
             alert('Debes iniciar sesión para acceder a este módulo.');
-            window.location.href = fallbackPath;
+            window.location.href = rutaRetorno;
             return null;
         }
-        const roles = Array.isArray(expectedRoles) ? expectedRoles : [expectedRoles];
-        if (!roles.includes(session.rol)) {
-            alert(`Acceso no autorizado para tu rol (${session.rol}). Redireccionando...`);
-            window.location.href = fallbackPath;
+        const listaRoles = Array.isArray(rolesEsperados) ? rolesEsperados : [rolesEsperados];
+        if (!listaRoles.includes(sesion.rol)) {
+            alert(`Acceso no autorizado para tu rol (${sesion.rol}). Redirigiendo...`);
+            window.location.href = rutaRetorno;
             return null;
         }
-        return session;
+        return sesion;
     }
 };
 
-// Inicializar de inmediato al cargar el script
+// Inicialización inmediata al importar el script
 DB.init();

@@ -92,10 +92,14 @@
 <script src="../js/db.js"></script>
 
 <script>
-    // 1. CONTROL DE ACCESO
+    // ========================================================================
+    // 1. CONTROL DE ACCESO Y SEGURIDAD POR SESIÓN
+    // ========================================================================
+
+    // Garantiza que solo representantes de instituciones receptoras accedan al panel
     const sesion = DB.requireRole(['institucion'], '../index.html');
     if (!sesion) {
-        // Redirigido
+        // Redirigido por la guardia de seguridad
     }
 
     const instId = sesion.id_institucion || sesion.id || 'INST-01';
@@ -107,7 +111,18 @@
         document.getElementById('inst-dir-header').innerText = institucionObj.direccion;
     }
 
-    // 2. CONSULTAR PRÁCTICAS ASIGNADAS A ESTA INSTITUCIÓN
+    // ========================================================================
+    // 2. CONSULTAR PRÁCTICAS ASIGNADAS A ESTA INSTITUCIÓN RECEPTORA
+    // ========================================================================
+
+    /**
+     * Consulta las prácticas asignadas a la institución educativa autenticada.
+     * Computa horas totales desarrolladas en la sede escolar, total de bitácoras
+     * presentadas y renderiza la tabla de control y validación de practicantes.
+     * 
+     * @function cargarPracticasSede
+     * @returns {void}
+     */
     function cargarPracticasSede() {
         const idActual = institucionObj ? institucionObj.id_institucion : instId;
         const practicas = DB.filterBy('Practica', 'id_institucion', idActual);
@@ -161,10 +176,19 @@
         });
     }
 
+    /**
+     * Acción de la institución receptora: valida el cumplimiento presencial y asistencia
+     * del estudiante en las aulas escolares de la sede según el convenio.
+     * 
+     * @function validarHoras
+     * @param {string} idPractica - Identificador de la práctica validada.
+     * @returns {void}
+     */
     function validarHoras(idPractica) {
         alert(`¡Asistencia y cumplimiento presencial de la práctica ${idPractica} validados formalmente por la institución receptora!`);
     }
 
+    // Carga inicial al completar el ciclo de vida del DOM
     window.onload = cargarPracticasSede;
 </script>
 

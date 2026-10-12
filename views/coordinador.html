@@ -514,26 +514,75 @@
 <script src="../js/db.js"></script>
 
 <script>
-    // 1. SEGURIDAD Y SESIÓN
+    // ========================================================================
+    // 1. CONTROL DE ACCESO Y SEGURIDAD POR SESIÓN
+    // ========================================================================
+
+    // Valida que el usuario tenga rol de coordinador o director antes de cargar el panel
     const sesion = DB.requireRole(['coordinador', 'director'], '../index.html');
     if (!sesion) {
-        // Redirigido
+        // Redirección manejada por el método de seguridad
     }
     document.getElementById('usuario-sesion-badge').innerText = `Coordinador: ${sesion.nombre} (${sesion.correo})`;
     document.getElementById('rep-fecha').innerText = new Date().toLocaleDateString('es-CO');
 
-    function cambiarTab(tabId) {
+    /**
+     * Alterna la visualización de las pestañas de navegación del coordinador.
+     * 
+     * @function cambiarTab
+     * @param {string} tabId - Identificador HTML del contenedor de la pestaña destino.
+     * @param {HTMLElement} [botonElemento] - Elemento del botón pulsado para asignar clase activa.
+     * @returns {void}
+     */
+    function cambiarTab(tabId, botonElemento) {
         document.querySelectorAll('.contenido-tab').forEach(el => el.classList.remove('activo'));
         document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('activa'));
         
-        document.getElementById(tabId).classList.add('activo');
-        event.currentTarget.classList.add('activa');
+        const tabDestino = document.getElementById(tabId);
+        if (tabDestino) tabDestino.classList.add('activo');
+
+        if (botonElemento) {
+            botonElemento.classList.add('activa');
+        } else if (window.event && window.event.currentTarget) {
+            window.event.currentTarget.classList.add('activa');
+        }
     }
 
-    function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+    /**
+     * Muestra una ventana modal superpuesta para operaciones de captura o edición.
+     * 
+     * @function abrirModal
+     * @param {string} id - Identificador HTML del elemento modal.
+     * @returns {void}
+     */
+    function abrirModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'flex';
+    }
 
-    // 2. CARGA DE TABLAS Y RENDERIZADO
+    /**
+     * Oculta la ventana modal especificada.
+     * 
+     * @function cerrarModal
+     * @param {string} id - Identificador HTML del elemento modal a cerrar.
+     * @returns {void}
+     */
+    function cerrarModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'none';
+    }
+
+    // ========================================================================
+    // 2. CARGA DE TABLAS Y RENDERIZADO REACTIVO DEL PANEL
+    // ========================================================================
+
+    /**
+     * Consulta las colecciones relacionales de datos desde la capa DB y
+     * reconstruye en el DOM los indicadores y las tablas de todas las pestañas.
+     * 
+     * @function cargarTodo
+     * @returns {void}
+     */
     function cargarTodo() {
         const practicas = DB.getTable('Practica');
         const estudiantes = DB.getTable('Estudiante');
@@ -720,7 +769,10 @@
         });
     }
 
-    // FORMULARIO: MATRICULAR USUARIO OFICIAL (COORDINADOR)
+    /**
+     * Manejador de matrícula oficial de usuarios institucionales (estudiantes, docentes o coordinadores).
+     * Da de alta credenciales e inserta el registro en la entidad correspondiente del diagrama UML.
+     */
     document.getElementById('form-matricular-oficial').addEventListener('submit', function(e) {
         e.preventDefault();
         const nombre = document.getElementById('mat-nombre').value.trim();
@@ -755,7 +807,14 @@
         cargarTodo();
     });
 
-    // PROCESAR ALTA DE ASPIRANTE
+    /**
+     * Procesa la solicitud de alta de un aspirante registrado desde el formulario del login.
+     * Inserta al aspirante en la tabla oficial Estudiante y lo retira de la cola de pendientes.
+     * 
+     * @function procesarAltaAspirante
+     * @param {number} idx - Índice de la solicitud dentro del arreglo almacenado.
+     * @returns {void}
+     */
     function procesarAltaAspirante(idx) {
         let solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
         const item = solicitudes[idx];
@@ -778,7 +837,16 @@
         cargarTodo();
     }
 
-    // --- CRUD DOCENTES ASESORES ---
+    // ========================================================================
+    // 3. MÓDULO CRUD: DOCENTES ASESORES (TUTOR ACADÉMICO)
+    // ========================================================================
+
+    /**
+     * Abre el modal para registrar un nuevo docente asesor con campos limpios.
+     * 
+     * @function abrirModalDocente
+     * @returns {void}
+     */
     function abrirModalDocente() {
         document.getElementById('titulo-modal-docente').innerText = 'Registrar Docente Asesor';
         document.getElementById('doc-id-editar').value = '';
@@ -787,6 +855,13 @@
         abrirModal('modal-crud-docente');
     }
 
+    /**
+     * Carga la información de un docente asesor existente en el modal para su modificación.
+     * 
+     * @function editarDocente
+     * @param {string} documento - Documento único del tutor académico a editar.
+     * @returns {void}
+     */
     function editarDocente(documento) {
         const tut = DB.findBy('Tutor_Academico', 'documento', documento);
         if (tut) {
@@ -802,6 +877,13 @@
         }
     }
 
+    /**
+     * Elimina un docente asesor del sistema previa confirmación modal.
+     * 
+     * @function eliminarDocente
+     * @param {string} documento - Documento del tutor a eliminar.
+     * @returns {void}
+     */
     function eliminarDocente(documento) {
         if (confirm(`¿Eliminar al docente asesor ${documento}?`)) {
             DB.delete('Tutor_Academico', 'documento', documento);
@@ -810,6 +892,9 @@
         }
     }
 
+    /**
+     * Manejador de guardado y actualización para el CRUD de Docentes Asesores.
+     */
     document.getElementById('form-docente-crud').addEventListener('submit', function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('doc-id-editar').value;
@@ -835,7 +920,17 @@
         cargarTodo();
     });
 
-    // --- ASIGNAR PRÁCTICA ---
+    // ========================================================================
+    // 4. MÓDULO CRUD: ASIGNACIÓN DE PRÁCTICAS PEDAGÓGICAS
+    // ========================================================================
+
+    /**
+     * Despliega el modal de asignación de práctica y puebla los selectores con las
+     * listas actualizadas de estudiantes, tutores, colegios y modalidades.
+     * 
+     * @function abrirModalAsignarPractica
+     * @returns {void}
+     */
     function abrirModalAsignarPractica() {
         document.getElementById('titulo-modal-practica').innerText = 'Asignar Nueva Práctica';
         document.getElementById('prac-id-editar').value = '';
@@ -853,6 +948,13 @@
         abrirModal('modal-asignar-practica');
     }
 
+    /**
+     * Carga una práctica existente en el modal para editar sus participantes o estado.
+     * 
+     * @function editarPractica
+     * @param {string} idPractica - Código de la práctica a modificar (ej: PRAC-001).
+     * @returns {void}
+     */
     function editarPractica(idPractica) {
         abrirModalAsignarPractica();
         const p = DB.findBy('Practica', 'id_practica', idPractica);
@@ -867,6 +969,13 @@
         }
     }
 
+    /**
+     * Elimina una práctica asignada del sistema previa confirmación.
+     * 
+     * @function eliminarPractica
+     * @param {string} idPractica - Código de la práctica a eliminar.
+     * @returns {void}
+     */
     function eliminarPractica(idPractica) {
         if (confirm(`¿Eliminar la práctica ${idPractica}?`)) {
             DB.delete('Practica', 'id_practica', idPractica);
@@ -875,6 +984,9 @@
         }
     }
 
+    /**
+     * Manejador de guardado y asignación de prácticas pedagógicas.
+     */
     document.getElementById('form-practica').addEventListener('submit', function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('prac-id-editar').value;
@@ -907,7 +1019,16 @@
         cargarTodo();
     });
 
-    // --- CRUD ESTUDIANTES ---
+    // ========================================================================
+    // 5. MÓDULO CRUD: ESTUDIANTES REGISTRADOS
+    // ========================================================================
+
+    /**
+     * Abre el modal para dar de alta a un estudiante.
+     * 
+     * @function abrirModalEstudiante
+     * @returns {void}
+     */
     function abrirModalEstudiante() {
         document.getElementById('titulo-modal-estudiante').innerText = 'Registrar Estudiante';
         document.getElementById('est-id-editar').value = '';
@@ -915,6 +1036,13 @@
         abrirModal('modal-crud-estudiante');
     }
 
+    /**
+     * Carga la información de un alumno en el modal de edición.
+     * 
+     * @function editarEstudiante
+     * @param {string} idEstudiante - Identificador del estudiante (ej: EST-2024-01).
+     * @returns {void}
+     */
     function editarEstudiante(idEstudiante) {
         const est = DB.findBy('Estudiante', 'id_estudiante', idEstudiante);
         if (est) {
@@ -928,6 +1056,13 @@
         }
     }
 
+    /**
+     * Elimina un estudiante de la base de datos tras confirmación del usuario.
+     * 
+     * @function eliminarEstudiante
+     * @param {string} idEstudiante - Código del estudiante a eliminar.
+     * @returns {void}
+     */
     function eliminarEstudiante(idEstudiante) {
         if (confirm(`¿Eliminar al estudiante ${idEstudiante}?`)) {
             DB.delete('Estudiante', 'id_estudiante', idEstudiante);
@@ -936,6 +1071,9 @@
         }
     }
 
+    /**
+     * Manejador de persistencia para el CRUD de estudiantes.
+     */
     document.getElementById('form-estudiante-crud').addEventListener('submit', function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('est-id-editar').value;
@@ -956,7 +1094,16 @@
         cargarTodo();
     });
 
-    // --- CRUD INSTITUCIONES ---
+    // ========================================================================
+    // 6. MÓDULO CRUD: INSTITUCIONES RECEPTORAS Y COLEGIOS
+    // ========================================================================
+
+    /**
+     * Abre el modal para registrar un nuevo colegio o centro de práctica.
+     * 
+     * @function abrirModalInstitucion
+     * @returns {void}
+     */
     function abrirModalInstitucion() {
         document.getElementById('titulo-modal-institucion').innerText = 'Registrar Institución';
         document.getElementById('inst-id-editar').value = '';
@@ -964,6 +1111,13 @@
         abrirModal('modal-crud-institucion');
     }
 
+    /**
+     * Carga los datos de una institución en el modal para editar dirección, contacto o teléfono.
+     * 
+     * @function editarInstitucion
+     * @param {string} idInst - Código de la institución (ej: INST-01).
+     * @returns {void}
+     */
     function editarInstitucion(idInst) {
         const inst = DB.findBy('Institucion', 'id_institucion', idInst);
         if (inst) {
@@ -977,6 +1131,13 @@
         }
     }
 
+    /**
+     * Elimina una institución del sistema tras confirmación.
+     * 
+     * @function eliminarInstitucion
+     * @param {string} idInst - Código de la institución a eliminar.
+     * @returns {void}
+     */
     function eliminarInstitucion(idInst) {
         if (confirm(`¿Eliminar la institución ${idInst}?`)) {
             DB.delete('Institucion', 'id_institucion', idInst);
@@ -985,6 +1146,9 @@
         }
     }
 
+    /**
+     * Manejador de guardado para el CRUD de Instituciones receptoras.
+     */
     document.getElementById('form-institucion-crud').addEventListener('submit', function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('inst-id-editar').value;
@@ -1007,10 +1171,17 @@
         cargarTodo();
     });
 
+    /**
+     * Invoca el diálogo nativo de impresión para emitir el reporte consolidado formal.
+     * 
+     * @function imprimirReporte
+     * @returns {void}
+     */
     function imprimirReporte() {
         window.print();
     }
 
+    // Inicializa la carga de todos los datos al finalizar el parseo del DOM
     window.onload = cargarTodo;
 </script>
 

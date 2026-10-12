@@ -212,7 +212,17 @@
         document.getElementById('info-tipo-practica').innerText = tipoPractica.descripcion;
     }
 
-    // 3. CARGAR ACTIVIDADES, EVIDENCIAS Y EVALUACIONES
+    // ========================================================================
+    // 3. CARGA Y PRESENTACIÓN DE ACTIVIDADES, EVIDENCIAS Y EVALUACIONES
+    // ========================================================================
+
+    /**
+     * Renderiza las actividades formativas, evidencias asociadas y evaluaciones
+     * oficiales de la práctica en curso. Calcula horas aprobadas y porcentaje de avance.
+     * 
+     * @function renderizarDatos
+     * @returns {void}
+     */
     function renderizarDatos() {
         const actividades = DB.filterBy('Actividad', 'id_practica', practica.id_practica);
         const evidencias = DB.getTable('Evidencia');
@@ -291,8 +301,19 @@
         }
     }
 
-    // 4. IMPLEMENTACIÓN DEL DIAGRAMA DE SECUENCIA: REGISTRO DE BITÁCORA Y EVIDENCIA
-    // Mensajes: ingresarDatosBitacora -> adjuntarArchivoEvidencia -> presionarGuardar -> insertarRegistro -> HTTP 201 Created -> mostrarMensaje
+    // ========================================================================
+    // 4. IMPLEMENTACIÓN ESTRICTA DEL DIAGRAMA DE SECUENCIA UML
+    // ========================================================================
+    /**
+     * Secuencia UML: Registro de Bitácora y Evidencia
+     * Flujo de mensajes:
+     * 1. ingresarDatosBitacora(fecha, descripcion, horas)
+     * 2. adjuntarArchivoEvidencia(archivo)
+     * 3. presionarGuardar()
+     * 4. insertarRegistro() en la capa de persistencia
+     * 5. Respuesta HTTP 201 Created (simulada/sincronizada)
+     * 6. Notificación y actualización reactiva de la interfaz
+     */
     document.getElementById('form-bitacora-real').addEventListener('submit', function(e) {
         e.preventDefault();
 
