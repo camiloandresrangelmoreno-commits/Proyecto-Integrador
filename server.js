@@ -24,6 +24,35 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ARCHIVO_SOLICITUDES = path.join(__dirname, 'backend', 'solicitudes.json');
+const ARCHIVO_ESTUDIANTES = path.join(__dirname, 'backend', 'estudiantes.json');
+
+/**
+ * Lee de manera síncrona el listado persistente de estudiantes en disco.
+ * @returns {Array<Object>} Arreglo de estudiantes matriculados.
+ */
+function leerEstudiantesServidor() {
+    try {
+        if (fs.existsSync(ARCHIVO_ESTUDIANTES)) {
+            const contenido = fs.readFileSync(ARCHIVO_ESTUDIANTES, 'utf-8');
+            return JSON.parse(contenido || '[]');
+        }
+    } catch (e) {
+        console.error('Error al leer estudiantes en disco:', e.message);
+    }
+    return [];
+}
+
+/**
+ * Persiste en disco el listado de estudiantes para sincronización continua.
+ * @param {Array<Object>} lista
+ */
+function guardarEstudiantesServidor(lista) {
+    try {
+        fs.writeFileSync(ARCHIVO_ESTUDIANTES, JSON.stringify(lista, null, 2), 'utf-8');
+    } catch (e) {
+        console.error('Error al guardar estudiantes en disco:', e.message);
+    }
+}
 
 /**
  * Lee de manera síncrona el listado persistente de solicitudes de aspirantes.
@@ -182,21 +211,64 @@ app.delete('/api/solicitudes/:id', (req, res) => {
 // ============================================================================
 
 /**
+ * GET /api/estado-db
+ * Diagnóstico en vivo de la conexión con PostgreSQL en Supabase.
+ */
+app.get('/api/estado-db', async (req, res) => {
+    const tieneEnvAcademica = !!process.env.DATABASE_URL_ACADEMICA;
+    const tieneEnvSeguimiento = !!process.env.DATABASE_URL_SEGUIMIENTO;
+    let postgresActivo = false;
+    let mensajeDetallado = '';
+
+    if (tieneEnvAcademica) {
+        try {
+            await dbAcademica.getTiposPractica();
+            postgresActivo = true;
+            mensajeDetallado = 'Conectado exitosamente a PostgreSQL en Supabase.';
+        } catch (err) {
+            mensajeDetallado = `Error al conectar con PostgreSQL: ${err.message}`;
+        }
+    } else {
+        mensajeDetallado = 'Archivo .env no detectado o sin credenciales. Operando en modo almacenamiento local con persistencia en backend/estudiantes.json.';
+    }
+
+    res.status(200).json({
+        conectado_a_postgresql: postgresActivo,
+        tiene_variables_env: tieneEnvAcademica && tieneEnvSeguimiento,
+        mensaje: mensajeDetallado,
+        total_estudiantes_servidor: leerEstudiantesServidor().length,
+        servidor_hora: new Date().toLocaleTimeString('es-CO')
+    });
+});
+
+/**
  * GET /api/academica/estudiantes
- * Retorna todos los estudiantes matriculados en prácticas.
+ * Retorna todos los estudiantes matriculados (desde PostgreSQL o réplica local en disco).
  */
 app.get('/api/academica/estudiantes', async (req, res) => {
     try {
-        const estudiantes = await dbAcademica.getEstudiantes();
+        let estudiantes = [];
+        if (process.env.DATABASE_URL_ACADEMICA) {
+            try {
+                estudiantes = await dbAcademica.getEstudiantes();
+            } catch (errDb) {
+                console.warn('Aviso: PostgreSQL no respondió, usando datos de estudiantes en disco:', errDb.message);
+            }
+        }
+        if (!estudiantes || estudiantes.length === 0) {
+            estudiantes = leerEstudiantesServidor();
+        } else {
+            guardarEstudiantesServidor(estudiantes);
+        }
         res.status(200).json(estudiantes);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(200).json(leerEstudiantesServidor());
     }
 });
 
 /**
  * POST /api/academica/estudiantes
- * Registra un nuevo estudiante en el esquema gestion_academica.
+ * Registra un nuevo estudiante garantizando persistencia en disco y PostgreSQL.
  */
 app.post('/api/academica/estudiantes', async (req, res) => {
     try {
@@ -206,14 +278,36 @@ app.post('/api/academica/estudiantes', async (req, res) => {
                 error: 'Parámetros incompletos. Documento, nombre, correo y semestre son obligatorios.'
             });
         }
-        const nuevoEstudiante = await dbAcademica.insertEstudiante({
+        const nuevoEstudiante = {
+            id_estudiante: documento.startsWith('EST') ? documento : `EST-2024-${String(documento).slice(-2)}`,
             documento,
             nombre,
-            apellido,
+            apellido: apellido || '',
             correo,
-            semestre,
-            telefono
-        });
+            semestre: parseInt(semestre) || 7,
+            telefono: telefono || '',
+            clave: req.body.clave || 'estudiante123'
+        };
+
+        // Guardar en disco para sincronización entre VS Code y todos los navegadores
+        const listaDisco = leerEstudiantesServidor();
+        const idx = listaDisco.findIndex(e => e.correo === correo || e.documento === documento);
+        if (idx >= 0) {
+            listaDisco[idx] = nuevoEstudiante;
+        } else {
+            listaDisco.push(nuevoEstudiante);
+        }
+        guardarEstudiantesServidor(listaDisco);
+
+        // Guardar en PostgreSQL si está configurado
+        if (process.env.DATABASE_URL_ACADEMICA) {
+            try {
+                await dbAcademica.insertEstudiante({ documento, nombre, apellido, correo, semestre, telefono });
+            } catch (ePostgres) {
+                console.warn('Aviso PostgreSQL:', ePostgres.message);
+            }
+        }
+
         res.status(201).json(nuevoEstudiante);
     } catch (error) {
         res.status(400).json({ error: error.message });

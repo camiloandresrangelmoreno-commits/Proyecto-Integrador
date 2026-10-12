@@ -66,6 +66,9 @@
         <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando sesión...</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
+        <button type="button" onclick="verificarEstadoBaseDatos(true)" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Haz clic para comprobar la conexión a la base de datos">
+            <span id="indicador-db-icono">⚪</span> <span id="indicador-db-texto">Verificar BD</span>
+        </button>
         <a href="../index.html" onclick="DB.logout(); return false;" class="boton-salir">Cerrar Sesión</a>
     </div>
 </header>
@@ -664,6 +667,36 @@
         if (modal) modal.style.display = 'none';
     }
 
+    /**
+     * Comprueba en tiempo real si el servidor está conectado a Supabase PostgreSQL
+     * o funcionando en modo réplica local persistente.
+     */
+    async function verificarEstadoBaseDatos(mostrarAlerta = false) {
+        try {
+            const res = await fetch('/api/estado-db');
+            if (res.ok) {
+                const data = await res.json();
+                const badgeIcono = document.getElementById('indicador-db-icono');
+                const badgeTexto = document.getElementById('indicador-db-texto');
+                if (data.conectado_a_postgresql) {
+                    if (badgeIcono) badgeIcono.innerText = '🟢';
+                    if (badgeTexto) badgeTexto.innerText = 'Supabase Conectado';
+                    if (mostrarAlerta) {
+                        alert(`✅ CONEXIÓN EXITOSA A BASE DE DATOS\n\nMotor: PostgreSQL en Supabase\nEstado: Conexión ACTIVA y sincronizada\nTotal estudiantes en servidor: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}`);
+                    }
+                } else {
+                    if (badgeIcono) badgeIcono.innerText = '🟡';
+                    if (badgeTexto) badgeTexto.innerText = 'Modo Local (Activo)';
+                    if (mostrarAlerta) {
+                        alert(`ℹ️ DIAGNÓSTICO DE BASE DE DATOS\n\n${data.mensaje}\n\nEstudiantes sincronizados en disco: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}\n\nPara activar PostgreSQL en tu VS Code local, añade tus variables DATABASE_URL_ACADEMICA y DATABASE_URL_SEGUIMIENTO a tu archivo .env.`);
+                    }
+                }
+            }
+        } catch (e) {
+            if (mostrarAlerta) alert('El servidor no respondió al diagnóstico en /api/estado-db.');
+        }
+    }
+
     // ========================================================================
     // 2. CARGA DE TABLAS Y RENDERIZADO REACTIVO DEL PANEL
     // ========================================================================
@@ -676,6 +709,7 @@
      * @returns {void}
      */
     function cargarTodo() {
+        verificarEstadoBaseDatos(false);
         const practicas = DB.getTable('Practica');
         const estudiantes = DB.getTable('Estudiante');
         const instituciones = DB.getTable('Institucion');

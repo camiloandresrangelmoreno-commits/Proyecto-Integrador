@@ -1,0 +1,42 @@
+[
+  {
+    "documento": "1098234501",
+    "nombre": "Camilo Andrés",
+    "apellido": "Rangel Moreno",
+    "correo": "estudiante@udi.edu.co",
+    "semestre": 7,
+    "telefono": "3158901234"
+  },
+  {
+    "documento": "1098234502",
+    "nombre": "Edwin Fabián",
+    "apellido": "Quiroga Díaz",
+    "correo": "edwin.quiroga@udi.edu.co",
+    "semestre": 8,
+    "telefono": "3167894512"
+  },
+  {
+    "documento": "1098234503",
+    "nombre": "Laura Valentina",
+    "apellido": "Morales Gómez",
+    "correo": "laura.morales@udi.edu.co",
+    "semestre": 6,
+    "telefono": "3123456789"
+  },
+  {
+    "documento": "EST-2024-04",
+    "nombre": "maria",
+    "apellido": "",
+    "correo": "marias@udi.edu.co",
+    "semestre": 6,
+    "telefono": ""
+  },
+  {
+    "documento": "EST-2024-05",
+    "nombre": "maria",
+    "apellido": "",
+    "correo": "maria@udi.edu.co",
+    "semestre": 1,
+    "telefono": ""
+  }
+]
