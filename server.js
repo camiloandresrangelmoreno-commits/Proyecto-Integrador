@@ -12,6 +12,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { dbAcademica } from './backend/dbAcademica.js';
@@ -22,6 +23,35 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ARCHIVO_SOLICITUDES = path.join(__dirname, 'backend', 'solicitudes.json');
+
+/**
+ * Lee de manera síncrona el listado persistente de solicitudes de aspirantes.
+ * @returns {Array<Object>} Arreglo de postulaciones pendientes.
+ */
+function leerSolicitudesServidor() {
+    try {
+        if (fs.existsSync(ARCHIVO_SOLICITUDES)) {
+            const contenido = fs.readFileSync(ARCHIVO_SOLICITUDES, 'utf-8');
+            return JSON.parse(contenido || '[]');
+        }
+    } catch (e) {
+        console.error('Error al leer solicitudes:', e.message);
+    }
+    return [];
+}
+
+/**
+ * Escribe y persiste en disco el listado actualizado de solicitudes de aspirantes.
+ * @param {Array<Object>} lista - Colección de solicitudes a guardar.
+ */
+function guardarSolicitudesServidor(lista) {
+    try {
+        fs.writeFileSync(ARCHIVO_SOLICITUDES, JSON.stringify(lista, null, 2), 'utf-8');
+    } catch (e) {
+        console.error('Error al guardar solicitudes:', e.message);
+    }
+}
 
 const app = express();
 const PORT = 3000;
@@ -83,6 +113,67 @@ app.get('/api/estado-servidor', async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ error: `Fallo al consultar diagnóstico: ${error.message}` });
+    }
+});
+
+// ============================================================================
+// RUTAS API: GESTIÓN DE SOLICITUDES DE ASPIRANTES (SINCRONIZACIÓN MULTIPLATAFORMA)
+// ============================================================================
+
+/**
+ * GET /api/solicitudes
+ * Consulta las solicitudes radicadas por estudiantes en espera de aprobación.
+ */
+app.get('/api/solicitudes', (req, res) => {
+    try {
+        const solicitudes = leerSolicitudesServidor();
+        res.status(200).json(solicitudes);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/solicitudes
+ * Radica una nueva postulación en espera de revisión por el Coordinador.
+ */
+app.post('/api/solicitudes', (req, res) => {
+    try {
+        const solicitudes = leerSolicitudesServidor();
+        const nueva = req.body;
+        if (!nueva || !nueva.correo) {
+            return res.status(400).json({ error: 'Datos incompletos para radicar solicitud.' });
+        }
+        const index = solicitudes.findIndex(s => (s.correo || '').toLowerCase() === nueva.correo.toLowerCase());
+        if (index >= 0) {
+            solicitudes[index] = nueva;
+        } else {
+            solicitudes.push(nueva);
+        }
+        guardarSolicitudesServidor(solicitudes);
+        res.status(201).json(nueva);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/solicitudes/:id
+ * Remueve una solicitud una vez aceptada, matriculada o rechazada por el Coordinador.
+ */
+app.delete('/api/solicitudes/:id', (req, res) => {
+    try {
+        let solicitudes = leerSolicitudesServidor();
+        const identificador = decodeURIComponent(req.params.id).toLowerCase();
+        solicitudes = solicitudes.filter(s => 
+            String(s.id || '').toLowerCase() !== identificador &&
+            String(s.id_solicitud || '').toLowerCase() !== identificador &&
+            String(s.correo || '').toLowerCase() !== identificador
+        );
+        guardarSolicitudesServidor(solicitudes);
+        res.status(200).json({ mensaje: `Solicitud ${req.params.id} procesada exitosamente.` });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
@@ -310,13 +401,23 @@ app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], async (req, res) => {
         const bitacorasExistentes = await dbSeguimiento.getBitacoras();
         const idGenerado = req.body.id_bitacora || `BIT-${String(bitacorasExistentes.length + 1).padStart(3, '0')}`;
         
+        let practicaAsignada = id_practica;
+        if (!practicaAsignada) {
+            try {
+                const practicasDb = await dbAcademica.getPracticas();
+                if (practicasDb && practicasDb.length > 0) {
+                    practicaAsignada = practicasDb[practicasDb.length - 1].id_practica;
+                }
+            } catch (e) {}
+        }
+
         const nuevaBitacora = {
             id_bitacora: idGenerado,
             fecha: fecha || new Date().toISOString().split('T')[0],
             descripcion: descripcion || 'Jornada pedagógica desarrollada en aula',
             observaciones: req.body.observaciones || null,
             estado: req.body.estado || 'Pendiente',
-            id_practica: id_practica || 'PRAC-001'
+            id_practica: practicaAsignada || 'PRAC-001'
         };
 
         const bitacoraCreada = await dbSeguimiento.insertBitacora(nuevaBitacora);

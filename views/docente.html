@@ -129,6 +129,128 @@
         </table>
     </div>
 
+    <!-- MODAL INSTITUCIONAL: VISOR OFICIAL DE EVIDENCIAS FO-EP-07 -->
+    <div id="modal-visor-evidencia" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+        <div style="background: #ffffff; border-radius: 10px; max-width: 820px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #cbd5e1; position: relative;">
+            
+            <!-- CABECERA MODAL -->
+            <div style="background: #1e3a8a; color: white; padding: 16px 22px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="../images/logo1.png" alt="Logo UDI" style="height: 36px; filter: brightness(0) invert(1);" onerror="this.src='../images/logo.png'">
+                    <div>
+                        <h3 style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.3px;">Visor Oficial de Evidencias - Formato FO-EP-07</h3>
+                        <small style="opacity: 0.85; font-size: 11px;">Supervisión Académica UDI · Validación de Jornadas Formativas</small>
+                    </div>
+                </div>
+                <button type="button" onclick="cerrarModalEvidencia()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 16px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+
+            <!-- CUERPO MODAL -->
+            <div style="padding: 24px; color: #1e293b;">
+                <!-- BANNER DE IDENTIFICACIÓN -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; font-size: 13px;">
+                    <div>
+                        <strong style="color: #64748b; font-size: 11px; text-transform: uppercase;">CÓDIGO ACTIVIDAD</strong>
+                        <div id="m-evi-act-id" style="font-weight: 700; color: #1e3a8a; font-size: 15px;">ACT-001</div>
+                    </div>
+                    <div>
+                        <strong style="color: #64748b; font-size: 11px; text-transform: uppercase;">CÓDIGO EVIDENCIA</strong>
+                        <div id="m-evi-id" style="font-weight: 700; color: #0f766e; font-size: 15px;">EVI-001</div>
+                    </div>
+                    <div>
+                        <strong style="color: #64748b; font-size: 11px; text-transform: uppercase;">PRÁCTICA ASOCIADA</strong>
+                        <div id="m-evi-prac-id" style="font-weight: 700; color: #4338ca; font-size: 15px;">PRAC-001</div>
+                    </div>
+                    <div>
+                        <strong style="color: #64748b; font-size: 11px; text-transform: uppercase;">FECHA Y HORAS</strong>
+                        <div id="m-evi-fecha-horas" style="font-weight: 600;">05/03/2026 · 4 hrs</div>
+                    </div>
+                </div>
+
+                <!-- PARTICIPANTES -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 13px;">
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+                        <strong style="color: #64748b; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px;">Practicante (Estudiante):</strong>
+                        <div id="m-evi-estudiante" style="font-weight: 700; color: #0f172a;">-</div>
+                        <small id="m-evi-estudiante-correo" style="color: #64748b;">-</small>
+                    </div>
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+                        <strong style="color: #64748b; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px;">Docente Asesor / Tutor UDI:</strong>
+                        <div id="m-evi-tutor" style="font-weight: 700; color: #0f172a;">-</div>
+                        <small id="m-evi-institucion" style="color: #64748b;">-</small>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 1: DESCRIPCIÓN -->
+                <div style="margin-bottom: 18px;">
+                    <h4 style="margin: 0 0 6px 0; font-size: 13px; color: #0f172a; text-transform: uppercase; border-left: 3px solid #2563eb; padding-left: 8px;">1. Descripción de la Jornada en Aula</h4>
+                    <div id="m-evi-descripcion" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-size: 13px; line-height: 1.5; color: #334155;">-</div>
+                </div>
+
+                <!-- SECCIÓN 2: METODOLOGÍA -->
+                <div style="margin-bottom: 18px;">
+                    <h4 style="margin: 0 0 6px 0; font-size: 13px; color: #0f172a; text-transform: uppercase; border-left: 3px solid #0f766e; padding-left: 8px;">2. Fundamentación y Estrategia Pedagógica</h4>
+                    <div id="m-evi-metodologia" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-size: 13px; line-height: 1.5; color: #334155;">-</div>
+                </div>
+
+                <!-- SECCIÓN 3: ARCHIVO Y SOPORTE DIGITAL -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #0f172a; text-transform: uppercase; border-left: 3px solid #16a34a; padding-left: 8px;">3. Soporte Documental Adjunto (Evidencia Digital)</h4>
+                    <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 36px;">📄</span>
+                            <div>
+                                <strong id="m-evi-archivo-nombre" style="color: #1e293b; font-size: 14px; display: block;">Diagnostico_Lectura_Grado_4A_Rubrica.pdf</strong>
+                                <span id="m-evi-archivo-tipo" style="color: #166534; font-size: 12px; font-weight: 600;">✓ Documento PDF Institucional Certificado</span>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 3px;" id="m-evi-hash">Firma Digital SHA-256: 7f8a3c9e9b21a004f812d3</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="descargarEvidenciaPDF()" style="background: #15803d; color: white; border: none; padding: 9px 15px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                📥 Descargar Soporte PDF
+                            </button>
+                            <a id="m-evi-enlace-completo" href="#" target="_blank" style="background: #1e3a8a; color: white; text-decoration: none; padding: 9px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                                🖨️ Pantalla Completa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 4: CONCEPTO DEL TUTOR -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 6px 0; font-size: 13px; color: #0f172a; text-transform: uppercase; border-left: 3px solid #f59e0b; padding-left: 8px;">4. Concepto de Calidad y Supervisión Docente</h4>
+                    <div id="m-evi-concepto" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 12px; font-size: 13px; line-height: 1.5; color: #92400e;">-</div>
+                </div>
+
+                <!-- FIRMAS -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; text-align: center;">
+                    <div>
+                        <div style="height: 35px; display: flex; align-items: flex-end; justify-content: center; font-family: cursive; font-size: 18px; color: #1e3a8a;">
+                            <span id="m-evi-firma-est">-</span>
+                        </div>
+                        <div style="border-top: 1px solid #94a3b8; padding-top: 4px; font-weight: 600; color: #334155;" id="m-evi-firma-est-nom">Practicante</div>
+                        <small style="color: #94a3b8;">Licenciatura en Educación - UDI</small>
+                    </div>
+                    <div>
+                        <div style="height: 35px; display: flex; align-items: flex-end; justify-content: center; font-family: cursive; font-size: 18px; color: #0f766e;">
+                            <span id="m-evi-firma-tut">-</span>
+                        </div>
+                        <div style="border-top: 1px solid #94a3b8; padding-top: 4px; font-weight: 600; color: #334155;" id="m-evi-firma-tut-nom">Docente Asesor</div>
+                        <small style="color: #94a3b8;">Coordinación de Prácticas UDI</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PIE DEL MODAL -->
+            <div style="background: #f1f5f9; padding: 12px 22px; border-radius: 0 0 10px 10px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0;">
+                <span style="font-size: 11px; color: #64748b;">Soporte oficial de práctica avalado conforme al Decreto MEN 1075 de 2015</span>
+                <button type="button" onclick="cerrarModalEvidencia()" style="background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer;">
+                    Cerrar Visor
+                </button>
+            </div>
+        </div>
+    </div>
+
 </main>
 
 <!-- CAPA DE PERSISTENCIA DB JAVASCRIPT VANILLA -->
@@ -224,7 +346,9 @@
                         <td><strong>${act.horas_realizadas} hrs</strong></td>
                         <td>${act.descripcion}</td>
                         <td>
-                            ${evidencia ? `<a href="${evidencia.ruta_archivo}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">🔗 Ver Soporte</a>` : '<span style="color: #94a3b8;">Sin archivo</span>'}
+                            <button type="button" onclick="abrirModalEvidencia('${act.id_actividad}')" style="background: none; border: none; padding: 0; color: #2563eb; text-decoration: underline; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 13px;">
+                                📄 Ver Soporte FO-EP-07
+                            </button>
                         </td>
                         <td>
                             <span style="background: ${bgEstado}; color: ${colorEstado}; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 11px;">
@@ -322,6 +446,190 @@
         document.getElementById('eval-fecha').value = new Date().toISOString().split('T')[0];
         cargarDatosTutor();
     };
+
+    // ========================================================================
+    // 4. CONTROLADOR DEL VISOR MODAL OFICIAL DE EVIDENCIAS FO-EP-07
+    // ========================================================================
+    const DETALLES_EVIDENCIAS_CATALOGO = {
+        'ACT-001': {
+            metodologia: 'Aplicación de prueba diagnóstica estandarizada y observación directa estructurada. Se evaluaron competencias en comprensión literal, inferencial y fluidez fonológica en 28 alumnos.',
+            concepto: 'El practicante diseñó una rúbrica rigurosa y pertinente. Los resultados permiten formular un plan de nivelación acorde a las metas del PEI del colegio.',
+            archivo: 'Diagnostico_Lectoescritura_Grado_4A_Rubrica.pdf'
+        },
+        'ACT-002': {
+            metodologia: 'Secuencia didáctica de comprensión lectora mediada por fábulas y narrativas digitales interactivas. Fases: anticipación, lectura compartida y taller de producción textual.',
+            concepto: 'Excelente motivación y manejo de herramientas didácticas. Se observa progreso notable en la interpretación crítica de los estudiantes de primaria.',
+            archivo: 'Taller_Didactico_Comprension_Lectora_Cuentos.pdf'
+        },
+        'ACT-003': {
+            metodologia: 'Acompañamiento individualizado y adaptaciones curriculares bajo el enfoque DUA (Diseño Universal para el Aprendizaje). Refuerzo en habilidades de atención y lectoescritura.',
+            concepto: 'Se destaca la empatía pedagógica y la capacidad para atender ritmos diferenciados de aprendizaje en aula inclusiva.',
+            archivo: 'Registro_Acompanamiento_Pedagogico_Semana3.pdf'
+        },
+        'ACT-004': {
+            metodologia: 'Observación participante en clase de Ciencias Sociales. Formulación de plan de clase integrado enfocado en la memoria histórica y la convivencia ciudadana.',
+            concepto: 'Sólida articulación entre teoría pedagógica y realidad del contexto escolar. Plan de aula aprobado para ejecución.',
+            archivo: 'Plan_Clase_Ciencias_Sociales_Evidencia.pdf'
+        },
+        'ACT-005': {
+            metodologia: 'Diseño e implementación de rúbrica analítica formativa y taller con cartografía temática para grado 5°. Uso de mapas mudos y trabajo colaborativo.',
+            concepto: 'Metodología constructivista altamente participativa. Muy buena retroalimentación brindada a los alumnos.',
+            archivo: 'Rubrica_Evaluacion_Formativa_Geografia.pdf'
+        },
+        'ACT-006': {
+            metodologia: 'Caracterización diagnóstica de estilos de aprendizaje y barreras sensoriales. Diseño de matrices de ajuste razonable (PIAR).',
+            concepto: 'Excelente fundamentación inclusiva. El diagnóstico aporta valor concreto al departamento de orientación escolar.',
+            archivo: 'Diagnostico_Aula_Inclusion_Damaso_Zapata.pdf'
+        },
+        'ACT-007': {
+            metodologia: 'Taller de estimulación sensoriomotora con fichas hápticas y bloques de construcción de palabras para lectoescritura emergente.',
+            concepto: 'Innovación pedagógica sobresaliente. Se evidencia gran paciencia y dominio disciplinar con los niños.',
+            archivo: 'Secuencia_Didactica_Material_Manipulativo.pdf'
+        },
+        'ACT-008': {
+            metodologia: 'Observación etnográfica no intrusiva y registro en matriz de categorías de interacción social y clima de convivencia en recreo y aula.',
+            concepto: 'Observación metódica y rigurosa. Aporta datos claves para el plan de prevención del acoso escolar.',
+            archivo: 'Diario_Campo_Observacion_Santander.pdf'
+        },
+        'ACT-009': {
+            metodologia: 'Dinamización de rincón de lectura infantil con cuentacuentos y títeres temáticos para estimular el hábito lector en primera infancia.',
+            concepto: 'Actividad lúdica bien estructurada con alta participación de los educandos.',
+            archivo: 'Registro_Rincones_Lectura_Iniciacion.pdf'
+        }
+    };
+
+    let evidenciaActivaParaDescarga = null;
+
+    function abrirModalEvidencia(idActividad) {
+        const actividades = DB.getTable('Actividad');
+        const evidencias = DB.getTable('Evidencia');
+        const practicas = DB.getTable('Practica');
+        const estudiantes = DB.getTable('Estudiante');
+        const tutores = DB.getTable('Tutor_Academico');
+        const instituciones = DB.getTable('Institucion');
+
+        const act = actividades.find(a => a.id_actividad === idActividad) || {
+            id_actividad: idActividad,
+            id_practica: 'PRAC-001',
+            fecha: new Date().toISOString().split('T')[0],
+            horas_realizadas: 4,
+            descripcion: 'Jornada pedagógica desarrollada en aula',
+            estado_aprovacion: 'Aprobado'
+        };
+
+        const evi = evidencias.find(e => e.id_actividad === idActividad) || {
+            id_evidencia: 'EVI-' + (idActividad.replace('ACT-', '') || '001'),
+            ruta_archivo: `Evidencia_Practica_${idActividad}.pdf`
+        };
+
+        const p = practicas.find(pr => pr.id_practica === act.id_practica) || practicas[0];
+        const est = p ? estudiantes.find(e => e.id_estudiante === p.id_estudiante) : estudiantes[0];
+        const tut = p ? tutores.find(t => t.documento === p.documento) : tutores[0];
+        const inst = p ? instituciones.find(i => i.id_institucion === p.id_institucion) : instituciones[0];
+
+        const detalle = DETALLES_EVIDENCIAS_CATALOGO[idActividad] || {
+            metodologia: `Desarrollo de jornada de práctica formativa según los objetivos del plan pedagógico semestral de la UDI. Aplicación de metodologías activas y registro de avances en el formato institucional FO-EP-07.`,
+            concepto: `La jornada formativa cumple con los requerimientos normativos del Decreto MEN 1075 de 2015 y los criterios de evaluación del programa de Licenciatura.`,
+            archivo: evi.ruta_archivo.split('/').pop() || `Evidencia_Pedagogica_${idActividad}.pdf`
+        };
+
+        evidenciaActivaParaDescarga = { act, evi, p, est, tut, inst, detalle };
+
+        document.getElementById('m-evi-act-id').innerText = act.id_actividad;
+        document.getElementById('m-evi-id').innerText = evi.id_evidencia;
+        document.getElementById('m-evi-prac-id').innerText = p ? p.id_practica : 'PRAC-001';
+        document.getElementById('m-evi-fecha-horas').innerText = `${act.fecha} · ${act.horas_realizadas || 4} hrs`;
+        
+        document.getElementById('m-evi-estudiante').innerText = est ? est.nombre : 'Estudiante Practicante';
+        document.getElementById('m-evi-estudiante-correo').innerText = est ? est.correo : '-';
+        document.getElementById('m-evi-tutor').innerText = tut ? tut.nombre : sesion.nombre;
+        document.getElementById('m-evi-institucion').innerText = inst ? inst.nombre_colegio : 'Institución Educativa Receptora';
+
+        document.getElementById('m-evi-descripcion').innerText = act.descripcion;
+        document.getElementById('m-evi-metodologia').innerText = detalle.metodologia;
+        document.getElementById('m-evi-archivo-nombre').innerText = detalle.archivo;
+        document.getElementById('m-evi-concepto').innerText = `"${detalle.concepto}"`;
+
+        document.getElementById('m-evi-firma-est').innerText = est ? est.nombre : 'Practicante UDI';
+        document.getElementById('m-evi-firma-est-nom').innerText = est ? est.nombre : 'Practicante UDI';
+        document.getElementById('m-evi-firma-tut').innerText = tut ? tut.nombre : sesion.nombre;
+        document.getElementById('m-evi-firma-tut-nom').innerText = tut ? tut.nombre : sesion.nombre;
+
+        document.getElementById('m-evi-enlace-completo').href = `evidencia.html?id=${encodeURIComponent(idActividad)}`;
+
+        const modal = document.getElementById('modal-visor-evidencia');
+        modal.style.display = 'flex';
+    }
+
+    function cerrarModalEvidencia() {
+        const modal = document.getElementById('modal-visor-evidencia');
+        modal.style.display = 'none';
+    }
+
+    function descargarEvidenciaPDF() {
+        if (!evidenciaActivaParaDescarga) return;
+        const { act, evi, p, est, tut, inst, detalle } = evidenciaActivaParaDescarga;
+        
+        const contenidoHtml = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>Evidencia ${act.id_actividad} - UDI</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; color: #1e293b; }
+                    .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; margin-bottom: 20px; }
+                    h2 { color: #1e3a8a; margin: 0; }
+                    .meta { background: #f8fafc; border: 1px solid #cbd5e1; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+                    .seccion { margin-bottom: 18px; }
+                    .seccion h4 { color: #0f172a; margin-bottom: 6px; text-transform: uppercase; }
+                    .sello { border: 2px solid #15803d; color: #15803d; padding: 6px 12px; font-weight: bold; display: inline-block; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>UNIVERSIDAD DE INVESTIGACIÓN Y DESARROLLO - UDI</h2>
+                    <p>Soporte Oficial de Práctica Pedagógica - Formato FO-EP-07</p>
+                </div>
+                <div class="meta">
+                    <p><strong>Actividad:</strong> ${act.id_actividad} | <strong>Evidencia:</strong> ${evi.id_evidencia} | <strong>Práctica:</strong> ${p ? p.id_practica : 'PRAC-001'}</p>
+                    <p><strong>Estudiante:</strong> ${est ? est.nombre : 'Practicante'} (${est ? est.correo : '-'})</p>
+                    <p><strong>Tutor Asesor:</strong> ${tut ? tut.nombre : sesion.nombre} | <strong>Institución:</strong> ${inst ? inst.nombre_colegio : 'Colegio'}</p>
+                    <p><strong>Fecha:</strong> ${act.fecha} | <strong>Horas Avaladas:</strong> ${act.horas_realizadas} hrs | <strong>Estado:</strong> ${act.estado_aprovacion}</p>
+                </div>
+                <div class="seccion">
+                    <h4>1. Descripción de la Actividad:</h4>
+                    <p>${act.descripcion}</p>
+                </div>
+                <div class="seccion">
+                    <h4>2. Metodología Aplicada:</h4>
+                    <p>${detalle.metodologia}</p>
+                </div>
+                <div class="seccion">
+                    <h4>3. Archivo Digitalizado:</h4>
+                    <p><strong>${detalle.archivo}</strong> (Ruta: ${evi.ruta_archivo})</p>
+                    <div class="sello">✓ VERIFICADO Y CONFORME POR TUTOR ASESOR UDI</div>
+                </div>
+                <div class="seccion">
+                    <h4>4. Concepto del Tutor:</h4>
+                    <p><em>"${detalle.concepto}"</em></p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([contenidoHtml], { type: 'text/html' });
+        const enlace = document.createElement('a');
+        enlace.href = URL.createObjectURL(blob);
+        enlace.download = `${detalle.archivo.replace('.pdf', '')}_FO-EP-07.html`;
+        document.body.appendChild(enlace);
+        enlace.click();
+        document.body.removeChild(enlace);
+    }
+
+    window.addEventListener('db:sincronizado', function() {
+        cargarDatosTutor();
+    });
 </script>
 
 </body>

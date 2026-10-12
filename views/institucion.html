@@ -190,6 +190,7 @@
 
     // Carga inicial al completar el ciclo de vida del DOM
     window.onload = cargarPracticasSede;
+    window.addEventListener('db:sincronizado', cargarPracticasSede);
 </script>
 
 </body>

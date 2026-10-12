@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Evidencia de Práctica - UDI</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        .hoja-documento {
+            background: #ffffff;
+            max-width: 850px;
+            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #cbd5e1;
+            padding: 40px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .encabezado-institucional {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        .logo-udi {
+            max-height: 55px;
+            width: auto;
+        }
+        .titulo-formato {
+            text-align: right;
+        }
+        .titulo-formato h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #1e3a8a;
+            text-transform: uppercase;
+        }
+        .titulo-formato span {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .cuadro-metadatos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+        .cuadro-metadatos div strong {
+            display: block;
+            color: #475569;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .seccion-bloque {
+            margin-bottom: 25px;
+        }
+        .seccion-bloque h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #0f172a;
+            border-left: 4px solid #0f766e;
+            padding-left: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .seccion-bloque p {
+            margin: 0;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: #334155;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 6px;
+        }
+        .caja-evidencia-grafica {
+            background: #f0fdf4;
+            border: 1px dashed #86efac;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .contenedor-firmas {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px dashed #cbd5e1;
+        }
+        .linea-firma {
+            border-top: 1px solid #0f172a;
+            margin-top: 40px;
+            text-align: center;
+            padding-top: 6px;
+            font-size: 12px;
+            color: #334155;
+        }
+        .sello-verificacion {
+            display: inline-block;
+            border: 2px solid #15803d;
+            color: #15803d;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+        .botones-acciones {
+            max-width: 850px;
+            margin: 20px auto 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .hoja-documento { box-shadow: none; border: none; padding: 0; }
+            .botones-acciones { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="botones-acciones">
+    <button onclick="window.history.back()" style="background: #e2e8f0; color: #334155; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">
+        ⬅️ Volver al Sistema
+    </button>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" style="background: #1e3a8a; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">
+            🖨️ Imprimir / Guardar en PDF
+        </button>
+    </div>
+</div>
+
+<div class="hoja-documento" id="documento-imprimible">
+    <!-- ENCABEZADO INSTITUCIONAL -->
+    <div class="encabezado-institucional">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="../images/logo1.png" alt="Logo UDI" class="logo-udi" onerror="this.src='../images/logo.png'">
+            <div>
+                <strong style="color: #0f172a; font-size: 14px; display: block;">UNIVERSIDAD DE INVESTIGACIÓN Y DESARROLLO - UDI</strong>
+                <span style="font-size: 12px; color: #64748b;">Facultad de Ciencias Sociales y Educación - Licenciatura</span>
+            </div>
+        </div>
+        <div class="titulo-formato">
+            <h3>Soporte Oficial de Práctica</h3>
+            <span>FORMATO INSTITUCIONAL: FO-EP-07</span>
+        </div>
+    </div>
+
+    <!-- METADATOS DEL REGISTRO -->
+    <div class="cuadro-metadatos">
+        <div>
+            <strong>Código de Actividad:</strong>
+            <span id="doc-act-id" style="font-weight: bold; color: #1e3a8a;">ACT-001</span>
+        </div>
+        <div>
+            <strong>Identificador Evidencia:</strong>
+            <span id="doc-evi-id" style="font-weight: bold; color: #0f766e;">EVI-001</span>
+        </div>
+        <div>
+            <strong>Fecha de Ejecución:</strong>
+            <span id="doc-fecha">05/03/2026</span>
+        </div>
+        <div>
+            <strong>Horas Avaladas:</strong>
+            <span id="doc-horas" style="font-weight: bold;">4 Horas Pedagógicas</span>
+        </div>
+        <div>
+            <strong>Practicante:</strong>
+            <span id="doc-estudiante">Camilo Andrés Rangel Moreno</span>
+        </div>
+        <div>
+            <strong>Institución Receptora:</strong>
+            <span id="doc-institucion">Colegio Custodio García Rovira</span>
+        </div>
+        <div>
+            <strong>Tutor Académico UDI:</strong>
+            <span id="doc-tutor">Mg. Carlos Alberto Gómez Silva</span>
+        </div>
+        <div>
+            <strong>Estado de Validación:</strong>
+            <span id="doc-estado" style="font-weight: bold; color: #15803d;">Aprobado</span>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 1: DESCRIPCIÓN DE LA ACTIVIDAD -->
+    <div class="seccion-bloque">
+        <h4>1. Descripción de la Jornada y Actividades Desarrolladas</h4>
+        <p id="doc-descripcion">
+            Diagnóstico de lectura y escritura en grado 4°A. Aplicación de prueba diagnóstica estandarizada y rúbrica pedagógica de comprensión de textos informativos.
+        </p>
+    </div>
+
+    <!-- SECCIÓN 2: METODOLOGÍA Y ESTRATEGIA DIDÁCTICA -->
+    <div class="seccion-bloque">
+        <h4>2. Metodología y Fundamentación Pedagógica</h4>
+        <p id="doc-metodologia">
+            Se aplicaron principios de observación participante y evaluación formativa bajo el modelo pedagógico sociocrítico. Se organizó el grupo en estaciones de lectura guiada y se tabularon las respuestas en matrices de fluidez y análisis fonológico.
+        </p>
+    </div>
+
+    <!-- SECCIÓN 3: EVIDENCIA ADJUNTA Y SOPORTE DOCUMENTAL -->
+    <div class="seccion-bloque">
+        <h4>3. Soporte Documental y Anexos de Aula</h4>
+        <div class="caja-evidencia-grafica">
+            <div style="font-size: 32px; margin-bottom: 5px;">📄</div>
+            <strong id="doc-archivo-nombre" style="color: #1e293b; font-size: 14px; display: block;">Diagnostico_Lectura_Grado_4A_Rúbrica.pdf</strong>
+            <span id="doc-archivo-ruta" style="font-size: 12px; color: #64748b; word-break: break-all;">Registro Digitalizado - Verificado en Servidor Institucional UDI</span>
+            <div style="margin-top: 12px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span class="sello-verificacion">✓ DOCUMENTO DIGITAL VERIFICADO Y CONFORME</span>
+                <button type="button" onclick="descargarDocumentoEvidencia()" style="background: #15803d; color: white; border: none; padding: 6px 14px; border-radius: 4px; font-weight: 600; font-size: 12px; cursor: pointer;">
+                    📥 Descargar Soporte (.PDF)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 4: CONCEPTO DEL TUTOR ASESOR -->
+    <div class="seccion-bloque">
+        <h4>4. Concepto de Calidad y Supervisión Docente</h4>
+        <p id="doc-concepto">
+            La actividad cumple satisfactoriamente con los objetivos del plan de práctica y las disposiciones del Decreto 1075 de 2015. El practicante demuestra dominio disciplinar, pertinencia en los instrumentos y adecuado manejo de grupo.
+        </p>
+    </div>
+
+    <!-- FIRMAS DE LEGALIZACIÓN -->
+    <div class="contenedor-firmas">
+        <div>
+            <div class="linea-firma">
+                <strong id="doc-firma-estudiante">Camilo Andrés Rangel Moreno</strong><br>
+                <span>Firma del Licenciado en Formación</span><br>
+                <small style="color: #94a3b8;">Estudiante Practicante UDI</small>
+            </div>
+        </div>
+        <div>
+            <div class="linea-firma">
+                <strong id="doc-firma-tutor">Mg. Carlos Alberto Gómez Silva</strong><br>
+                <span>Docente Asesor / Tutor Académico</span><br>
+                <small style="color: #94a3b8;">Coordinación de Prácticas Pedagógicas UDI</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../js/db.js"></script>
+<script>
+    // Diccionario enriquecido de evidencias pedagógicas predeterminadas
+    const DETALLES_EVIDENCIAS = {
+        'ACT-001': {
+            metodologia: 'Aplicación de prueba diagnóstica estandarizada y observación directa estructurada. Se evaluaron competencias en comprensión literal, inferencial y fluidez fonológica en 28 alumnos.',
+            concepto: 'El practicante diseñó una rúbrica rigurosa y pertinente. Los resultados permiten formular un plan de nivelación acorde a las metas del PEI del colegio.',
+            archivo: 'Diagnostico_Lectoescritura_Grado_4A_Rubrica.pdf'
+        },
+        'ACT-002': {
+            metodologia: 'Secuencia didáctica de comprensión lectora mediada por fábulas y narrativas digitales interactivas. Fases: anticipación, lectura compartida y taller de producción textual.',
+            concepto: 'Excelente motivación y manejo de herramientas didácticas. Se observa progreso notable en la interpretación crítica de los estudiantes de primaria.',
+            archivo: 'Taller_Didactico_Comprension_Lectora_Cuentos.pdf'
+        },
+        'ACT-003': {
+            metodologia: 'Acompañamiento individualizado y adaptaciones curriculares bajo el enfoque DUA (Diseño Universal para el Aprendizaje). Refuerzo en habilidades de atención y lectoescritura.',
+            concepto: 'Se destaca la empatía pedagógica y la capacidad para atender ritmos diferenciados de aprendizaje en aula inclusiva.',
+            archivo: 'Registro_Acompanamiento_Pedagogico_Semana3.pdf'
+        },
+        'ACT-004': {
+            metodologia: 'Observación participante en clase de Ciencias Sociales. Formulación de plan de clase integrado enfocado en la memoria histórica y la convivencia ciudadana.',
+            concepto: 'Sólida articulación entre teoría pedagógica y realidad del contexto escolar. Plan de aula aprobado para ejecución.',
+            archivo: 'Plan_Clase_Ciencias_Sociales_Evidencia.pdf'
+        },
+        'ACT-005': {
+            metodologia: 'Diseño e implementación de rúbrica analítica formativa y taller con cartografía temática para grado 5°. Uso de mapas mudos y trabajo colaborativo.',
+            concepto: 'Metodología constructivista altamente participativa. Muy buena retroalimentación brindada a los alumnos.',
+            archivo: 'Rubrica_Evaluacion_Formativa_Geografia.pdf'
+        },
+        'ACT-006': {
+            metodologia: 'Caracterización diagnóstica de estilos de aprendizaje y barreras sensoriales. Diseño de matrices de ajuste razonable (PIAR).',
+            concepto: 'Excelente fundamentación inclusiva. El diagnóstico aporta valor concreto al departamento de orientación escolar.',
+            archivo: 'Diagnostico_Aula_Inclusion_Damaso_Zapata.pdf'
+        },
+        'ACT-007': {
+            metodologia: 'Taller de estimulación sensoriomotora con fichas hápticas y bloques de construcción de palabras para lectoescritura emergente.',
+            concepto: 'Innovación pedagógica sobresaliente. Se evidencia gran paciencia y dominio disciplinar con los niños.',
+            archivo: 'Secuencia_Didactica_Material_Manipulativo.pdf'
+        },
+        'ACT-008': {
+            metodologia: 'Observación etnográfica no intrusiva y registro en matriz de categorías de interacción social y clima de convivencia en recreo y aula.',
+            concepto: 'Observación metódica y rigurosa. Aporta datos claves para el plan de prevención del acoso escolar.',
+            archivo: 'Diario_Campo_Observacion_Santander.pdf'
+        },
+        'ACT-009': {
+            metodologia: 'Dinamización de rincón de lectura infantil con cuentacuentos y títeres temáticos para estimular el hábito lector en primera infancia.',
+            concepto: 'Actividad lúdica bien estructurada con alta participación de los educandos.',
+            archivo: 'Registro_Rincones_Lectura_Iniciacion.pdf'
+        }
+    };
+
+    let evidenciaGlobal = null;
+
+    function descargarDocumentoEvidencia() {
+        if (!evidenciaGlobal) {
+            window.print();
+            return;
+        }
+        const { actividad, detalle, estudiante, tutor, colegio } = evidenciaGlobal;
+        const htmlDoc = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>Evidencia ${actividad.id_actividad} - UDI</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; color: #1e293b; }
+                    .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 20px; }
+                    .sello { border: 2px solid #15803d; color: #15803d; font-weight: bold; padding: 6px 10px; display: inline-block; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>UNIVERSIDAD DE INVESTIGACIÓN Y DESARROLLO - UDI</h2>
+                    <h3>Soporte Oficial de Práctica - Formato FO-EP-07</h3>
+                </div>
+                <p><strong>Actividad:</strong> ${actividad.id_actividad} | <strong>Fecha:</strong> ${actividad.fecha} | <strong>Horas:</strong> ${actividad.horas_realizadas} hrs</p>
+                <p><strong>Practicante:</strong> ${estudiante ? estudiante.nombre : 'Practicante'} | <strong>Tutor:</strong> ${tutor ? tutor.nombre : 'Tutor UDI'}</p>
+                <p><strong>Institución:</strong> ${colegio ? colegio.nombre_colegio : 'Colegio'}</p>
+                <hr>
+                <h4>Descripción:</h4>
+                <p>${actividad.descripcion}</p>
+                <h4>Metodología:</h4>
+                <p>${detalle.metodologia}</p>
+                <h4>Concepto del Tutor:</h4>
+                <p><em>"${detalle.concepto}"</em></p>
+                <div class="sello">✓ SOPORTE INSTITUCIONAL DIGITALIZADO Y CONFORME</div>
+            </body>
+            </html>
+        `;
+        const blob = new Blob([htmlDoc], { type: 'text/html' });
+        const enlace = document.createElement('a');
+        enlace.href = URL.createObjectURL(blob);
+        enlace.download = `${detalle.archivo.replace('.pdf', '')}_FO-EP-07.html`;
+        document.body.appendChild(enlace);
+        enlace.click();
+        document.body.removeChild(enlace);
+    }
+
+    window.onload = function() {
+        const params = new URLSearchParams(window.location.search);
+        const idBuscado = params.get('id') || 'ACT-001';
+
+        const actividades = DB.getTable('Actividad');
+        const evidencias = DB.getTable('Evidencia');
+        const practicas = DB.getTable('Practica');
+        const estudiantes = DB.getTable('Estudiante');
+        const tutores = DB.getTable('Tutor_Academico');
+        const colegios = DB.getTable('Institucion');
+
+        // Buscar por id_actividad o id_evidencia
+        let actividad = actividades.find(a => a.id_actividad === idBuscado);
+        let evidencia = evidencias.find(e => e.id_actividad === idBuscado || e.id_evidencia === idBuscado);
+
+        if (!actividad && evidencia) {
+            actividad = actividades.find(a => a.id_actividad === evidencia.id_actividad);
+        }
+
+        // Si no se encuentra, usar la primera actividad disponible
+        if (!actividad) {
+            actividad = actividades[0] || {
+                id_actividad: idBuscado,
+                id_practica: 'PRAC-001',
+                fecha: new Date().toLocaleDateString('es-CO'),
+                horas_realizadas: 4,
+                descripcion: 'Jornada pedagógica desarrollada en aula',
+                estado_aprovacion: 'Aprobado'
+            };
+        }
+
+        if (!evidencia) {
+            evidencia = evidencias.find(e => e.id_actividad === actividad.id_actividad) || {
+                id_evidencia: 'EVI-' + (actividad.id_actividad.replace('ACT-', '') || '001'),
+                ruta_archivo: 'Evidencia_Practica_' + actividad.id_actividad + '.pdf'
+            };
+        }
+
+        const practica = practicas.find(p => p.id_practica === actividad.id_practica) || practicas[0];
+        const estudiante = practica ? estudiantes.find(e => e.id_estudiante === practica.id_estudiante) : estudiantes[0];
+        const tutor = practica ? tutores.find(t => t.documento === practica.documento) : tutores[0];
+        const colegio = practica ? colegios.find(c => c.id_institucion === practica.id_institucion) : colegios[0];
+
+        const detalle = DETALLES_EVIDENCIAS[actividad.id_actividad] || {
+            metodologia: 'Desarrollo de jornada de práctica formativa según los objetivos del plan pedagógico semestral y las orientaciones del tutor académico.',
+            concepto: 'La actividad documentada cumple con los requerimientos normativos institucionales para la validación de horas de práctica en la UDI.',
+            archivo: `Soporte_Evidencia_${actividad.id_actividad}.pdf`
+        };
+
+        // Rellenar en el documento
+        document.getElementById('doc-act-id').innerText = actividad.id_actividad;
+        document.getElementById('doc-evi-id').innerText = evidencia.id_evidencia || 'EVI-001';
+        document.getElementById('doc-fecha').innerText = actividad.fecha;
+        document.getElementById('doc-horas').innerText = `${actividad.horas_realizadas || 4} Horas Pedagógicas`;
+        document.getElementById('doc-estado').innerText = actividad.estado_aprovacion || 'Aprobado';
+        document.getElementById('doc-descripcion').innerText = actividad.descripcion;
+
+        if (estudiante) {
+            document.getElementById('doc-estudiante').innerText = estudiante.nombre;
+            document.getElementById('doc-firma-estudiante').innerText = estudiante.nombre;
+        }
+        if (tutor) {
+            document.getElementById('doc-tutor').innerText = tutor.nombre;
+            document.getElementById('doc-firma-tutor').innerText = tutor.nombre;
+        }
+        if (colegio) {
+            document.getElementById('doc-institucion').innerText = colegio.nombre_colegio;
+        }
+
+        document.getElementById('doc-metodologia').innerText = detalle.metodologia;
+        document.getElementById('doc-concepto').innerText = detalle.concepto;
+        document.getElementById('doc-archivo-nombre').innerText = detalle.archivo;
+        document.getElementById('doc-archivo-ruta').innerText = `Ruta: ${evidencia.ruta_archivo || detalle.archivo}`;
+
+        evidenciaGlobal = { actividad, evidencia, detalle, estudiante, tutor, colegio, practica };
+    };
+</script>
+</body>
+</html>

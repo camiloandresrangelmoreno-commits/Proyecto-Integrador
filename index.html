@@ -71,11 +71,14 @@
                     <span style="font-size: 10px; opacity: 0.7; color: #cbd5e1;">[Ctrl+Shift+D]</span>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                    <button type="button" onclick="cargarDemo('estudiante')" style="background: #2563eb; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Estudiante</button>
+                    <button type="button" onclick="cargarDemo('estudiante')" style="background: #2563eb; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Camilo (PRAC-001)</button>
+                    <button type="button" onclick="cargarDemo('edwin')" style="background: #1d4ed8; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Edwin (PRAC-002)</button>
+                    <button type="button" onclick="cargarDemo('laura')" style="background: #0284c7; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Laura (PRAC-003)</button>
+                    <button type="button" onclick="cargarDemo('maria')" style="background: #0369a1; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 María (PRAC-004)</button>
                     <button type="button" onclick="cargarDemo('docente')" style="background: #0d9488; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">👨‍🏫 Tutor Académico</button>
                     <button type="button" onclick="cargarDemo('coordinador')" style="background: #7c3aed; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">📋 Coordinador</button>
                     <button type="button" onclick="cargarDemo('institucion')" style="background: #ea580c; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🏫 Institución</button>
-                    <button type="button" onclick="cargarDemo('director')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; grid-column: span 2; font-weight: 600;">👔 Director de Programa</button>
+                    <button type="button" onclick="cargarDemo('director')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">👔 Director</button>
                 </div>
             </div>
 
@@ -106,9 +109,16 @@
             <div style="margin-bottom: 12px;">
                 <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Semestre Académico:</label>
                 <select id="sol-semestre" required style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    <option value="1">1° Semestre</option>
+                    <option value="2">2° Semestre</option>
+                    <option value="3">3° Semestre</option>
+                    <option value="4">4° Semestre</option>
+                    <option value="5">5° Semestre</option>
                     <option value="6">6° Semestre - Observación Pedagógica</option>
-                    <option value="7" selected>7° Semestre - Inmersión</option>
+                    <option value="7" selected>7° Semestre - Inmersión Pedagógica</option>
                     <option value="8">8° Semestre - Práctica Integral</option>
+                    <option value="9">9° Semestre - Profundización</option>
+                    <option value="10">10° Semestre - Grado y Culminación</option>
                 </select>
             </div>
             <div style="margin-bottom: 18px;">
@@ -144,8 +154,20 @@
         const campoClave = document.getElementById('password');
         const campoRol = document.getElementById('rol');
 
-        if (rol === 'estudiante') {
+        if (rol === 'estudiante' || rol === 'camilo') {
             campoEmail.value = 'estudiante@udi.edu.co';
+            campoClave.value = 'estudiante123';
+            campoRol.value = 'estudiante';
+        } else if (rol === 'edwin') {
+            campoEmail.value = 'edwin.quiroga@udi.edu.co';
+            campoClave.value = 'edwin123';
+            campoRol.value = 'estudiante';
+        } else if (rol === 'laura') {
+            campoEmail.value = 'laura.morales@udi.edu.co';
+            campoClave.value = 'laura123';
+            campoRol.value = 'estudiante';
+        } else if (rol === 'maria') {
+            campoEmail.value = 'marias@udi.edu.co';
             campoClave.value = 'estudiante123';
             campoRol.value = 'estudiante';
         } else if (rol === 'docente') {
@@ -216,8 +238,9 @@
 
     /**
      * Manejador del formulario de radicación de aspirantes.
-     * Registra un nuevo estudiante en el modelo relacional (Clase Estudiante) y
-     * encola la postulación para su posterior alta oficial por parte del Coordinador.
+     * Encola la postulación en estado de ESPERA (solicitudes_aspirantes) para que
+     * el Coordinador de Práctica sea quien formalmente la revise y acepte.
+     * NO activa al estudiante para login hasta su aprobación oficial.
      */
     document.getElementById('form-radicar-solicitud').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -226,41 +249,46 @@
         const semestre = parseInt(document.getElementById('sol-semestre').value);
         const clave = document.getElementById('sol-clave').value;
 
-        // Validar si el estudiante ya existe
+        // 1. Validar si ya existe como estudiante matriculado y activo en el sistema
         const existente = DB.findBy('Estudiante', 'correo', correo);
         if (existente) {
-            alert('Ya existe un estudiante radicado con este correo electrónico.');
+            alert(`El correo ${correo} ya se encuentra registrado y matriculado en el sistema.`);
             return;
         }
 
-        // Crear registro en la tabla Estudiante del Diagrama de Clases
-        const nuevoEstudiante = {
-            id_estudiante: 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0'),
-            nombre: nombre,
-            correo: correo,
-            semestre: semestre,
-            clave: clave
-        };
-        DB.insert('Estudiante', nuevoEstudiante);
+        // 2. Validar si ya cuenta con una solicitud previa en lista de espera
+        const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+        const solicitudExistente = solicitudes.find(s => (s.correo || '').toLowerCase() === correo);
+        if (solicitudExistente) {
+            alert(`Ya has radicado previamente una solicitud con este correo (${correo}).\n\nTu solicitud se encuentra en estado de ESPERA. Debes aguardar a que el Coordinador de Prácticas la apruebe.`);
+            return;
+        }
 
-        // Crear registro asociado en Solicitudes de Aspirantes para el Director/Coordinador
-        const postulaciones = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
-        postulaciones.push({
-            id: nuevoEstudiante.id_estudiante,
+        // 3. Crear el registro exclusivamente en la bandeja de aspirantes en espera
+        const idSolicitud = 'ASP-' + String(solicitudes.length + 1).padStart(3, '0');
+        const nuevaSolicitud = {
+            id_solicitud: idSolicitud,
+            id: idSolicitud,
             nombre: nombre,
             correo: correo,
             semestre: semestre,
+            clave: clave,
+            estado: 'Pendiente',
             fecha: new Date().toLocaleDateString('es-CO')
-        });
-        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(postulaciones));
+        };
+        solicitudes.push(nuevaSolicitud);
+        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudes));
 
-        alert(`¡Solicitud radicada con éxito! Tu ID es ${nuevoEstudiante.id_estudiante}. Ahora puedes iniciar sesión con tu correo y contraseña seleccionando el rol "Estudiante de Práctica".`);
+        // Enviar al servidor para sincronización multiplataforma (VS Code y preview)
+        fetch('/api/solicitudes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevaSolicitud)
+        }).catch(() => {});
+
+        // 4. Notificar al aspirante que debe esperar la aprobación del coordinador
+        alert(`¡Solicitud radicada con éxito!\n\nTu radicado es: ${idSolicitud}\nEstado: EN ESPERA DE APROBACIÓN\n\nEl Coordinador de Prácticas debe revisar y aceptar tu solicitud antes de que puedas iniciar sesión.`);
         cerrarModalRadicar();
-
-        // Autocompletar formulario de login para agilizar la entrada
-        document.getElementById('email').value = correo;
-        document.getElementById('password').value = clave;
-        document.getElementById('rol').value = 'estudiante';
     });
 
     /**

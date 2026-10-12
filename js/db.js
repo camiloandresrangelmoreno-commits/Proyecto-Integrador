@@ -14,15 +14,16 @@
  * asíncrona bidireccional con el backend en Node.js y PostgreSQL en Supabase.
  */
 
-// Clave única para aislamiento de la memoria local en el navegador
-const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V1';
+// Clave única para aislamiento de la memoria local en el navegador (V2 con prácticas diferenciadas por estudiante)
+const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V2';
 
 // Estructura semilla inicial modelada exactamente según el Diagrama de Clases UML
 const datosSemillaInicial = {
     Estudiante: [
         { id_estudiante: 'EST-2024-01', documento: '1098234501', nombre: 'Camilo Andrés Rangel Moreno', correo: 'estudiante@udi.edu.co', semestre: 7, clave: 'estudiante123' },
         { id_estudiante: 'EST-2024-02', documento: '1098234502', nombre: 'Edwin Fabián Quiroga Díaz', correo: 'edwin.quiroga@udi.edu.co', semestre: 8, clave: 'edwin123' },
-        { id_estudiante: 'EST-2024-03', documento: '1098234503', nombre: 'Laura Valentina Morales Gómez', correo: 'laura.morales@udi.edu.co', semestre: 6, clave: 'laura123' }
+        { id_estudiante: 'EST-2024-03', documento: '1098234503', nombre: 'Laura Valentina Morales Gómez', correo: 'laura.morales@udi.edu.co', semestre: 6, clave: 'laura123' },
+        { id_estudiante: 'EST-2024-04', documento: '1098234504', nombre: 'María Camila Sotomayor Peña', correo: 'marias@udi.edu.co', semestre: 6, clave: 'estudiante123' }
     ],
     Tutor_Academico: [
         { documento: 'DOC-1098234', documento_tu: 'DOC-1098234', nombre: 'Mg. Carlos Alberto Gómez Silva', correo: 'docente@udi.edu.co', clave: 'docente123', especialidad: 'Didáctica de la Lengua' },
@@ -57,7 +58,7 @@ const datosSemillaInicial = {
             id_practica: 'PRAC-002',
             id_estudiante: 'EST-2024-02',
             documento: 'DOC-1098234',
-            id_institucion: 'INST-01',
+            id_institucion: 'INST-02',
             id_tipo: 'TP-03',
             estado: 'En Curso',
             fecha_inicio: '2026-02-01',
@@ -67,11 +68,21 @@ const datosSemillaInicial = {
             id_practica: 'PRAC-003',
             id_estudiante: 'EST-2024-03',
             documento: 'DOC-1098567',
-            id_institucion: 'INST-02',
+            id_institucion: 'INST-03',
             id_tipo: 'TP-02',
-            estado: 'Pendiente Aprobación',
+            estado: 'En Curso',
             fecha_inicio: '2026-03-01',
             horas_objetivo: 60
+        },
+        {
+            id_practica: 'PRAC-004',
+            id_estudiante: 'EST-2024-04',
+            documento: 'DOC-1098567',
+            id_institucion: 'INST-01',
+            id_tipo: 'TP-01',
+            estado: 'En Curso',
+            fecha_inicio: '2026-03-01',
+            horas_objetivo: 50
         }
     ],
     Actividad: [
@@ -106,6 +117,46 @@ const datosSemillaInicial = {
             descripcion: 'Observación participante en clase de Ciencias Sociales y formulación de plan de clase integrado.',
             horas_realizadas: 6,
             estado_aprovacion: 'Aprobado'
+        },
+        {
+            id_actividad: 'ACT-005',
+            id_practica: 'PRAC-002',
+            fecha: '2026-03-18',
+            descripcion: 'Diseño de rúbrica de evaluación formativa y taller de geografía interactiva con mapas temáticos.',
+            horas_realizadas: 5,
+            estado_aprovacion: 'Aprobado'
+        },
+        {
+            id_actividad: 'ACT-006',
+            id_practica: 'PRAC-003',
+            fecha: '2026-03-08',
+            descripcion: 'Diagnóstico situacional del aula de inclusión y caracterización de estilos de aprendizaje bajo el modelo DUA.',
+            horas_realizadas: 5,
+            estado_aprovacion: 'Aprobado'
+        },
+        {
+            id_actividad: 'ACT-007',
+            id_practica: 'PRAC-003',
+            fecha: '2026-03-16',
+            descripcion: 'Implementación de material manipulativo para estimulación sensoriomotora en lenguaje inicial.',
+            horas_realizadas: 5,
+            estado_aprovacion: 'Aprobado'
+        },
+        {
+            id_actividad: 'ACT-008',
+            id_practica: 'PRAC-004',
+            fecha: '2026-03-14',
+            descripcion: 'Observación guiada en aula y registro etnográfico de dinámicas de convivencia escolar.',
+            horas_realizadas: 4,
+            estado_aprovacion: 'Aprobado'
+        },
+        {
+            id_actividad: 'ACT-009',
+            id_practica: 'PRAC-004',
+            fecha: '2026-03-21',
+            descripcion: 'Apoyo en organización de rincones de lectura y actividades lúdicas de iniciación literaria.',
+            horas_realizadas: 4,
+            estado_aprovacion: 'Pendiente'
         }
     ],
     Evidencia: [
@@ -132,6 +183,36 @@ const datosSemillaInicial = {
             id_actividad: 'ACT-004',
             id_practica: 'PRAC-002',
             ruta_archivo: 'https://drive.google.com/file/d/plan-clase-sociales-evidencia.pdf'
+        },
+        {
+            id_evidencia: 'EVI-005',
+            id_actividad: 'ACT-005',
+            id_practica: 'PRAC-002',
+            ruta_archivo: 'https://drive.google.com/file/d/rubrica-geografia-interactiva.pdf'
+        },
+        {
+            id_evidencia: 'EVI-006',
+            id_actividad: 'ACT-006',
+            id_practica: 'PRAC-003',
+            ruta_archivo: 'https://drive.google.com/file/d/diagnostico-aula-inclusion-damaso.pdf'
+        },
+        {
+            id_evidencia: 'EVI-007',
+            id_actividad: 'ACT-007',
+            id_practica: 'PRAC-003',
+            ruta_archivo: 'https://drive.google.com/file/d/guia-material-manipulativo.pdf'
+        },
+        {
+            id_evidencia: 'EVI-008',
+            id_actividad: 'ACT-008',
+            id_practica: 'PRAC-004',
+            ruta_archivo: 'https://drive.google.com/file/d/diario-campo-observacion-santander.pdf'
+        },
+        {
+            id_evidencia: 'EVI-009',
+            id_actividad: 'ACT-009',
+            id_practica: 'PRAC-004',
+            ruta_archivo: 'https://drive.google.com/file/d/registro-rincones-lectura.pdf'
         }
     ],
     Evaluacion: [
@@ -142,6 +223,30 @@ const datosSemillaInicial = {
             calificacion: 4.8,
             observaciones: 'Excelente pertinencia en el diseño de los instrumentos y sólida fundamentación pedagógica.',
             fecha_evaluacion: '2026-03-15'
+        },
+        {
+            id_evaluacion: 'EVAL-002',
+            id_practica: 'PRAC-002',
+            documento: 'DOC-1098234',
+            calificacion: 4.7,
+            observaciones: 'Excelente iniciativa en la formulación de secuencias didácticas de ciencias sociales.',
+            fecha_evaluacion: '2026-03-20'
+        },
+        {
+            id_evaluacion: 'EVAL-003',
+            id_practica: 'PRAC-003',
+            documento: 'DOC-1098567',
+            calificacion: 4.9,
+            observaciones: 'Compromiso ejemplar con los estudiantes de inclusión y gran sensibilidad pedagógica.',
+            fecha_evaluacion: '2026-03-22'
+        },
+        {
+            id_evaluacion: 'EVAL-004',
+            id_practica: 'PRAC-004',
+            documento: 'DOC-1098567',
+            calificacion: 4.6,
+            observaciones: 'Muy buena capacidad de observación e identificación de necesidades socioeducativas en aula.',
+            fecha_evaluacion: '2026-03-25'
         }
     ],
     Convenio: [
@@ -191,13 +296,67 @@ const DB = {
         } else {
             try {
                 const datosGuardados = JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL));
+                let huboActualizaciones = false;
                 if (!datosGuardados.Convenio) {
                     datosGuardados.Convenio = datosSemillaInicial.Convenio;
+                    huboActualizaciones = true;
+                }
+                // Asegurar que las prácticas de los alumnos registrados tengan sus códigos individuales
+                if (Array.isArray(datosGuardados.Estudiante) && Array.isArray(datosGuardados.Practica)) {
+                    datosGuardados.Estudiante.forEach((est, idx) => {
+                        let prac = datosGuardados.Practica.find(p => p.id_estudiante === est.id_estudiante || p.id_estudiante === est.documento);
+                        if (!prac) {
+                            const nuevoNum = String(datosGuardados.Practica.length + 1).padStart(3, '0');
+                            const tutores = datosGuardados.Tutor_Academico || datosSemillaInicial.Tutor_Academico;
+                            const colegios = datosGuardados.Institucion || datosSemillaInicial.Institucion;
+                            const tut = tutores[idx % tutores.length] || { documento: 'DOC-1098234' };
+                            const col = colegios[idx % colegios.length] || { id_institucion: 'INST-01' };
+                            const sem = parseInt(est.semestre) || 7;
+                            prac = {
+                                id_practica: `PRAC-${nuevoNum}`,
+                                id_estudiante: est.id_estudiante,
+                                documento: tut.documento || tut.documento_tu,
+                                id_institucion: col.id_institucion,
+                                id_tipo: sem <= 4 ? 'TP-01' : (sem <= 7 ? 'TP-02' : 'TP-03'),
+                                estado: 'En Curso',
+                                fecha_inicio: '2026-03-01',
+                                horas_objetivo: sem >= 8 ? 80 : (sem >= 5 ? 60 : 50)
+                            };
+                            datosGuardados.Practica.push(prac);
+                            huboActualizaciones = true;
+                        }
+                    });
+                }
+                if (huboActualizaciones) {
                     localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosGuardados));
                 }
             } catch (error) {
                 localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosSemillaInicial));
             }
+        }
+
+        // Saneamiento de consistencia: si hay aspirantes en espera en solicitudes_aspirantes,
+        // garantizar que no existan aún en la tabla oficial Estudiante hasta que el Coordinador los apruebe
+        try {
+            const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+            const correosEnEspera = solicitudes
+                .filter(s => s.estado === 'Pendiente' || !s.estado)
+                .map(s => String(s.correo || '').trim().toLowerCase());
+
+            if (correosEnEspera.length > 0) {
+                const datos = JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL));
+                if (datos && Array.isArray(datos.Estudiante)) {
+                    const cantOriginal = datos.Estudiante.length;
+                    datos.Estudiante = datos.Estudiante.filter(e => 
+                        !correosEnEspera.includes(String(e.correo || '').trim().toLowerCase())
+                    );
+                    if (datos.Estudiante.length !== cantOriginal) {
+                        localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datos));
+                    }
+                }
+            }
+        } catch (e) {
+            // Ignorar errores de parseo
         }
     },
 
@@ -221,6 +380,104 @@ const DB = {
      */
     saveAll(datos) {
         localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datos));
+    },
+
+    /**
+     * Sincroniza bidireccionalmente el almacén local con los endpoints del servidor en Supabase.
+     * Descarga estudiantes, solicitudes, bitácoras y prácticas actualizadas para que
+     * cualquier cambio realizado en la nube o en otro navegador (VS Code o vista previa)
+     * se refleje de manera inmediata e idéntica.
+     * 
+     * @async
+     * @function syncWithBackend
+     * @returns {Promise<boolean>}
+     */
+    async syncWithBackend() {
+        try {
+            const datos = this.getAll();
+            let huboCambios = false;
+
+            // 1. Sincronizar estudiantes desde PostgreSQL
+            try {
+                const resEst = await fetch('/api/academica/estudiantes');
+                if (resEst.ok) {
+                    const estudiantesNube = await resEst.json();
+                    if (Array.isArray(estudiantesNube)) {
+                        estudiantesNube.forEach(est => {
+                            const doc = String(est.documento || '').trim();
+                            const id = doc.startsWith('EST') ? doc : `EST-2024-${doc.slice(-2)}`;
+                            const indice = (datos.Estudiante || []).findIndex(e => 
+                                String(e.correo || '').toLowerCase() === String(est.correo || '').toLowerCase() ||
+                                String(e.id_estudiante || '') === id ||
+                                String(e.documento || '') === doc
+                            );
+                            const nombreCompleto = est.apellido ? `${est.nombre} ${est.apellido}`.trim() : est.nombre;
+                            if (indice === -1) {
+                                datos.Estudiante.push({
+                                    id_estudiante: id,
+                                    documento: doc,
+                                    nombre: nombreCompleto,
+                                    correo: est.correo,
+                                    semestre: parseInt(est.semestre) || 7,
+                                    clave: 'estudiante123'
+                                });
+                                huboCambios = true;
+                            } else {
+                                datos.Estudiante[indice].nombre = nombreCompleto || datos.Estudiante[indice].nombre;
+                                datos.Estudiante[indice].semestre = parseInt(est.semestre) || datos.Estudiante[indice].semestre;
+                            }
+                        });
+                    }
+                }
+            } catch (e) {}
+
+            // 2. Sincronizar solicitudes de aspirantes desde el servidor
+            try {
+                const resSol = await fetch('/api/solicitudes');
+                if (resSol.ok) {
+                    const solicitudesNube = await resSol.json();
+                    if (Array.isArray(solicitudesNube)) {
+                        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudesNube));
+                    }
+                }
+            } catch (e) {}
+
+            // 3. Sincronizar prácticas desde la base de datos
+            try {
+                const resPrac = await fetch('/api/academica/practicas');
+                if (resPrac.ok) {
+                    const practicasNube = await resPrac.json();
+                    if (Array.isArray(practicasNube)) {
+                        practicasNube.forEach(p => {
+                            const existe = (datos.Practica || []).some(pr => pr.id_practica === p.id_practica);
+                            if (!existe) {
+                                datos.Practica.push({
+                                    id_practica: p.id_practica,
+                                    id_estudiante: p.documento ? (p.documento.startsWith('EST') ? p.documento : `EST-2024-${p.documento.slice(-2)}`) : 'EST-2024-01',
+                                    documento: p.documento_tu || 'DOC-1098234',
+                                    id_institucion: p.id_institucion || 'INST-01',
+                                    id_tipo: p.id_tipo || 'TP-01',
+                                    estado: p.estado || 'En Curso',
+                                    fecha_inicio: p.fecha_ini || '2026-02-01',
+                                    horas_objetivo: 80
+                                });
+                                huboCambios = true;
+                            }
+                        });
+                    }
+                }
+            } catch (e) {}
+
+            if (huboCambios) {
+                this.saveAll(datos);
+            }
+
+            // Disparar evento para que las interfaces reactivas se actualicen en pantalla
+            window.dispatchEvent(new CustomEvent('db:sincronizado'));
+            return true;
+        } catch (e) {
+            return false;
+        }
     },
 
     /**
@@ -263,12 +520,20 @@ const DB = {
                     })
                 }).catch(() => {});
             } else if (nombreTabla === 'Actividad' || nombreTabla === 'Bitacora') {
+                // Determinar el id_practica real del registro
+                let idPracticaReal = nuevoRegistro.id_practica;
+                if (!idPracticaReal) {
+                    const sesionActiva = JSON.parse(sessionStorage.getItem('usuario_sesion') || '{}');
+                    const estudianteActual = sesionActiva.id_estudiante || sesionActiva.correo;
+                    const prac = (datos.Practica || []).find(p => p.id_estudiante === estudianteActual || p.id_estudiante === sesionActiva.id_estudiante);
+                    idPracticaReal = prac ? prac.id_practica : 'PRAC-001';
+                }
                 fetch('/api/bitacoras', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         id_bitacora: nuevoRegistro.id_actividad || nuevoRegistro.id_bitacora,
-                        id_practica: nuevoRegistro.id_practica || 'PRAC-001',
+                        id_practica: idPracticaReal,
                         fecha: nuevoRegistro.fecha,
                         descripcion: nuevoRegistro.descripcion,
                         horas: nuevoRegistro.horas_realizadas || nuevoRegistro.horas || 4,
@@ -472,6 +737,21 @@ const DB = {
                 urlDestino = 'views/docente.html';
             }
         } else if (rol === 'estudiante') {
+            // 1. Validar primero si el aspirante tiene una solicitud pendiente de aprobación
+            try {
+                const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+                const solicitudEnEspera = solicitudes.find(s => 
+                    String(s.correo || '').trim().toLowerCase() === correoLimpio && (s.estado === 'Pendiente' || !s.estado)
+                );
+                if (solicitudEnEspera) {
+                    return {
+                        success: false,
+                        message: `Acceso restringido: Tu solicitud de inscripción para ${solicitudEnEspera.nombre} está en estado de ESPERA (Pendiente de Aprobación).\n\nEl Coordinador de Práctica debe revisar y aceptar tu solicitud antes de que puedas iniciar sesión.`
+                    };
+                }
+            } catch (e) {}
+
+            // 2. Buscar en la tabla oficial de Estudiantes matriculados
             const estudiante = (datos.Estudiante || []).find(e => 
                 e.correo.toLowerCase() === correoLimpio && e.clave === claveLimpia
             );
@@ -486,6 +766,16 @@ const DB = {
                     semestre: estudiante.semestre
                 };
                 urlDestino = 'views/estudiante.html';
+            } else {
+                // Verificar si el correo existe pero la contraseña no coincide
+                const correoCoincide = (datos.Estudiante || []).some(e => e.correo.toLowerCase() === correoLimpio);
+                if (correoCoincide) {
+                    return { success: false, message: 'Contraseña incorrecta. Por favor verifica tu clave.' };
+                }
+                return { 
+                    success: false, 
+                    message: 'Estudiante no registrado o aún no aprobado por el Coordinador de Prácticas.' 
+                };
             }
         } else if (rol === 'institucion') {
             const institucion = (datos.Institucion || []).find(i => 
@@ -565,3 +855,9 @@ const DB = {
 
 // Inicialización inmediata al importar el script
 DB.init();
+if (typeof window !== 'undefined') {
+    DB.syncWithBackend();
+    window.addEventListener('DOMContentLoaded', () => {
+        DB.syncWithBackend();
+    });
+}
