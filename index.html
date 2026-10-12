@@ -64,10 +64,11 @@
                 Iniciar Sesión
             </button>
 
-            <!-- Panel visible de credenciales para sustentación y evaluación -->
-            <div id="panel-acceso-rapido" style="display: block; margin-top: 18px; padding: 12px; background: rgba(255,255,255,0.08); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.30);">
+            <!-- Panel de credenciales para sustentación y evaluación (Oculto por defecto: se abre con el atajo Ctrl + Shift + D) -->
+            <div id="panel-acceso-rapido" style="display: none; margin-top: 18px; padding: 12px; background: rgba(255,255,255,0.08); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.30);">
                 <div style="color: #93c5fd; font-size: 11px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
                     <span>⚡ Clic para auto-completar credenciales:</span>
+                    <span style="font-size: 10px; opacity: 0.75; cursor: pointer;" onclick="document.getElementById('panel-acceso-rapido').style.display='none'" title="Ocultar panel">✖ Ocultar</span>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                     <button type="button" onclick="cargarDemo('estudiante')" style="background: #2563eb; color: #fff; border: none; padding: 7px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" title="Estudiante Camilo (estudiante@udi.edu.co / estudiante123)">🎓 Camilo (Estudiante)</button>
