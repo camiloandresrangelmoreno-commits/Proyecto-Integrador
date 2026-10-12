@@ -22,7 +22,7 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const SUPABASE_DEFAULT_URL = 'postgresql://postgres:Integrador123%23@db.ywadbrsmyswfgmvkfxjn.supabase.co:5432/postgres';
+const SUPABASE_DEFAULT_URL = 'postgresql://postgres.ywadbrsmyswfgmvkfxjn:Integrador123%23@aws-0-us-east-1.pooler.supabase.com:5432/postgres';
 
 /// Pool de conexiones reutilizables con soporte SSL obligatorio para Supabase
 const pool = new Pool({
@@ -37,7 +37,7 @@ pool.on('error', (err) => {
 
 export const dbAcademica = {
     nombre: 'Base de Datos 1 - Gestión Académica (Supabase PostgreSQL)',
-    estado: 'Conectado a la nube (db.ywadbrsmyswfgmvkfxjn.supabase.co / gestion_academica)',
+    estado: 'Conectado a la nube (aws-0-us-east-1.pooler.supabase.com / gestion_academica)',
 
     // ========================================================================
     // GESTIÓN DE ESTUDIANTES

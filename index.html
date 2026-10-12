@@ -64,21 +64,21 @@
                 Iniciar Sesión
             </button>
 
-            <!-- Acceso rápido para sustentación y video demostrativo (Oculto por defecto: Ctrl + Shift + D) -->
-            <div id="panel-acceso-rapido" style="display: none; margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.07); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.25);">
-                <div style="color: #93c5fd; font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>⚡ Acceso Rápido por Rol (Sustentación):</span>
-                    <span style="font-size: 10px; opacity: 0.7; color: #cbd5e1;">[Ctrl+Shift+D]</span>
+            <!-- Panel visible de credenciales para sustentación y evaluación -->
+            <div id="panel-acceso-rapido" style="display: block; margin-top: 18px; padding: 12px; background: rgba(255,255,255,0.08); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.30);">
+                <div style="color: #93c5fd; font-size: 11px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>⚡ Clic para auto-completar credenciales:</span>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                    <button type="button" onclick="cargarDemo('estudiante')" style="background: #2563eb; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Camilo (PRAC-001)</button>
-                    <button type="button" onclick="cargarDemo('edwin')" style="background: #1d4ed8; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Edwin (PRAC-002)</button>
-                    <button type="button" onclick="cargarDemo('laura')" style="background: #0284c7; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 Laura (PRAC-003)</button>
-                    <button type="button" onclick="cargarDemo('maria')" style="background: #0369a1; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🎓 María (PRAC-004)</button>
-                    <button type="button" onclick="cargarDemo('docente')" style="background: #0d9488; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">👨‍🏫 Tutor Académico</button>
-                    <button type="button" onclick="cargarDemo('coordinador')" style="background: #7c3aed; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">📋 Coordinador</button>
-                    <button type="button" onclick="cargarDemo('institucion')" style="background: #ea580c; color: #fff; border: none; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">🏫 Institución</button>
-                    <button type="button" onclick="cargarDemo('director')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">👔 Director</button>
+                    <button type="button" onclick="cargarDemo('estudiante')" style="background: #2563eb; color: #fff; border: none; padding: 7px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" title="Estudiante Camilo (estudiante@udi.edu.co / estudiante123)">🎓 Camilo (Estudiante)</button>
+                    <button type="button" onclick="cargarDemo('docente')" style="background: #0d9488; color: #fff; border: none; padding: 7px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" title="Docente Asesor (docente@udi.edu.co / docente123)">👨‍🏫 Tutor Académico</button>
+                    <button type="button" onclick="cargarDemo('coordinador')" style="background: #7c3aed; color: #fff; border: none; padding: 7px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" title="Coordinador de Prácticas (coordinador@udi.edu.co / coordinador123)">📋 Coordinador</button>
+                    <button type="button" onclick="cargarDemo('director')" style="background: #334155; color: #cbd5e1; border: 1px solid #475569; padding: 7px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" title="Director de Programa (director@udi.edu.co / director123)">👔 Director</button>
+                    <button type="button" onclick="cargarDemo('institucion')" style="background: #ea580c; color: #fff; border: none; padding: 7px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" title="Institución Receptora (colegio@udi.edu.co / colegio123)">🏫 Institución</button>
+                    <button type="button" onclick="cargarDemo('laura')" style="background: #0284c7; color: #fff; border: none; padding: 7px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" title="Estudiante Laura (laura.morales@udi.edu.co / laura123)">🎓 Laura (Estudiante)</button>
+                </div>
+                <div style="margin-top: 8px; font-size: 10px; color: #94a3b8; text-align: center;">
+                    Clave general: <code>estudiante123</code> / <code>docente123</code> / <code>coordinador123</code>
                 </div>
             </div>
 

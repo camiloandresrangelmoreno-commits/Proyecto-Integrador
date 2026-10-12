@@ -23,7 +23,7 @@ dotenv.config();
 
 // Configuración de respaldo automática: garantiza conexión inmediata a PostgreSQL en Supabase
 // en cualquier PC o entorno donde se descomprima el proyecto, sin requerir configuración manual.
-const SUPABASE_FALLBACK_URL = 'postgresql://postgres:Integrador123%23@db.ywadbrsmyswfgmvkfxjn.supabase.co:5432/postgres';
+const SUPABASE_FALLBACK_URL = 'postgresql://postgres.ywadbrsmyswfgmvkfxjn:Integrador123%23@aws-0-us-east-1.pooler.supabase.com:5432/postgres';
 if (!process.env.DATABASE_URL_ACADEMICA) {
     process.env.DATABASE_URL_ACADEMICA = SUPABASE_FALLBACK_URL;
 }

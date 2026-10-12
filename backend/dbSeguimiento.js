@@ -20,7 +20,7 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const SUPABASE_DEFAULT_URL = 'postgresql://postgres:Integrador123%23@db.ywadbrsmyswfgmvkfxjn.supabase.co:5432/postgres';
+const SUPABASE_DEFAULT_URL = 'postgresql://postgres.ywadbrsmyswfgmvkfxjn:Integrador123%23@aws-0-us-east-1.pooler.supabase.com:5432/postgres';
 
 // Pool de conexiones para el esquema de seguimiento de prácticas
 const pool = new Pool({
@@ -35,7 +35,7 @@ pool.on('error', (err) => {
 
 export const dbSeguimiento = {
     nombre: 'Base de Datos 2 - Seguimiento de Prácticas (Supabase PostgreSQL)',
-    estado: 'Conectado a la nube (db.ywadbrsmyswfgmvkfxjn.supabase.co / seguimiento_practicas)',
+    estado: 'Conectado a la nube (aws-0-us-east-1.pooler.supabase.com / seguimiento_practicas)',
 
     // ========================================================================
     // GESTIÓN DE BITÁCORAS DE ACTIVIDAD

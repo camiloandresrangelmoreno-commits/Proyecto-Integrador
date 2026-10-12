@@ -1,8 +1,3 @@
-# Entorno y variables secretas
-.env
-.env.local
-.env.*.local
-
 # Dependencias
 node_modules/
 
