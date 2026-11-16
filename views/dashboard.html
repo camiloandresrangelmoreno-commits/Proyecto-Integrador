@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Director de Programa - Gestión Institucional UDI</title>
+    <title>Director de Programa - Software para la Gestión y Seguimiento de Prácticas Académicas</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
         .grid-graficas {
@@ -41,6 +41,26 @@
             border-radius: 6px;
             transition: width 0.6s ease;
         }
+        .modal-fondo {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.65);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-caja {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -48,7 +68,7 @@
 <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
 <header class="barra-superior">
     <div>
-        <h2 id="titulo-bienvenida" style="margin: 0; font-size: 20px;">Panel Ejecutivo - Director de Programa</h2>
+        <h2 id="titulo-bienvenida" style="margin: 0; font-size: 20px;">Software para la Gestión y Seguimiento de Prácticas Académicas · Director</h2>
         <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando perfil directivo...</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
@@ -233,17 +253,32 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- 3. REPORTES GENERALES Y AUDITORÍA DE PRÁCTICAS                 -->
+    <!-- 3. REPORTES E INFORMES CONSOLIDADOS DE AUDITORÍA               -->
     <!-- ============================================================== -->
     <div class="seccion-tabla" style="margin-top: 35px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <div>
-                <h3 style="margin: 0; color: #0f172a;">Consolidado General de Prácticas del Programa</h3>
-                <small style="color: #64748b;">Matriz completa para presentación en informes de autoevaluación y visitas de pares académicos.</small>
+                <h3 style="margin: 0; color: #0f172a;">Informes Consolidados y Auditoría de Prácticas</h3>
+                <small style="color: #64748b;">Consulta en tiempo real por estudiante integrando Gestión Académica y Seguimiento vía REST.</small>
             </div>
-            <button onclick="window.print()" style="background: #0f766e; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                🖨️ Imprimir Reporte General
-            </button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" onclick="exportarReporteDirectorCSV()" style="background: #1e3a8a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    📥 Exportar CSV Auditoría
+                </button>
+                <button type="button" onclick="window.print()" style="background: #0f766e; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🖨️ Imprimir Reporte General
+                </button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;">
+            <input type="text" id="dir-filtro-buscar" placeholder="Filtrar por estudiante, práctica, tutor o colegio..." oninput="cargarTablaConsolidadaDirector()" style="flex: 1; min-width: 240px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            <select id="dir-filtro-estado" onchange="cargarTablaConsolidadaDirector()" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                <option value="todos">Todos los estados</option>
+                <option value="En Curso">En Curso</option>
+                <option value="Culminada">Culminada</option>
+                <option value="Pendiente Aprobación">Pendiente Aprobación</option>
+            </select>
         </div>
 
         <table class="tabla-datos" id="tabla-reporte-general-director">
@@ -254,7 +289,7 @@
                     <th>Tutor Asesor UDI</th>
                     <th>Colegio Receptor</th>
                     <th>Modalidad</th>
-                    <th>Horas Aprobadas</th>
+                    <th>Horas / Cumplimiento</th>
                     <th>Nota Promedio</th>
                     <th>Estado</th>
                     <th>Autorización Final</th>
@@ -268,6 +303,26 @@
 
 </main>
 
+<!-- Modal de Confirmación Personalizado -->
+<div id="modal-confirmar-accion" class="modal-fondo">
+    <div class="modal-caja" style="border-top: 5px solid #0f766e;">
+        <h3 id="confirmar-titulo" style="margin-top: 0; color: #0f172a; font-size: 18px;">Confirmar Acción</h3>
+        <p id="confirmar-mensaje" style="color: #475569; font-size: 14px; line-height: 1.55; margin: 10px 0 22px 0;">
+            ¿Desea continuar?
+        </p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" id="btn-confirmar-cancelar" style="padding: 9px 16px; background: #e2e8f0; color: #334155; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirmar-aceptar" style="padding: 9px 18px; background: #0f766e; color: #ffffff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-notificacion" style="display: none; position: fixed; top: 22px; right: 22px; z-index: 10100; padding: 12px 18px; border-radius: 8px; color: #ffffff; font-size: 13px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.22); max-width: 380px;"></div>
+
 <footer class="pie-pagina-institucional">
     <img src="../images/logo1.png" alt="Logo UDI">
 </footer>
@@ -276,6 +331,12 @@
 <script src="../js/db.js"></script>
 
 <script>
+    /**
+     * @fileoverview Controlador del Panel Ejecutivo del Director de Programa (views/dashboard.html).
+     * @description Calcula indicadores macro de cobertura, ocupación de cupos por sede y distribución
+     * de notas; permite la firma digital de convenios, culminación oficial de prácticas y consulta
+     * del Informe Consolidado para auditoría.
+     */
     // ========================================================================
     // 1. SEGURIDAD Y SESIÓN DEL DIRECTOR DE PROGRAMA
     // ========================================================================
@@ -331,7 +392,7 @@
         // -------------------------------------------------------------
         function calcularProgresoTipo(idTipo, metaHoras) {
             const pracsDelTipo = practicas.filter(p => p.id_tipo === idTipo);
-            if (pracsDelTipo.length === 0) return 30; // valor base representativo
+            if (pracsDelTipo.length === 0) return 0;
             const ids = pracsDelTipo.map(p => p.id_practica);
             const horas = actividades
                 .filter(a => ids.includes(a.id_practica) && a.estado_aprovacion === 'Aprobado')
@@ -366,7 +427,7 @@
         });
 
         const totalEvals = evaluaciones.length || 1;
-        const promGeneral = evaluaciones.length > 0 ? (sumaNotas / evaluaciones.length).toFixed(1) : '4.8';
+        const promGeneral = evaluaciones.length > 0 ? (sumaNotas / evaluaciones.length).toFixed(1) : '0.0';
 
         document.getElementById('txt-nota-excelente').innerText = `${cExcelente} practicantes (${Math.round((cExcelente/totalEvals)*100)}%)`;
         document.getElementById('bar-nota-excelente').style.width = `${Math.round((cExcelente/totalEvals)*100)}%`;
@@ -384,16 +445,17 @@
         // -------------------------------------------------------------
         const listaColegios = document.getElementById('lista-ocupacion-colegios');
         listaColegios.innerHTML = '';
-        instituciones.slice(0, 3).forEach(inst => {
+        instituciones.forEach(inst => {
             const ocupados = practicas.filter(p => p.id_institucion === inst.id_institucion).length;
             const conv = convenios.find(c => c.id_institucion === inst.id_institucion);
-            const totalCupos = conv ? conv.cupos_autorizados : 10;
-            const pct = Math.round((ocupados / totalCupos) * 100);
+            const totalCupos = conv ? (parseInt(conv.cupos_autorizados, 10) || 10) : 10;
+            const pct = Math.min(100, Math.round((ocupados / totalCupos) * 100));
+            const nombreInst = inst.nombre_colegio || inst.nombre || inst.id_institucion;
 
             listaColegios.innerHTML += `
                 <div class="barra-rendimiento-contenedor">
                     <div class="barra-rendimiento-info">
-                        <span>${inst.nombre_colegio}</span>
+                        <span>${nombreInst}</span>
                         <span>${ocupados}/${totalCupos} cupos (${pct}%)</span>
                     </div>
                     <div class="barra-rendimiento-fondo">
@@ -410,7 +472,7 @@
         tbodyConv.innerHTML = '';
         convenios.forEach(conv => {
             const inst = instituciones.find(i => i.id_institucion === conv.id_institucion);
-            const nombreCol = inst ? inst.nombre_colegio : conv.id_institucion;
+            const nombreCol = inst ? (inst.nombre_colegio || inst.nombre) : conv.id_institucion;
             const estaFirmado = conv.estado === 'Firmado y Vigente';
 
             const fila = `
@@ -440,93 +502,235 @@
         });
 
         // -------------------------------------------------------------
-        // TABLA: REPORTE GENERAL DE PRÁCTICAS CON AUTORIZACIÓN FINAL
+        // TABLA: INFORME CONSOLIDADO EN TIEMPO REAL PARA AUDITORÍA
         // -------------------------------------------------------------
+        cargarTablaConsolidadaDirector();
+    }
+
+    let ultimoReporteDirector = [];
+
+    /**
+     * Consulta en tiempo real el informe consolidado desde `/api/reportes/consolidado`
+     * (con respaldo local automático) y actualiza la matriz de auditoría directiva.
+     *
+     * @async
+     * @function cargarTablaConsolidadaDirector
+     * @returns {Promise<void>}
+     */
+    async function cargarTablaConsolidadaDirector() {
+        const inputBuscar = document.getElementById('dir-filtro-buscar');
+        const selectEstado = document.getElementById('dir-filtro-estado');
+        const reporte = await DB.getConsolidatedReport({
+            q: inputBuscar ? inputBuscar.value.trim() : '',
+            estado: selectEstado ? selectEstado.value : 'todos'
+        });
+
+        ultimoReporteDirector = reporte.registros || [];
         const tbodyRep = document.querySelector('#tabla-reporte-general-director tbody');
+        if (!tbodyRep) return;
         tbodyRep.innerHTML = '';
-        practicas.forEach(p => {
-            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
-            const tut = tutores.find(t => t.documento === p.documento);
-            const inst = instituciones.find(i => i.id_institucion === p.id_institucion);
-            const tip = tipos.find(tp => tp.id_tipo === p.id_tipo);
 
-            const acts = actividades.filter(a => a.id_practica === p.id_practica && a.estado_aprovacion === 'Aprobado');
-            const horasAprobadas = acts.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
-            const meta = p.horas_objetivo || 80;
+        if (ultimoReporteDirector.length === 0) {
+            tbodyRep.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 20px;">No hay prácticas registradas que coincidan con el filtro aplicado.</td></tr>`;
+            return;
+        }
 
-            const ev = evaluaciones.find(e => e.id_practica === p.id_practica);
-            const nota = ev ? `⭐ ${ev.calificacion}` : 'En curso';
+        ultimoReporteDirector.forEach(r => {
+            const nota = r.calificacion_promedio !== null ? `⭐ ${r.calificacion_promedio}` : 'En curso';
+            const esCulminada = r.estado === 'Culminada';
 
-            const esCulminada = p.estado === 'Culminada' || p.autorizado_director;
-
-            const fila = `
+            tbodyRep.innerHTML += `
                 <tr>
-                    <td><strong>${p.id_practica}</strong></td>
-                    <td>${est ? est.nombre : p.id_estudiante}</td>
-                    <td>${tut ? tut.nombre : p.documento}</td>
-                    <td>${inst ? inst.nombre_colegio : p.id_institucion}</td>
-                    <td><small>${tip ? tip.descripcion : p.id_tipo}</small></td>
-                    <td><strong>${horasAprobadas} / ${meta} hrs</strong></td>
+                    <td><strong>${r.id_practica}</strong></td>
+                    <td>${r.estudiante_nombre}</td>
+                    <td>${r.tutor_nombre}</td>
+                    <td>${r.institucion_nombre}</td>
+                    <td><small>${r.tipo_nombre}</small></td>
+                    <td>
+                        <strong>${r.horas_aprobadas} / ${r.horas_objetivo} hrs</strong>
+                        <div style="font-size: 11px; font-weight: 700; color: ${r.porcentaje_cumplimiento >= 80 ? '#15803d' : '#1e3a8a'};">${r.porcentaje_cumplimiento}% cumplimiento</div>
+                    </td>
                     <td><strong>${nota}</strong></td>
                     <td>
                         <span style="background: ${esCulminada ? '#dbeafe' : '#dcfce7'}; color: ${esCulminada ? '#1e3a8a' : '#15803d'}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">
-                            ${esCulminada ? 'Culminada' : p.estado}
+                            ${r.estado}
                         </span>
                     </td>
                     <td>
                         ${esCulminada
                             ? `<span style="color: #1e3a8a; font-weight: bold; font-size: 12px;">🎓 Certificada</span>`
-                            : `<button onclick="autorizarCulminacion('${p.id_practica}')" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">
+                            : `<button onclick="autorizarCulminacion('${r.id_practica}')" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">
                                 📜 Autorizar Culminación
                                </button>`
                         }
                     </td>
                 </tr>
             `;
-            tbodyRep.innerHTML += fila;
         });
+    }
+
+    /**
+     * Descarga el informe consolidado de dirección en formato CSV para auditoría.
+     * @function exportarReporteDirectorCSV
+     * @returns {void}
+     */
+    function exportarReporteDirectorCSV() {
+        if (!ultimoReporteDirector || ultimoReporteDirector.length === 0) {
+            alert('No hay registros para exportar.');
+            return;
+        }
+        const encabezados = ['ID_Practica', 'Estudiante', 'Tutor_Asesor', 'Institucion', 'Modalidad', 'Horas_Aprobadas', 'Horas_Objetivo', 'Cumplimiento_Pct', 'Calificacion_Promedio', 'Validado_Sede', 'Estado'];
+        const filas = ultimoReporteDirector.map(r => [
+            r.id_practica,
+            `"${(r.estudiante_nombre || '').replace(/"/g, '""')}"`,
+            `"${(r.tutor_nombre || '').replace(/"/g, '""')}"`,
+            `"${(r.institucion_nombre || '').replace(/"/g, '""')}"`,
+            `"${(r.tipo_nombre || '').replace(/"/g, '""')}"`,
+            r.horas_aprobadas,
+            r.horas_objetivo,
+            `${r.porcentaje_cumplimiento}%`,
+            r.calificacion_promedio !== null ? r.calificacion_promedio : 'En curso',
+            r.validado_institucion ? 'Si' : 'No',
+            r.estado
+        ].join(','));
+
+        const csv = '\uFEFF' + [encabezados.join(','), ...filas].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Auditoria_Practicas_Direccion_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    /**
+     * Despliega un cuadro de confirmación propio en HTML/CSS compatible con iframes.
+     *
+     * @function mostrarConfirmacion
+     * @param {string} titulo - Encabezado del modal de confirmación.
+     * @param {string} mensaje - Texto descriptivo de la operación.
+     * @param {string} [textoConfirmar='Confirmar'] - Etiqueta del botón de confirmación.
+     * @param {string} [colorBoton='#0f766e'] - Color hexadecimal del botón principal.
+     * @returns {Promise<boolean>} True si el usuario confirma, false si cancela.
+     */
+    function mostrarConfirmacion(titulo, mensaje, textoConfirmar = 'Confirmar', colorBoton = '#0f766e') {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-confirmar-accion');
+            const elTitulo = document.getElementById('confirmar-titulo');
+            const elMensaje = document.getElementById('confirmar-mensaje');
+            const btnAceptar = document.getElementById('btn-confirmar-aceptar');
+            const btnCancelar = document.getElementById('btn-confirmar-cancelar');
+            const caja = modal ? modal.querySelector('.modal-caja') : null;
+            if (!modal || !btnAceptar || !btnCancelar) { resolve(false); return; }
+
+            elTitulo.innerText = titulo;
+            elMensaje.innerText = mensaje;
+            btnAceptar.innerText = textoConfirmar;
+            btnAceptar.style.backgroundColor = colorBoton;
+            if (caja) caja.style.borderTopColor = colorBoton;
+
+            const limpiar = (ok) => {
+                modal.style.display = 'none';
+                btnAceptar.onclick = null;
+                btnCancelar.onclick = null;
+                modal.onclick = null;
+                document.removeEventListener('keydown', onKey);
+                resolve(ok);
+            };
+            const onKey = (ev) => { if (ev.key === 'Escape') limpiar(false); };
+            btnAceptar.onclick = () => limpiar(true);
+            btnCancelar.onclick = () => limpiar(false);
+            modal.onclick = (ev) => { if (ev.target === modal) limpiar(false); };
+            document.addEventListener('keydown', onKey);
+            modal.style.display = 'flex';
+        });
+    }
+
+    let timerToastDir = null;
+    /**
+     * Muestra una notificación flotante temporal en la vista del Director.
+     *
+     * @function mostrarToast
+     * @param {string} mensaje - Contenido de la notificación.
+     * @param {('success'|'error')} [tipo='success'] - Variante de color.
+     * @returns {void}
+     */
+    function mostrarToast(mensaje, tipo = 'success') {
+        const toast = document.getElementById('toast-notificacion');
+        if (!toast) return;
+        toast.innerText = mensaje;
+        toast.style.backgroundColor = tipo === 'error' ? '#b91c1c' : '#0f766e';
+        toast.style.display = 'block';
+        if (timerToastDir) clearTimeout(timerToastDir);
+        timerToastDir = setTimeout(() => { toast.style.display = 'none'; }, 3800);
     }
 
     /**
      * Acción directiva de nivel jerárquico superior: formaliza legalmente un convenio interinstitucional
      * estampando la firma digital rectoral del Director de Programa en el registro persistido.
-     * 
+     *
+     * @async
      * @function firmarConvenio
      * @param {string} idConvenio - Código único del convenio a firmar (ej: CONV-2026-02).
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    function firmarConvenio(idConvenio) {
-        if (confirm(`¿Proceder con la firma rectoral y formalización legal del convenio ${idConvenio}?`)) {
-            DB.update('Convenio', 'id_convenio', idConvenio, {
+    async function firmarConvenio(idConvenio) {
+        const confirmado = await mostrarConfirmacion(
+            'Firma Rectoral de Convenio',
+            `¿Proceder con la firma rectoral y formalización legal del convenio ${idConvenio}?`,
+            'Sí, Firmar Convenio',
+            '#1e3a8a'
+        );
+        if (!confirmado) return;
+
+        try {
+            await DB.update('Convenio', 'id_convenio', idConvenio, {
                 estado: 'Firmado y Vigente',
-                firmado_por: 'Dr. Roberto Mendoza (Director)'
+                firmado_por: `${sesion.nombre} (Director)`
             });
-            alert(`¡Convenio ${idConvenio} formalizado exitosamente por la Dirección del Programa!`);
             cargarDashboardDirector();
+            mostrarToast(`Convenio ${idConvenio} formalizado exitosamente.`);
+        } catch (err) {
+            mostrarToast(err.message || 'Error al formalizar el convenio.', 'error');
         }
     }
 
     /**
      * Acción de autorización final: valida la culminación satisfactoria de las horas
      * y avala la expedición del certificado oficial y paz y salvo de práctica formativa.
-     * 
+     *
+     * @async
      * @function autorizarCulminacion
      * @param {string} idPractica - Código de la práctica académica a culminar.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    function autorizarCulminacion(idPractica) {
-        if (confirm(`¿Autorizar culminación formal y expedición de certificado para la práctica ${idPractica}?`)) {
-            DB.update('Practica', 'id_practica', idPractica, {
+    async function autorizarCulminacion(idPractica) {
+        const confirmado = await mostrarConfirmacion(
+            'Autorizar Culminación',
+            `¿Autorizar culminación formal y expedición de certificado para la práctica ${idPractica}?`,
+            'Sí, Autorizar',
+            '#0f766e'
+        );
+        if (!confirmado) return;
+
+        try {
+            await DB.update('Practica', 'id_practica', idPractica, {
                 estado: 'Culminada',
                 autorizado_director: true
             });
-            alert(`Práctica ${idPractica} autorizada para expedición de paz y salvo y certificado final.`);
             cargarDashboardDirector();
+            mostrarToast(`Práctica ${idPractica} autorizada para expedición de certificado.`);
+        } catch (err) {
+            mostrarToast(err.message || 'Error al autorizar culminación.', 'error');
         }
     }
 
-    // Inicialización del panel de dirección al cargar la ventana
-    window.onload = cargarDashboardDirector;
+    // Inicialización del panel de dirección sincronizando con Supabase
+    window.onload = async function() {
+        await DB.syncWithBackend();
+        cargarDashboardDirector();
+    };
     window.addEventListener('db:sincronizado', cargarDashboardDirector);
 </script>
 

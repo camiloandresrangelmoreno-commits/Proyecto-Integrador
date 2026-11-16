@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Tutor Académico - Gestión de Prácticas UDI</title>
+    <title>Tutor Académico - Software para la Gestión y Seguimiento de Prácticas Académicas</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
 <header class="barra-superior">
     <div>
-        <h2 style="margin: 0; font-size: 20px;">Panel de Control - Tutor Académico</h2>
+        <h2 style="margin: 0; font-size: 20px;">Software para la Gestión y Seguimiento de Prácticas Académicas · Tutor Académico</h2>
         <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando sesión...</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
@@ -51,7 +51,7 @@
     <div class="seccion-tabla" style="margin-top: 30px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
             <h3 style="margin: 0;">Revisión de Actividades y Evidencias de Practicantes</h3>
-            <span style="font-size: 12px; color: #64748b;">(Tabla Actividad y Evidencia del Modelo Relacional)</span>
+            <span style="font-size: 12px; color: #64748b;">Seguimiento de jornadas y soportes documentales</span>
         </div>
         <table class="tabla-datos" id="tabla-tutor-evaluar">
             <thead>
@@ -76,7 +76,7 @@
     <div class="seccion-tabla" style="margin-top: 35px; background: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #cbd5e1; max-width: 700px;">
         <h3 style="margin-top: 0; color: #0f766e;">Emitir Evaluación Oficial de Práctica</h3>
         <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
-            Registra una calificación numérica (0.0 a 5.0) y las observaciones pedagógicas formales (UML: Clase Evaluacion).
+            Registra una calificación numérica (0.0 a 5.0) y las observaciones pedagógicas formales.
         </p>
 
         <form id="form-calificar">
@@ -257,6 +257,12 @@
 <script src="../js/db.js"></script>
 
 <script>
+    /**
+     * @fileoverview Controlador del Panel del Tutor Académico / Docente Asesor (views/docente.html).
+     * @description Lista los practicantes asignados al docente, permite aprobar o rechazar bitácoras
+     * (PUT /api/seguimiento/bitacoras/:id), revisar soportes FO-EP-07 y emitir evaluaciones
+     * cuantitativas en Supabase (POST /api/seguimiento/evaluaciones).
+     */
     // ========================================================================
     // 1. VALIDACIÓN DE SESIÓN Y CONTROL DE ACCESO
     // ========================================================================
@@ -267,10 +273,12 @@
         // Redirigido por la guardia de seguridad
     }
 
-    const docTutor = sesion.documento || sesion.id || 'DOC-1098234';
-    const tutorObj = DB.findBy('Tutor_Academico', 'documento', docTutor) || DB.findBy('Tutor_Academico', 'correo', sesion.correo);
+    const docTutor = sesion ? (sesion.documento_tu || sesion.documento || sesion.id || 'DOC-1098234') : 'DOC-1098234';
+    let tutorObj = null;
 
-    document.getElementById('usuario-sesion-badge').innerText = `Tutor: ${sesion.nombre} (Doc: ${tutorObj ? tutorObj.documento : docTutor})`;
+    if (sesion) {
+        document.getElementById('usuario-sesion-badge').innerText = `Tutor: ${sesion.nombre} (Doc: ${docTutor})`;
+    }
 
     // ========================================================================
     // 2. CARGA Y RENDERIZADO DE DATOS DEL TUTOR ACADÉMICO
@@ -280,15 +288,20 @@
      * Consulta las prácticas bajo la tutoría del docente autenticado,
      * totaliza horas avaladas y bitácoras pendientes, y renderiza tanto la
      * tabla de revisión de actividades como el historial de evaluaciones emitidas.
-     * 
+     *
      * @function cargarDatosTutor
      * @returns {void}
      */
     function cargarDatosTutor() {
-        const docActual = tutorObj ? tutorObj.documento : docTutor;
-        
+        if (!sesion) return;
+        tutorObj = DB.findBy('Tutor_Academico', 'documento_tu', docTutor) ||
+                   DB.findBy('Tutor_Academico', 'documento', docTutor) ||
+                   DB.findBy('Tutor_Academico', 'correo', sesion.correo);
+        const docActual = tutorObj ? (tutorObj.documento_tu || tutorObj.documento) : docTutor;
+        document.getElementById('usuario-sesion-badge').innerText = `Tutor: ${tutorObj ? tutorObj.nombre : sesion.nombre} (Doc: ${docActual})`;
+
         // Obtener prácticas asignadas a este tutor
-        const practicas = DB.filterBy('Practica', 'documento', docActual);
+        const practicas = DB.getTable('Practica').filter(p => (p.documento_tu || p.documento) === docActual);
         const estudiantes = DB.getTable('Estudiante');
         const actividades = DB.getTable('Actividad');
         const evidencias = DB.getTable('Evidencia');
@@ -304,9 +317,11 @@
         const totalPendientes = misActividades.filter(a => a.estado_aprovacion === 'Pendiente').length;
         const horasAvaladas = misActividades
             .filter(a => a.estado_aprovacion === 'Aprobado')
-            .reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
-        
-        const misEvaluaciones = evaluaciones.filter(e => e.documento === docActual || misPracticasIds.includes(e.id_practica));
+            .reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0, 10), 0);
+
+        const misEvaluaciones = evaluaciones.filter(e =>
+            (e.documento_tu || e.documento) === docActual || misPracticasIds.includes(e.id_practica)
+        );
 
         document.getElementById('total-alumnos').innerText = practicas.length;
         document.getElementById('total-pendientes').innerText = totalPendientes;
@@ -315,12 +330,14 @@
 
         // Poblar Selector de Prácticas para Evaluar
         const selectPractica = document.getElementById('eval-practica-select');
+        const selPrevio = selectPractica.value;
         selectPractica.innerHTML = '<option value="">-- Elige un practicante --</option>';
         practicas.forEach(p => {
-            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante || e.documento === p.documento_estudiante);
             const nombreEst = est ? est.nombre : p.id_estudiante;
             selectPractica.innerHTML += `<option value="${p.id_practica}">${p.id_practica} - ${nombreEst} (${p.estado})</option>`;
         });
+        if (selPrevio) selectPractica.value = selPrevio;
 
         // Poblar Tabla de Actividades y Evidencias
         const tbodyAct = document.querySelector('#tabla-tutor-evaluar tbody');
@@ -403,47 +420,57 @@
      * @param {string} nuevoEstado - Estado asignado ('Aprobado' o 'Rechazado').
      * @returns {void}
      */
-    function cambiarEstadoActividad(idActividad, nuevoEstado) {
-        const actualizado = DB.update('Actividad', 'id_actividad', idActividad, { estado_aprovacion: nuevoEstado });
-        if (actualizado) {
+    async function cambiarEstadoActividad(idActividad, nuevoEstado) {
+        try {
+            await DB.update('Actividad', 'id_actividad', idActividad, { estado_aprovacion: nuevoEstado });
             cargarDatosTutor();
             alert(`Actividad ${idActividad} actualizada a estado: ${nuevoEstado}.`);
+        } catch (err) {
+            alert(err.message || 'No fue posible actualizar la actividad.');
         }
     }
 
     /**
-     * Manejador del formulario de calificación pedagógica (UML: Clase Evaluacion).
+     * Manejador del formulario de calificación pedagógica.
      * Registra la nota cuantitativa (0.0 - 5.0) y las observaciones pedagógicas formales.
      */
-    document.getElementById('form-calificar').addEventListener('submit', function(e) {
+    document.getElementById('form-calificar').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const idPractica = document.getElementById('eval-practica-select').value;
         const nota = parseFloat(document.getElementById('nota-input').value);
         const fecha = document.getElementById('eval-fecha').value;
         const observaciones = document.getElementById('obs-input').value.trim();
-        const docActual = tutorObj ? tutorObj.documento : docTutor;
+        const docActual = tutorObj ? (tutorObj.documento_tu || tutorObj.documento) : docTutor;
 
-        const totalEvals = DB.getTable('Evaluacion').length;
         const nuevaEvaluacion = {
-            id_evaluacion: 'EVAL-' + String(totalEvals + 1).padStart(3, '0'),
+            id_evaluacion: 'EVAL-' + String(Date.now()).slice(-6),
             id_practica: idPractica,
             documento: docActual,
+            documento_tu: docActual,
             calificacion: nota,
             observaciones: observaciones,
-            fecha_evaluacion: fecha
+            fecha_evaluacion: fecha,
+            fecha: fecha
         };
 
-        DB.insert('Evaluacion', nuevaEvaluacion);
-
-        alert(`¡Evaluación ${nuevaEvaluacion.id_evaluacion} registrada con éxito! Nota oficial asignada: ${nota}`);
-        document.getElementById('form-calificar').reset();
-        document.getElementById('eval-fecha').value = new Date().toISOString().split('T')[0];
-        cargarDatosTutor();
+        try {
+            await DB.insert('Evaluacion', nuevaEvaluacion);
+            alert(`¡Evaluación ${nuevaEvaluacion.id_evaluacion} registrada con éxito! Nota oficial asignada: ${nota}`);
+            document.getElementById('form-calificar').reset();
+            document.getElementById('eval-fecha').value = new Date().toISOString().split('T')[0];
+            cargarDatosTutor();
+        } catch (err) {
+            alert(err.message || 'No fue posible registrar la evaluación.');
+        }
     });
 
-    window.onload = function() {
+    /**
+     * Inicializa el selector de fecha y sincroniza los registros desde Supabase al cargar la vista.
+     */
+    window.onload = async function() {
         document.getElementById('eval-fecha').value = new Date().toISOString().split('T')[0];
+        await DB.syncWithBackend();
         cargarDatosTutor();
     };
 
@@ -500,6 +527,12 @@
 
     let evidenciaActivaParaDescarga = null;
 
+    /**
+     * Abre el visor modal oficial de evidencia FO-EP-07 para revisión del tutor.
+     * @function abrirModalEvidencia
+     * @param {string} idActividad - Identificador de la actividad/bitácora.
+     * @returns {void}
+     */
     function abrirModalEvidencia(idActividad) {
         const actividades = DB.getTable('Actividad');
         const evidencias = DB.getTable('Evidencia');
@@ -523,8 +556,9 @@
         };
 
         const p = practicas.find(pr => pr.id_practica === act.id_practica) || practicas[0];
-        const est = p ? estudiantes.find(e => e.id_estudiante === p.id_estudiante) : estudiantes[0];
-        const tut = p ? tutores.find(t => t.documento === p.documento) : tutores[0];
+        const est = p ? estudiantes.find(e => e.id_estudiante === p.id_estudiante || e.documento === p.documento_estudiante) : estudiantes[0];
+        const docTuP = p ? (p.documento_tu || p.documento) : '';
+        const tut = docTuP ? tutores.find(t => (t.documento_tu || t.documento) === docTuP) : tutores[0];
         const inst = p ? instituciones.find(i => i.id_institucion === p.id_institucion) : instituciones[0];
 
         const detalle = DETALLES_EVIDENCIAS_CATALOGO[idActividad] || {
@@ -543,7 +577,7 @@
         document.getElementById('m-evi-estudiante').innerText = est ? est.nombre : 'Estudiante Practicante';
         document.getElementById('m-evi-estudiante-correo').innerText = est ? est.correo : '-';
         document.getElementById('m-evi-tutor').innerText = tut ? tut.nombre : sesion.nombre;
-        document.getElementById('m-evi-institucion').innerText = inst ? inst.nombre_colegio : 'Institución Educativa Receptora';
+        document.getElementById('m-evi-institucion').innerText = inst ? (inst.nombre_colegio || inst.nombre) : 'Institución Educativa Receptora';
 
         document.getElementById('m-evi-descripcion').innerText = act.descripcion;
         document.getElementById('m-evi-metodologia').innerText = detalle.metodologia;
@@ -561,11 +595,21 @@
         modal.style.display = 'flex';
     }
 
+    /**
+     * Cierra el visor modal de evidencia FO-EP-07.
+     * @function cerrarModalEvidencia
+     * @returns {void}
+     */
     function cerrarModalEvidencia() {
         const modal = document.getElementById('modal-visor-evidencia');
         modal.style.display = 'none';
     }
 
+    /**
+     * Genera y descarga el documento de soporte FO-EP-07 para auditoría docente.
+     * @function descargarEvidenciaPDF
+     * @returns {void}
+     */
     function descargarEvidenciaPDF() {
         if (!evidenciaActivaParaDescarga) return;
         const { act, evi, p, est, tut, inst, detalle } = evidenciaActivaParaDescarga;

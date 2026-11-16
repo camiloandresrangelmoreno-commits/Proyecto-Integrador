@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Evidencia de Práctica - UDI</title>
+    <title>Soporte de Evidencia - Software para la Gestión y Seguimiento de Prácticas Académicas</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
         body {
@@ -166,7 +166,7 @@
         </div>
         <div class="titulo-formato">
             <h3>Soporte Oficial de Práctica</h3>
-            <span>FORMATO INSTITUCIONAL: FO-EP-07</span>
+            <span>FORMATO FO-EP-07 · Software para la Gestión y Seguimiento de Prácticas Académicas</span>
         </div>
     </div>
 
@@ -267,6 +267,12 @@
 
 <script src="../js/db.js"></script>
 <script>
+    /**
+     * @fileoverview Controlador del Visor Oficial de Evidencias FO-EP-07 (views/evidencia.html).
+     * @description Resuelve una actividad o evidencia desde los parámetros URL (?id=ACT-XXX),
+     * cruza la información entre Gestión Académica y Seguimiento de Prácticas y permite su
+     * impresión o descarga en formato HTML oficial UDI.
+     */
     // Diccionario enriquecido de evidencias pedagógicas predeterminadas
     const DETALLES_EVIDENCIAS = {
         'ACT-001': {
@@ -318,6 +324,11 @@
 
     let evidenciaGlobal = null;
 
+    /**
+     * Genera y descarga una versión imprimible del soporte FO-EP-07 de la actividad consultada.
+     * @function descargarDocumentoEvidencia
+     * @returns {void}
+     */
     function descargarDocumentoEvidencia() {
         if (!evidenciaGlobal) {
             window.print();
@@ -343,7 +354,7 @@
                 </div>
                 <p><strong>Actividad:</strong> ${actividad.id_actividad} | <strong>Fecha:</strong> ${actividad.fecha} | <strong>Horas:</strong> ${actividad.horas_realizadas} hrs</p>
                 <p><strong>Practicante:</strong> ${estudiante ? estudiante.nombre : 'Practicante'} | <strong>Tutor:</strong> ${tutor ? tutor.nombre : 'Tutor UDI'}</p>
-                <p><strong>Institución:</strong> ${colegio ? colegio.nombre_colegio : 'Colegio'}</p>
+                <p><strong>Institución:</strong> ${colegio ? (colegio.nombre_colegio || colegio.nombre) : 'Colegio'}</p>
                 <hr>
                 <h4>Descripción:</h4>
                 <p>${actividad.descripcion}</p>
@@ -364,7 +375,12 @@
         document.body.removeChild(enlace);
     }
 
-    window.onload = function() {
+    /**
+     * Sincroniza la caché con el backend y renderiza el documento FO-EP-07 correspondiente
+     * al identificador recibido por query string (`?id=...`).
+     */
+    window.onload = async function() {
+        await DB.syncWithBackend();
         const params = new URLSearchParams(window.location.search);
         const idBuscado = params.get('id') || 'ACT-001';
 
@@ -375,7 +391,6 @@
         const tutores = DB.getTable('Tutor_Academico');
         const colegios = DB.getTable('Institucion');
 
-        // Buscar por id_actividad o id_evidencia
         let actividad = actividades.find(a => a.id_actividad === idBuscado);
         let evidencia = evidencias.find(e => e.id_actividad === idBuscado || e.id_evidencia === idBuscado);
 
@@ -383,7 +398,6 @@
             actividad = actividades.find(a => a.id_actividad === evidencia.id_actividad);
         }
 
-        // Si no se encuentra, usar la primera actividad disponible
         if (!actividad) {
             actividad = actividades[0] || {
                 id_actividad: idBuscado,
@@ -403,8 +417,9 @@
         }
 
         const practica = practicas.find(p => p.id_practica === actividad.id_practica) || practicas[0];
-        const estudiante = practica ? estudiantes.find(e => e.id_estudiante === practica.id_estudiante) : estudiantes[0];
-        const tutor = practica ? tutores.find(t => t.documento === practica.documento) : tutores[0];
+        const estudiante = practica ? estudiantes.find(e => e.id_estudiante === practica.id_estudiante || e.documento === practica.documento_estudiante) : estudiantes[0];
+        const docTu = practica ? (practica.documento_tu || practica.documento) : '';
+        const tutor = docTu ? tutores.find(t => (t.documento_tu || t.documento) === docTu) : tutores[0];
         const colegio = practica ? colegios.find(c => c.id_institucion === practica.id_institucion) : colegios[0];
 
         const detalle = DETALLES_EVIDENCIAS[actividad.id_actividad] || {
@@ -413,7 +428,6 @@
             archivo: `Soporte_Evidencia_${actividad.id_actividad}.pdf`
         };
 
-        // Rellenar en el documento
         document.getElementById('doc-act-id').innerText = actividad.id_actividad;
         document.getElementById('doc-evi-id').innerText = evidencia.id_evidencia || 'EVI-001';
         document.getElementById('doc-fecha').innerText = actividad.fecha;
@@ -430,7 +444,7 @@
             document.getElementById('doc-firma-tutor').innerText = tutor.nombre;
         }
         if (colegio) {
-            document.getElementById('doc-institucion').innerText = colegio.nombre_colegio;
+            document.getElementById('doc-institucion').innerText = colegio.nombre_colegio || colegio.nombre;
         }
 
         document.getElementById('doc-metodologia').innerText = detalle.metodologia;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Coordinación de Prácticas - UDI</title>
+    <title>Coordinador - Software para la Gestión y Seguimiento de Prácticas Académicas</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
         .pestañas-nav {
@@ -62,7 +62,7 @@
 <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
 <header class="barra-superior">
     <div>
-        <h2 style="margin: 0; font-size: 20px;">Panel de Control - Coordinador de Prácticas</h2>
+        <h2 style="margin: 0; font-size: 20px;">Software para la Gestión y Seguimiento de Prácticas Académicas · Coordinador</h2>
         <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando sesión...</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
@@ -96,6 +96,11 @@
             <h4>Prácticas Asignadas</h4>
             <p id="total-practicas" class="numero">0</p>
             <p class="detalle">En curso o programadas</p>
+        </div>
+        <div class="tarjeta-indicador">
+            <h4>Convenios</h4>
+            <p id="total-convenios" class="numero">0</p>
+            <p class="detalle">Convenios interinstitucionales</p>
         </div>
     </div>
 
@@ -147,8 +152,9 @@
                         </div>
                     </div>
                     <div class="grupo-campo" id="grupo-mat-semestre">
-                        <label for="mat-semestre" style="color: #334155 !important;">Semestre (Aplica para Estudiantes):</label>
+                        <label for="mat-semestre" style="color: #334155 !important;">Semestre (Opcional - Aplica para Estudiantes):</label>
                         <select id="mat-semestre" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <option value="">-- No especificado / Opcional --</option>
                             <option value="6">6° Semestre - Observación Pedagógica (TP-01)</option>
                             <option value="7" selected>7° Semestre - Inmersión Pedagógica (TP-02)</option>
                             <option value="8">8° Semestre - Práctica Integral (TP-03)</option>
@@ -161,7 +167,7 @@
                     <!-- ASIGNACIÓN EXPLÍCITA DE PRÁCTICA (SELECCIONADA POR EL COORDINADOR, NADA AUTOMÁTICO) -->
                     <div id="grupo-mat-practica-config" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; margin-bottom: 18px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <h4 style="margin: 0; color: #1e3a8a; font-size: 13px; text-transform: uppercase;">Asignación de Práctica (UML: Practica):</h4>
+                            <h4 style="margin: 0; color: #1e3a8a; font-size: 13px; text-transform: uppercase;">Asignación de Práctica:</h4>
                             <span style="font-size: 11px; color: #64748b; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">Selección Manual</span>
                         </div>
                         <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 12px;">
@@ -251,7 +257,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <div>
                 <h3 style="margin: 0; color: #0f766e;">Gestión de Docentes Asesores (Tutores Académicos)</h3>
-                <small style="color: #64748b;">UML: Entidad Tutor_Academico (documento, nombre, correo, especialidad)</small>
+                <small style="color: #64748b;">Administración de docentes asesores registrados en el programa</small>
             </div>
             <button onclick="abrirModalDocente()" style="background-color: #0f766e; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
                 ➕ Registrar Nuevo Docente Asesor
@@ -309,12 +315,12 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- TAB 4: GESTIÓN DE ESTUDIANTES (CRUD COMPLETO)                  -->
+    <!-- TAB 4: GESTIÓN DE ESTUDIANTES                                  -->
     <!-- ============================================================== -->
     <div id="tab-estudiantes" class="contenido-tab">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <div>
-                <h3 style="margin: 0;">Gestión de Estudiantes (CRUD Tabla Estudiante)</h3>
+                <h3 style="margin: 0;">Gestión de Estudiantes</h3>
                 <small style="color: #64748b;">Administración directa de registros en la base de datos.</small>
             </div>
             <button onclick="abrirModalEstudiante()" style="background-color: #0f766e; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
@@ -330,7 +336,7 @@
                         <th>Nombre Completo</th>
                         <th>Correo Institucional</th>
                         <th>Semestre</th>
-                        <th>Acciones (CRUD)</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -341,12 +347,12 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- TAB 5: INSTITUCIONES Y CONVENIOS (CRUD)                        -->
+    <!-- TAB 5: INSTITUCIONES Y CONVENIOS                               -->
     <!-- ============================================================== -->
     <div id="tab-instituciones" class="contenido-tab">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <div>
-                <h3 style="margin: 0;">Gestión de Instituciones Receptoras (CRUD Tabla Institucion)</h3>
+                <h3 style="margin: 0;">Gestión de Instituciones Receptoras</h3>
                 <small style="color: #64748b;">Administración de sedes educativas receptoras para prácticas.</small>
             </div>
             <button onclick="abrirModalInstitucion()" style="background-color: #7c3aed; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
@@ -362,7 +368,36 @@
                         <th>Nombre del Colegio / Sede</th>
                         <th>Dirección</th>
                         <th>Contacto / Teléfono</th>
-                        <th>Acciones (CRUD)</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Se llena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 28px 0 15px 0; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0;">Convenios Interinstitucionales</h3>
+                <small style="color: #64748b;">Control de resoluciones, cupos autorizados y vigencia de convenios.</small>
+            </div>
+            <button onclick="abrirModalConvenio()" style="background-color: #1e3a8a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                ➕ Registrar Nuevo Convenio
+            </button>
+        </div>
+
+        <div class="seccion-tabla">
+            <table class="tabla-datos" id="tabla-crud-convenios">
+                <thead>
+                    <tr>
+                        <th>ID Convenio</th>
+                        <th>Institución Receptora</th>
+                        <th>Resolución</th>
+                        <th>Cupos</th>
+                        <th>Vigencia</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -373,24 +408,67 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- TAB 6: GENERAR REPORTE DE SEGUIMIENTO                          -->
+    <!-- TAB 6: REPORTES E INFORMES CONSOLIDADOS (AUDITORÍA)            -->
     <!-- ============================================================== -->
     <div id="tab-reportes" class="contenido-tab">
-        <div style="background-color: #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="background-color: #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div>
-                <h4 style="margin: 0; color: #1e3a8a; font-size: 17px;">Consolidado de Trazabilidad y Calidad Académica</h4>
-                <p style="margin: 5px 0 0 0; color: #475569; font-size: 13px;">Une los datos fijos de estudiantes y tutores con las evidencias y bitácoras para acreditación.</p>
+                <h4 style="margin: 0; color: #1e3a8a; font-size: 17px;">Módulo de Reportes e Informes Consolidados</h4>
+                <p style="margin: 5px 0 0 0; color: #475569; font-size: 13px;">Integración REST en tiempo real entre Gestión Académica y Seguimiento de Prácticas para auditoría institucional.</p>
             </div>
-            <button onclick="imprimirReporte()" style="background-color: #0f766e; color: white; border: none; padding: 12px 22px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
-                🖨️ Imprimir / Exportar Reporte Consolidado
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" onclick="exportarReporteCSV()" style="background-color: #1e3a8a; color: white; border: none; padding: 11px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    📥 Exportar CSV (Auditoría)
+                </button>
+                <button type="button" onclick="imprimirReporte()" style="background-color: #0f766e; color: white; border: none; padding: 11px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🖨️ Imprimir / PDF Consolidado
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtros de Consulta en Tiempo Real -->
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 18px; margin-bottom: 18px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="rep-filtro-buscar" placeholder="Buscar por estudiante, código práctica, tutor o colegio..." oninput="cargarReporteConsolidado()" style="flex: 1; min-width: 240px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            <select id="rep-filtro-estado" onchange="cargarReporteConsolidado()" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                <option value="todos">Todos los estados</option>
+                <option value="En Curso">En Curso</option>
+                <option value="Culminada">Culminada</option>
+                <option value="Pendiente Aprobación">Pendiente Aprobación</option>
+            </select>
+            <button type="button" onclick="cargarReporteConsolidado()" style="background: #f1f5f9; color: #1e3a8a; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                🔄 Actualizar en Tiempo Real
             </button>
+        </div>
+
+        <!-- KPIs de Auditoría -->
+        <div class="bloque-tarjetas" style="margin-bottom: 20px;">
+            <div class="tarjeta-indicador">
+                <h4>Prácticas Auditadas</h4>
+                <p id="rep-kpi-practicas" class="numero">0</p>
+                <p class="detalle">Registros consolidados</p>
+            </div>
+            <div class="tarjeta-indicador">
+                <h4>Horas Aprobadas Totales</h4>
+                <p id="rep-kpi-horas" class="numero">0</p>
+                <p class="detalle">Acumulado verificado</p>
+            </div>
+            <div class="tarjeta-indicador">
+                <h4>Cumplimiento Promedio</h4>
+                <p id="rep-kpi-cumplimiento" class="numero">0%</p>
+                <p class="detalle">Avance vs meta normativa</p>
+            </div>
+            <div class="tarjeta-indicador">
+                <h4>Promedio Evaluaciones</h4>
+                <p id="rep-kpi-promedio" class="numero">0.0</p>
+                <p class="detalle">Escala 0.0 - 5.0</p>
+            </div>
         </div>
 
         <div id="area-reporte-imprimible" class="seccion-tabla" style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #cbd5e1;">
             <div style="border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h2 style="margin: 0; color: #1e3a8a; font-size: 20px;">UNIVERSIDAD DE INVESTIGACIÓN Y DESARROLLO - UDI</h2>
-                    <h4 style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Informe de Seguimiento a Prácticas Pedagógicas de Licenciatura</h4>
+                    <h4 style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Informe Consolidado de Auditoría · Software para la Gestión y Seguimiento de Prácticas Académicas</h4>
                 </div>
                 <div style="text-align: right; font-size: 12px; color: #64748b;">
                     <div>Fecha: <strong id="rep-fecha">-</strong></div>
@@ -406,8 +484,10 @@
                         <th>Tutor Asesor</th>
                         <th>Colegio</th>
                         <th>Horas Aprobadas</th>
-                        <th>Avance %</th>
+                        <th>Cumplimiento %</th>
+                        <th>Soportes</th>
                         <th>Calificación</th>
+                        <th>Validación Sede</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
@@ -477,7 +557,7 @@
                 <select id="prac-institucion" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;"></select>
             </div>
             <div class="grupo-campo">
-                <label style="color: #334155 !important;">Tipo de Práctica (UML Tipo_Practica):</label>
+                <label style="color: #334155 !important;">Tipo de Práctica:</label>
                 <select id="prac-tipo" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;"></select>
             </div>
             <div class="grupo-campo">
@@ -511,8 +591,8 @@
                 <input type="email" id="est-correo" required placeholder="usuario@udi.edu.co" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
             </div>
             <div class="grupo-campo">
-                <label style="color: #334155 !important;">Semestre:</label>
-                <input type="number" id="est-semestre" min="1" max="10" required value="7" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                <label style="color: #334155 !important;">Semestre (Opcional):</label>
+                <input type="number" id="est-semestre" min="1" max="10" placeholder="Opcional (1-10)" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
             </div>
             <div class="grupo-campo">
                 <label style="color: #334155 !important;">Contraseña:</label>
@@ -551,6 +631,41 @@
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                 <button type="button" onclick="cerrarModal('modal-crud-institucion')" style="padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
                 <button type="submit" style="padding: 8px 16px; background: #7c3aed; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Convenio -->
+<div id="modal-crud-convenio" class="modal-fondo">
+    <div class="modal-caja">
+        <h3 style="margin-top: 0; color: #1e3a8a;">Registrar Convenio Interinstitucional</h3>
+        <form id="form-convenio-crud">
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Institución Receptora:</label>
+                <select id="conv-institucion" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"></select>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Resolución / Acuerdo:</label>
+                <input type="text" id="conv-resolucion" required placeholder="Ej: RES-MEN-2026-05" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="grupo-campo">
+                    <label style="color: #334155 !important;">Fecha Inicio:</label>
+                    <input type="date" id="conv-inicio" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+                <div class="grupo-campo">
+                    <label style="color: #334155 !important;">Fecha Vencimiento:</label>
+                    <input type="date" id="conv-fin" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+            </div>
+            <div class="grupo-campo">
+                <label style="color: #334155 !important;">Cupos Autorizados:</label>
+                <input type="number" id="conv-cupos" min="1" max="100" value="10" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="cerrarModal('modal-crud-convenio')" style="padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 8px 16px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Guardar Convenio</button>
             </div>
         </form>
     </div>
@@ -601,6 +716,27 @@
     </div>
 </div>
 
+<!-- Modal de Confirmación Personalizado (Compatible con iframe Preview y localhost) -->
+<div id="modal-confirmar-accion" class="modal-fondo" style="z-index: 10050;">
+    <div class="modal-caja" style="max-width: 440px; border-top: 5px solid #b91c1c;">
+        <h3 id="confirmar-titulo" style="margin-top: 0; color: #0f172a; font-size: 18px;">Confirmar Eliminación</h3>
+        <p id="confirmar-mensaje" style="color: #475569; font-size: 14px; line-height: 1.55; margin: 10px 0 22px 0;">
+            ¿Está seguro de continuar con esta acción?
+        </p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" id="btn-confirmar-cancelar" style="padding: 9px 16px; background: #e2e8f0; color: #334155; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirmar-aceptar" style="padding: 9px 18px; background: #b91c1c; color: #ffffff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                Sí, Eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Notificación Toast Flotante -->
+<div id="toast-notificacion" style="display: none; position: fixed; top: 22px; right: 22px; z-index: 10100; padding: 12px 18px; border-radius: 8px; color: #ffffff; font-size: 13px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.22); max-width: 380px;"></div>
+
 <footer class="pie-pagina-institucional">
     <img src="../images/logo1.png" alt="Logo UDI">
 </footer>
@@ -609,6 +745,12 @@
 <script src="../js/db.js"></script>
 
 <script>
+    /**
+     * @fileoverview Controlador del Panel del Coordinador de Prácticas (views/coordinador.html).
+     * @description Administra solicitudes de aspirantes, matrícula oficial, CRUD completo de
+     * Docentes Asesores, Estudiantes, Instituciones Receptoras, Convenios y Prácticas Académicas
+     * directamente contra PostgreSQL en Supabase, además del Informe Consolidado de auditoría.
+     */
     // ========================================================================
     // 1. CONTROL DE ACCESO Y SEGURIDAD POR SESIÓN
     // ========================================================================
@@ -668,8 +810,86 @@
     }
 
     /**
+     * Despliega un cuadro de confirmación propio en HTML/CSS compatible con iframes
+     * (reemplazo seguro de window.confirm).
+     * @param {string} titulo - Encabezado de la confirmación.
+     * @param {string} mensaje - Detalle de la acción a confirmar.
+     * @param {string} [textoConfirmar='Sí, Eliminar'] - Etiqueta del botón afirmativo.
+     * @param {string} [colorBoton='#b91c1c'] - Color del botón afirmativo.
+     * @returns {Promise<boolean>} True si el usuario confirma, false si cancela.
+     */
+    function mostrarConfirmacion(titulo, mensaje, textoConfirmar = 'Sí, Eliminar', colorBoton = '#b91c1c') {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-confirmar-accion');
+            const elTitulo = document.getElementById('confirmar-titulo');
+            const elMensaje = document.getElementById('confirmar-mensaje');
+            const btnAceptar = document.getElementById('btn-confirmar-aceptar');
+            const btnCancelar = document.getElementById('btn-confirmar-cancelar');
+            const caja = modal ? modal.querySelector('.modal-caja') : null;
+
+            if (!modal || !btnAceptar || !btnCancelar) {
+                resolve(false);
+                return;
+            }
+
+            elTitulo.innerText = titulo || 'Confirmar Acción';
+            elMensaje.innerText = mensaje || '¿Desea continuar?';
+            btnAceptar.innerText = textoConfirmar;
+            btnAceptar.style.backgroundColor = colorBoton;
+            if (caja) caja.style.borderTopColor = colorBoton;
+
+            const limpiar = (resultado) => {
+                modal.style.display = 'none';
+                btnAceptar.onclick = null;
+                btnCancelar.onclick = null;
+                modal.onclick = null;
+                document.removeEventListener('keydown', onKeyDown);
+                resolve(resultado);
+            };
+
+            const onKeyDown = (ev) => {
+                if (ev.key === 'Escape') limpiar(false);
+            };
+
+            btnAceptar.onclick = () => limpiar(true);
+            btnCancelar.onclick = () => limpiar(false);
+            modal.onclick = (ev) => {
+                if (ev.target === modal) limpiar(false);
+            };
+            document.addEventListener('keydown', onKeyDown);
+            modal.style.display = 'flex';
+        });
+    }
+
+    let timerToastCoord = null;
+    /**
+     * Muestra una notificación flotante temporal (toast) en la esquina superior derecha.
+     *
+     * @function mostrarToast
+     * @param {string} mensaje - Texto informativo o de error a mostrar.
+     * @param {('success'|'error')} [tipo='success'] - Estilo visual de la notificación.
+     * @returns {void}
+     */
+    function mostrarToast(mensaje, tipo = 'success') {
+        const toast = document.getElementById('toast-notificacion');
+        if (!toast) return;
+        toast.innerText = mensaje;
+        toast.style.backgroundColor = tipo === 'error' ? '#b91c1c' : '#0f766e';
+        toast.style.display = 'block';
+        if (timerToastCoord) clearTimeout(timerToastCoord);
+        timerToastCoord = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3800);
+    }
+
+    /**
      * Comprueba en tiempo real si el servidor está conectado a Supabase PostgreSQL
      * o funcionando en modo réplica local persistente.
+     *
+     * @async
+     * @function verificarEstadoBaseDatos
+     * @param {boolean} [mostrarAlerta=false] - Si es true, despliega resumen de diagnóstico.
+     * @returns {Promise<void>}
      */
     async function verificarEstadoBaseDatos(mostrarAlerta = false) {
         try {
@@ -702,9 +922,33 @@
     // ========================================================================
 
     /**
+     * Calcula el siguiente código correlativo disponible a partir de una colección existente
+     * (por ejemplo EST-2024-05, PRAC-009, INST-05 o CONV-2026-04).
+     *
+     * @function generarCodigoCorrelativo
+     * @param {Array<Object>} lista - Registros actuales de la tabla.
+     * @param {string} campo - Nombre del atributo identificador a evaluar.
+     * @param {string} prefijo - Prefijo institucional del código.
+     * @param {number} digitos - Cantidad mínima de dígitos numéricos con relleno de ceros.
+     * @returns {string} Siguiente identificador único sugerido.
+     */
+    function generarCodigoCorrelativo(lista, campo, prefijo, digitos) {
+        let max = 0;
+        (lista || []).forEach(item => {
+            const val = String(item[campo] || '');
+            const m = val.match(/(\d+)$/);
+            if (m) {
+                const n = parseInt(m[1], 10);
+                if (!Number.isNaN(n) && n > max) max = n;
+            }
+        });
+        return prefijo + String(max + 1).padStart(digitos, '0');
+    }
+
+    /**
      * Consulta las colecciones relacionales de datos desde la capa DB y
      * reconstruye en el DOM los indicadores y las tablas de todas las pestañas.
-     * 
+     *
      * @function cargarTodo
      * @returns {void}
      */
@@ -715,61 +959,70 @@
         const instituciones = DB.getTable('Institucion');
         const tutores = DB.getTable('Tutor_Academico');
         const tipos = DB.getTable('Tipo_Practica');
-        const actividades = DB.getTable('Actividad');
-        const evaluaciones = DB.getTable('Evaluacion');
-        const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
+        const convenios = DB.getTable('Convenio');
+        const solicitudes = DB.getSolicitudes();
 
-        // Tarjetas
+        // Tarjetas KPI en tiempo real desde Supabase
         document.getElementById('total-solicitudes').innerText = solicitudes.length;
         document.getElementById('total-estudiantes').innerText = estudiantes.length;
         document.getElementById('total-tutores').innerText = tutores.length;
         document.getElementById('total-practicas').innerText = practicas.length;
+        const elConv = document.getElementById('total-convenios');
+        if (elConv) elConv.innerText = convenios.length;
 
         // Cargar opciones en el formulario de matrícula oficial para asignación manual
         const selMatTutor = document.getElementById('mat-tutor');
         if (selMatTutor) {
             const valPrevio = selMatTutor.value;
-            selMatTutor.innerHTML = '<option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>' + 
-                tutores.map(t => `<option value="${t.documento}">${t.nombre} (${t.documento})</option>`).join('');
+            selMatTutor.innerHTML = '<option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>' +
+                tutores.map(t => {
+                    const docTu = t.documento_tu || t.documento;
+                    return `<option value="${docTu}">${t.nombre} (${docTu})</option>`;
+                }).join('');
             if (valPrevio) selMatTutor.value = valPrevio;
         }
 
         const selMatInst = document.getElementById('mat-institucion');
         if (selMatInst) {
             const valPrevioInst = selMatInst.value;
-            selMatInst.innerHTML = '<option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>' + 
-                instituciones.map(i => `<option value="${i.id_institucion}">${i.nombre_colegio}</option>`).join('');
+            selMatInst.innerHTML = '<option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>' +
+                instituciones.map(i => `<option value="${i.id_institucion}">${i.nombre_colegio || i.nombre}</option>`).join('');
             if (valPrevioInst) selMatInst.value = valPrevioInst;
         }
 
-        // TAB 1: SOLICITUDES DE ASPIRANTES (Con colegio preferido y revisión manual)
+        // TAB 1: SOLICITUDES DE ASPIRANTES (Sincronizadas desde Supabase)
         const tbodySol = document.querySelector('#tabla-solicitudes-aspirantes tbody');
         tbodySol.innerHTML = '';
         if (solicitudes.length === 0) {
             tbodySol.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 15px;">No hay solicitudes de nuevos estudiantes pendientes de aprobación.</td></tr>`;
         } else {
-            solicitudes.forEach((s, idx) => {
+            solicitudes.forEach(s => {
                 const instPref = instituciones.find(i => i.id_institucion === s.id_institucion_preferencia);
-                const textoPref = instPref 
-                    ? `<span style="color:#1e3a8a; font-weight:600;">${instPref.nombre_colegio}</span>` 
-                    : (s.id_institucion_preferencia === 'POR_ASIGNAR' 
-                        ? '<span style="color:#64748b; font-style:italic;">A criterio Coordinador</span>' 
+                const nomInstTexto = instPref
+                    ? (instPref.nombre_colegio || instPref.nombre)
+                    : (s.institucion_preferencia || '');
+                const textoPref = nomInstTexto
+                    ? `<span style="color:#1e3a8a; font-weight:600;">${nomInstTexto}</span>`
+                    : (s.id_institucion_preferencia === 'POR_ASIGNAR'
+                        ? '<span style="color:#64748b; font-style:italic;">A criterio Coordinador</span>'
                         : (s.id_institucion_preferencia || '<span style="color:#94a3b8;">Sin preferencia</span>'));
+
+                const idSol = encodeURIComponent(s.id_solicitud || s.id || s.correo);
 
                 const fila = `
                     <tr>
                         <td><strong>${s.nombre}</strong></td>
                         <td>${s.correo}</td>
-                        <td>Semestre ${s.semestre || '7'}</td>
+                        <td>${s.semestre ? `Semestre ${s.semestre}` : 'N/A'}</td>
                         <td>${textoPref}</td>
                         <td>${s.fecha || 'Reciente'}</td>
-                        <td><span style="background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">⏳ En Espera</span></td>
+                        <td><span style="background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">⏳ ${s.estado || 'Pendiente'}</span></td>
                         <td>
                             <div style="display: flex; gap: 6px;">
-                                <button onclick="abrirModalAprobarAspirante(${idx})" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                                <button onclick="abrirModalAprobarAspirante(decodeURIComponent('${idSol}'))" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
                                     ✓ Revisar y Aprobar
                                 </button>
-                                <button onclick="rechazarSolicitudAspirante(${idx})" style="background-color: #b91c1c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                                <button onclick="rechazarSolicitudAspirante(decodeURIComponent('${idSol}'))" style="background-color: #b91c1c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
                                     ✕ Rechazar
                                 </button>
                             </div>
@@ -784,10 +1037,11 @@
         const tbodyAlumnos = document.querySelector('#tabla-alumnos-matriculados tbody');
         tbodyAlumnos.innerHTML = '';
         estudiantes.forEach(est => {
-            const p = practicas.find(pr => pr.id_estudiante === est.id_estudiante || pr.id_estudiante === est.documento);
+            const p = practicas.find(pr => pr.id_estudiante === est.id_estudiante || pr.id_estudiante === est.documento || pr.documento_estudiante === est.documento);
             const colegio = p ? instituciones.find(c => c.id_institucion === p.id_institucion) : null;
-            const asignacionTexto = p 
-                ? `<span style="font-weight:bold; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${p.id_practica}</span> <small style="display:block; color:#475569;">${colegio ? colegio.nombre_colegio : p.id_institucion}</small>` 
+            const nombreColegio = colegio ? (colegio.nombre_colegio || colegio.nombre) : (p ? p.id_institucion : '');
+            const asignacionTexto = p
+                ? `<span style="font-weight:bold; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${p.id_practica}</span> <small style="display:block; color:#475569;">${nombreColegio}</small>`
                 : `<div style="display:inline-flex; align-items:center; gap:6px;"><span style="color:#b45309; font-weight:bold; font-size:12px;">Por Asignar Práctica</span><button type="button" onclick="abrirModalAsignarPracticaParaEstudiante('${est.id_estudiante}')" style="background:#2563eb; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">➕ Asignar</button></div>`;
 
             const fila = `
@@ -795,7 +1049,7 @@
                     <td><strong>${est.id_estudiante}</strong></td>
                     <td><strong>${est.nombre}</strong></td>
                     <td>${est.correo}</td>
-                    <td>Semestre ${est.semestre}</td>
+                    <td>${est.semestre ? `Semestre ${est.semestre}` : 'N/A'}</td>
                     <td>${asignacionTexto}</td>
                     <td><span style="color:#15803d; font-weight:bold; background:#dcfce7; padding:4px 8px; border-radius:12px; font-size:11px;">Matriculado Oficial</span></td>
                 </tr>
@@ -807,17 +1061,19 @@
         const tbodyTutores = document.querySelector('#tabla-crud-docentes tbody');
         tbodyTutores.innerHTML = '';
         tutores.forEach(t => {
-            const countPrac = practicas.filter(p => p.documento === t.documento).length;
+            const docTu = t.documento_tu || t.documento || '';
+            const docEnc = encodeURIComponent(docTu);
+            const countPrac = practicas.filter(p => (p.documento_tu || p.documento) === docTu).length;
             const fila = `
                 <tr>
-                    <td><strong>${t.documento}</strong></td>
+                    <td><strong>${docTu}</strong></td>
                     <td><strong>${t.nombre}</strong></td>
                     <td>${t.correo}</td>
                     <td>${t.especialidad || 'Didáctica General'}</td>
                     <td><span style="font-weight: bold; color: #1e3a8a;">${countPrac} practicantes</span></td>
                     <td>
-                        <button onclick="editarDocente('${t.documento}')" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
-                        <button onclick="eliminarDocente('${t.documento}')" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
+                        <button onclick="editarDocente(decodeURIComponent('${docEnc}'))" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
+                        <button onclick="eliminarDocente(decodeURIComponent('${docEnc}'))" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
                     </td>
                 </tr>
             `;
@@ -828,10 +1084,12 @@
         const tbodyAsign = document.querySelector('#tabla-asignaciones tbody');
         tbodyAsign.innerHTML = '';
         practicas.forEach(p => {
-            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
-            const tut = tutores.find(t => t.documento === p.documento);
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante || e.documento === p.documento_estudiante);
+            const docTuP = p.documento_tu || p.documento;
+            const tut = tutores.find(t => (t.documento_tu || t.documento) === docTuP);
             const inst = instituciones.find(i => i.id_institucion === p.id_institucion);
             const tip = tipos.find(tp => tp.id_tipo === p.id_tipo);
+            const idPracEnc = encodeURIComponent(p.id_practica || '');
 
             const colorEstado = p.estado === 'En Curso' ? '#15803d' : (p.estado === 'Culminada' ? '#1e3a8a' : '#b45309');
             const bgEstado = p.estado === 'En Curso' ? '#dcfce7' : (p.estado === 'Culminada' ? '#dbeafe' : '#fef3c7');
@@ -840,13 +1098,13 @@
                 <tr>
                     <td><strong>${p.id_practica}</strong></td>
                     <td>${est ? est.nombre : p.id_estudiante}</td>
-                    <td>${tut ? tut.nombre : p.documento}</td>
-                    <td>${inst ? inst.nombre_colegio : p.id_institucion}</td>
-                    <td>${tip ? tip.descripcion : p.id_tipo}</td>
+                    <td>${tut ? tut.nombre : (docTuP || '-')}</td>
+                    <td>${inst ? (inst.nombre_colegio || inst.nombre) : (p.id_institucion || 'Sin sede asignada')}</td>
+                    <td>${tip ? (tip.nombre || tip.descripcion) : p.id_tipo}</td>
                     <td><span style="background: ${bgEstado}; color: ${colorEstado}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">${p.estado}</span></td>
                     <td>
-                        <button onclick="editarPractica('${p.id_practica}')" style="background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">✏️ Editar</button>
-                        <button onclick="eliminarPractica('${p.id_practica}')" style="background: #b91c1c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">🗑️</button>
+                        <button onclick="editarPractica(decodeURIComponent('${idPracEnc}'))" style="background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">✏️ Editar</button>
+                        <button onclick="eliminarPractica(decodeURIComponent('${idPracEnc}'))" style="background: #b91c1c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">🗑️</button>
                     </td>
                 </tr>
             `;
@@ -857,15 +1115,17 @@
         const tbodyEst = document.querySelector('#tabla-crud-estudiantes tbody');
         tbodyEst.innerHTML = '';
         estudiantes.forEach(e => {
+            const idEstKey = e.id_estudiante || e.documento || '';
+            const idEstEnc = encodeURIComponent(idEstKey);
             const fila = `
                 <tr>
                     <td><strong>${e.id_estudiante}</strong></td>
                     <td>${e.nombre}</td>
                     <td>${e.correo}</td>
-                    <td><span style="font-weight: bold; color: #1e3a8a;">Semestre ${e.semestre}</span></td>
+                    <td><span style="font-weight: bold; color: #1e3a8a;">${e.semestre ? `Semestre ${e.semestre}` : 'N/A'}</span></td>
                     <td>
-                        <button onclick="editarEstudiante('${e.id_estudiante}')" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
-                        <button onclick="eliminarEstudiante('${e.id_estudiante}')" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
+                        <button onclick="editarEstudiante(decodeURIComponent('${idEstEnc}'))" style="background: #0f766e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
+                        <button onclick="eliminarEstudiante(decodeURIComponent('${idEstEnc}'))" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
                     </td>
                 </tr>
             `;
@@ -876,121 +1136,229 @@
         const tbodyInst = document.querySelector('#tabla-crud-instituciones tbody');
         tbodyInst.innerHTML = '';
         instituciones.forEach(i => {
+            const nomInst = i.nombre_colegio || i.nombre || i.id_institucion;
+            const idInstEnc = encodeURIComponent(i.id_institucion || '');
             const fila = `
                 <tr>
                     <td><strong>${i.id_institucion}</strong></td>
-                    <td><strong>${i.nombre_colegio}</strong></td>
-                    <td>${i.direccion}</td>
+                    <td><strong>${nomInst}</strong></td>
+                    <td>${i.direccion || '-'}</td>
                     <td>${i.contacto || i.telefono || '-'}</td>
                     <td>
-                        <button onclick="editarInstitucion('${i.id_institucion}')" style="background: #7c3aed; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
-                        <button onclick="eliminarInstitucion('${i.id_institucion}')" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
+                        <button onclick="editarInstitucion(decodeURIComponent('${idInstEnc}'))" style="background: #7c3aed; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✏️ Editar</button>
+                        <button onclick="eliminarInstitucion(decodeURIComponent('${idInstEnc}'))" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
                     </td>
                 </tr>
             `;
             tbodyInst.innerHTML += fila;
         });
 
-        // TAB 6: REPORTE CONSOLIDADO
+        // TAB 5: CRUD CONVENIOS
+        const tbodyConv = document.querySelector('#tabla-crud-convenios tbody');
+        if (tbodyConv) {
+            tbodyConv.innerHTML = '';
+            if (convenios.length === 0) {
+                tbodyConv.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 15px;">No hay convenios registrados aún.</td></tr>`;
+            } else {
+                convenios.forEach(c => {
+                    const instRel = instituciones.find(i => i.id_institucion === c.id_institucion);
+                    const nomCol = instRel ? (instRel.nombre_colegio || instRel.nombre) : c.id_institucion;
+                    const firmado = c.estado === 'Firmado y Vigente';
+                    const idConvEnc = encodeURIComponent(c.id_convenio || '');
+                    tbodyConv.innerHTML += `
+                        <tr>
+                            <td><strong>${c.id_convenio}</strong></td>
+                            <td><strong>${nomCol}</strong></td>
+                            <td>${c.resolucion || '-'}</td>
+                            <td>${c.cupos_autorizados || 10} cupos</td>
+                            <td>${c.fecha_inicio || '-'} al ${c.fecha_vencimiento || '-'}</td>
+                            <td><span style="background: ${firmado ? '#dcfce7' : '#ffedd5'}; color: ${firmado ? '#15803d' : '#c2410c'}; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">${c.estado || 'Pendiente Firma Director'}</span></td>
+                            <td>
+                                <button onclick="eliminarConvenio(decodeURIComponent('${idConvEnc}'))" style="background: #b91c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // TAB 6: REPORTE CONSOLIDADO EN TIEMPO REAL
+        cargarReporteConsolidado();
+    }
+
+    let ultimoReporteConsolidado = [];
+
+    /**
+     * Consulta en tiempo real el informe consolidado desde la API REST
+     * `/api/reportes/consolidado` (con respaldo local) y renderiza métricas de auditoría.
+     *
+     * @async
+     * @function cargarReporteConsolidado
+     * @returns {Promise<void>}
+     */
+    async function cargarReporteConsolidado() {
+        const inputBuscar = document.getElementById('rep-filtro-buscar');
+        const selectEstado = document.getElementById('rep-filtro-estado');
+        const reporte = await DB.getConsolidatedReport({
+            q: inputBuscar ? inputBuscar.value.trim() : '',
+            estado: selectEstado ? selectEstado.value : 'todos'
+        });
+
+        const resumen = reporte.resumen_auditoria || {};
+        ultimoReporteConsolidado = reporte.registros || [];
+
+        const kpiPrac = document.getElementById('rep-kpi-practicas');
+        const kpiHoras = document.getElementById('rep-kpi-horas');
+        const kpiCump = document.getElementById('rep-kpi-cumplimiento');
+        const kpiProm = document.getElementById('rep-kpi-promedio');
+        if (kpiPrac) kpiPrac.innerText = resumen.total_practicas ?? ultimoReporteConsolidado.length;
+        if (kpiHoras) kpiHoras.innerText = `${resumen.horas_aprobadas_totales ?? 0} hrs`;
+        if (kpiCump) kpiCump.innerText = `${resumen.cumplimiento_promedio_pct ?? 0}%`;
+        if (kpiProm) kpiProm.innerText = `${resumen.promedio_calificaciones ?? 0} / 5.0`;
+
         const tbodyRep = document.querySelector('#tabla-reporte-consolidado tbody');
+        if (!tbodyRep) return;
         tbodyRep.innerHTML = '';
-        practicas.forEach(p => {
-            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
-            const tut = tutores.find(t => t.documento === p.documento);
-            const inst = instituciones.find(i => i.id_institucion === p.id_institucion);
-            
-            const acts = actividades.filter(a => a.id_practica === p.id_practica && a.estado_aprovacion === 'Aprobado');
-            const horasAprobadas = acts.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
-            const meta = p.horas_objetivo || 80;
-            const porcentaje = Math.min(100, Math.round((horasAprobadas / meta) * 100));
 
-            const ev = evaluaciones.find(e => e.id_practica === p.id_practica);
-            const notaTexto = ev ? `⭐ ${ev.calificacion}` : 'Pendiente';
+        if (ultimoReporteConsolidado.length === 0) {
+            tbodyRep.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 20px;">No se encontraron registros para los filtros seleccionados.</td></tr>`;
+            return;
+        }
 
-            const fila = `
+        ultimoReporteConsolidado.forEach(r => {
+            const notaTexto = r.calificacion_promedio !== null ? `⭐ ${r.calificacion_promedio}` : 'Pendiente';
+            const badgeSede = r.validado_institucion
+                ? '<span style="background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:700;">✓ Validada</span>'
+                : '<span style="background:#f1f5f9; color:#64748b; padding:3px 8px; border-radius:10px; font-size:11px;">Pendiente</span>';
+
+            tbodyRep.innerHTML += `
                 <tr>
-                    <td><strong>${p.id_practica}</strong></td>
-                    <td>${est ? est.nombre : p.id_estudiante}</td>
-                    <td>${tut ? tut.nombre : p.documento}</td>
-                    <td>${inst ? inst.nombre_colegio : p.id_institucion}</td>
-                    <td><strong>${horasAprobadas} / ${meta} hrs</strong></td>
+                    <td><strong>${r.id_practica}</strong></td>
+                    <td>${r.estudiante_nombre}</td>
+                    <td>${r.tutor_nombre}</td>
+                    <td>${r.institucion_nombre}</td>
+                    <td><strong>${r.horas_aprobadas} / ${r.horas_objetivo} hrs</strong></td>
                     <td>
-                        <div style="font-size: 12px; font-weight: bold; color: ${porcentaje >= 80 ? '#15803d' : '#b45309'};">${porcentaje}%</div>
+                        <div style="font-size: 12px; font-weight: bold; color: ${r.porcentaje_cumplimiento >= 80 ? '#15803d' : '#b45309'};">${r.porcentaje_cumplimiento}%</div>
                         <div style="background: #e2e8f0; height: 6px; border-radius: 4px; width: 80px; overflow: hidden; margin-top: 3px;">
-                            <div style="background: ${porcentaje >= 80 ? '#15803d' : '#2563eb'}; height: 100%; width: ${porcentaje}%;"></div>
+                            <div style="background: ${r.porcentaje_cumplimiento >= 80 ? '#15803d' : '#2563eb'}; height: 100%; width: ${r.porcentaje_cumplimiento}%;"></div>
                         </div>
                     </td>
+                    <td><small>${r.bitacoras_aprobadas}/${r.total_bitacoras} bit. · ${r.total_evidencias} evi.</small></td>
                     <td><strong>${notaTexto}</strong></td>
-                    <td><span style="font-weight: 600; font-size: 12px;">${p.estado}</span></td>
+                    <td>${badgeSede}</td>
+                    <td><span style="font-weight: 600; font-size: 12px;">${r.estado}</span></td>
                 </tr>
             `;
-            tbodyRep.innerHTML += fila;
         });
     }
 
     /**
-     * Manejador de matrícula oficial de usuarios institucionales (estudiantes, docentes o coordinadores).
-     * Da de alta credenciales e inserta el registro en la entidad correspondiente del diagrama UML.
+     * Exporta el informe consolidado actual en formato CSV listo para auditoría en Excel.
+     * @function exportarReporteCSV
+     * @returns {void}
      */
-    document.getElementById('form-matricular-oficial').addEventListener('submit', function(e) {
+    function exportarReporteCSV() {
+        if (!ultimoReporteConsolidado || ultimoReporteConsolidado.length === 0) {
+            alert('No hay registros consolidados para exportar.');
+            return;
+        }
+        const encabezados = ['ID_Practica', 'Estudiante', 'Tutor_Asesor', 'Institucion', 'Horas_Aprobadas', 'Horas_Objetivo', 'Cumplimiento_Pct', 'Bitacoras_Aprobadas', 'Evidencias', 'Calificacion', 'Validado_Sede', 'Estado'];
+        const filas = ultimoReporteConsolidado.map(r => [
+            r.id_practica,
+            `"${(r.estudiante_nombre || '').replace(/"/g, '""')}"`,
+            `"${(r.tutor_nombre || '').replace(/"/g, '""')}"`,
+            `"${(r.institucion_nombre || '').replace(/"/g, '""')}"`,
+            r.horas_aprobadas,
+            r.horas_objetivo,
+            `${r.porcentaje_cumplimiento}%`,
+            r.bitacoras_aprobadas,
+            r.total_evidencias,
+            r.calificacion_promedio !== null ? r.calificacion_promedio : 'Pendiente',
+            r.validado_institucion ? 'Si' : 'No',
+            r.estado
+        ].join(','));
+
+        const csv = '\uFEFF' + [encabezados.join(','), ...filas].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Informe_Consolidado_Practicas_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    /**
+     * Manejador de matrícula oficial de usuarios institucionales (estudiantes, docentes o coordinadores).
+     * Persiste directamente en Supabase vía API REST.
+     */
+    document.getElementById('form-matricular-oficial').addEventListener('submit', async function(e) {
         e.preventDefault();
         const nombre = document.getElementById('mat-nombre').value.trim();
         const correo = document.getElementById('mat-correo').value.trim().toLowerCase();
         const clave = document.getElementById('mat-clave').value;
         const rol = document.getElementById('mat-rol').value;
 
-        if (rol === 'estudiante') {
-            const semestreSel = parseInt(document.getElementById('mat-semestre').value) || 7;
-            const nuevoId = 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0');
-            DB.insert('Estudiante', {
-                id_estudiante: nuevoId,
-                nombre, correo, semestre: semestreSel, clave
-            });
-
-            // Asignación explícita seleccionada por el usuario (NADA AUTOMÁTICO)
-            const tutorSeleccionado = document.getElementById('mat-tutor').value;
-            const institucionSeleccionada = document.getElementById('mat-institucion').value;
-            const tipoSeleccionado = document.getElementById('mat-tipo').value || (semestreSel <= 6 ? 'TP-01' : (semestreSel === 7 ? 'TP-02' : 'TP-03'));
-
-            if (tutorSeleccionado && institucionSeleccionada) {
-                const practicas = DB.getTable('Practica');
-                const nuevoIdPrac = 'PRAC-' + String(practicas.length + 1).padStart(3, '0');
-                DB.insert('Practica', {
-                    id_practica: nuevoIdPrac,
+        try {
+            if (rol === 'estudiante') {
+                const semRaw = document.getElementById('mat-semestre').value;
+                const semestreSel = semRaw ? (parseInt(semRaw, 10) || null) : null;
+                const nuevoId = generarCodigoCorrelativo(DB.getTable('Estudiante'), 'id_estudiante', 'EST-2024-', 2);
+                const estCreado = await DB.insert('Estudiante', {
                     id_estudiante: nuevoId,
-                    documento: tutorSeleccionado,
-                    id_institucion: institucionSeleccionada,
-                    id_tipo: tipoSeleccionado,
-                    estado: 'En Curso',
-                    fecha_inicio: new Date().toISOString().split('T')[0],
-                    horas_objetivo: semestreSel >= 8 ? 80 : (semestreSel >= 7 ? 60 : 50)
+                    nombre, correo, semestre: semestreSel, clave
                 });
-                alert(`Estudiante ${nombre} (${nuevoId}) matriculado exitosamente con código de práctica ${nuevoIdPrac}.\nTutor: ${tutorSeleccionado}\nColegio: ${institucionSeleccionada}`);
-            } else {
-                alert(`Estudiante ${nombre} (${nuevoId}) matriculado exitosamente en el sistema.\n\n⚠️ Estado: Pendiente de asignación de práctica. Puedes asignarle tutor y colegio en cualquier momento desde la pestaña "Asignación de Prácticas".`);
-            }
-        } else if (rol === 'docente') {
-            const nuevoDoc = 'DOC-' + Math.floor(1000000 + Math.random() * 9000000);
-            DB.insert('Tutor_Academico', {
-                documento: nuevoDoc,
-                nombre, correo, clave, especialidad: 'Pedagogía y Práctica'
-            });
-            alert(`Docente Asesor ${nombre} (${nuevoDoc}) registrado exitosamente.`);
-        } else if (rol === 'coordinador') {
-            const nuevoCoord = 'COORD-' + String(DB.getTable('Coordinador').length + 1).padStart(3, '0');
-            DB.insert('Coordinador', {
-                id_coordinador: nuevoCoord,
-                nombre, correo, clave, departamento: 'Coordinación'
-            });
-            alert(`Coordinador ${nombre} registrado exitosamente.`);
-        }
+                const idFinal = estCreado.id_estudiante || nuevoId;
 
-        document.getElementById('form-matricular-oficial').reset();
-        const grupoSem = document.getElementById('grupo-mat-semestre');
-        const grupoPrac = document.getElementById('grupo-mat-practica-config');
-        if (grupoSem) grupoSem.style.display = 'block';
-        if (grupoPrac) grupoPrac.style.display = 'block';
-        cargarTodo();
+                const tutorSeleccionado = document.getElementById('mat-tutor').value;
+                const institucionSeleccionada = document.getElementById('mat-institucion').value;
+                const tipoSeleccionado = document.getElementById('mat-tipo').value || (semestreSel <= 6 ? 'TP-01' : (semestreSel === 7 ? 'TP-02' : 'TP-03'));
+
+                if (tutorSeleccionado && institucionSeleccionada) {
+                    const nuevoIdPrac = generarCodigoCorrelativo(DB.getTable('Practica'), 'id_practica', 'PRAC-', 3);
+                    await DB.insert('Practica', {
+                        id_practica: nuevoIdPrac,
+                        id_estudiante: idFinal,
+                        documento_estudiante: estCreado.documento || idFinal,
+                        documento_tu: tutorSeleccionado,
+                        documento: tutorSeleccionado,
+                        id_institucion: institucionSeleccionada,
+                        id_tipo: tipoSeleccionado,
+                        estado: 'En Curso',
+                        fecha_inicio: new Date().toISOString().split('T')[0],
+                        horas_objetivo: semestreSel >= 8 ? 80 : (semestreSel >= 7 ? 60 : 50)
+                    });
+                    alert(`Estudiante ${nombre} (${idFinal}) matriculado exitosamente en Supabase con práctica ${nuevoIdPrac}.`);
+                } else {
+                    alert(`Estudiante ${nombre} (${idFinal}) matriculado exitosamente en Supabase.\n\nEstado: Pendiente de asignación de práctica.`);
+                }
+            } else if (rol === 'docente') {
+                const nuevoDoc = 'DOC-' + Math.floor(1000000 + Math.random() * 9000000);
+                await DB.insert('Tutor_Academico', {
+                    documento_tu: nuevoDoc,
+                    documento: nuevoDoc,
+                    nombre, correo, clave, especialidad: 'Pedagogía y Práctica'
+                });
+                alert(`Docente Asesor ${nombre} (${nuevoDoc}) registrado exitosamente en Supabase.`);
+            } else if (rol === 'coordinador') {
+                const nuevoCoord = generarCodigoCorrelativo(DB.getTable('Coordinador'), 'id_coordinador', 'COORD-', 3);
+                await DB.insert('Coordinador', {
+                    id_coordinador: nuevoCoord,
+                    nombre, correo, clave, departamento: 'Coordinación'
+                });
+                alert(`Coordinador ${nombre} registrado exitosamente en Supabase.`);
+            }
+
+            document.getElementById('form-matricular-oficial').reset();
+            const grupoSem = document.getElementById('grupo-mat-semestre');
+            const grupoPrac = document.getElementById('grupo-mat-practica-config');
+            if (grupoSem) grupoSem.style.display = 'block';
+            if (grupoPrac) grupoPrac.style.display = 'block';
+            cargarTodo();
+        } catch (err) {
+            alert(err.message || 'No fue posible guardar la matrícula en Supabase.');
+        }
     });
 
     // Alternar campos de práctica y semestre según rol seleccionado en formulario de matrícula
@@ -1004,44 +1372,48 @@
 
     /**
      * Despliega el modal de aprobación de solicitud para que el Coordinador
-     * asigne deliberadamente tutor y colegio receptor (sin automatismos).
-     * 
+     * asigne deliberadamente tutor y colegio receptor.
+     *
      * @function abrirModalAprobarAspirante
-     * @param {number} idx - Índice de la solicitud en solicitudes_aspirantes.
+     * @param {string} idSolicitud - ID o correo de la solicitud en Supabase.
      * @returns {void}
      */
-    function abrirModalAprobarAspirante(idx) {
-        let solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
-        const item = solicitudes[idx];
+    function abrirModalAprobarAspirante(idSolicitud) {
+        const solicitudes = DB.getSolicitudes();
+        const item = solicitudes.find(s =>
+            s.id_solicitud === idSolicitud || s.id === idSolicitud || s.correo === idSolicitud
+        );
         if (!item) return;
 
-        document.getElementById('aprob-idx').value = idx;
+        document.getElementById('aprob-idx').value = item.id_solicitud || item.id || item.correo;
         document.getElementById('aprob-info-nombre').innerText = item.nombre;
         document.getElementById('aprob-info-correo').innerText = item.correo;
-        document.getElementById('aprob-info-semestre').innerText = `Semestre ${item.semestre || '7'}`;
+        document.getElementById('aprob-info-semestre').innerText = item.semestre ? `Semestre ${item.semestre}` : 'N/A (Opcional)';
 
         const instituciones = DB.getTable('Institucion');
         const tutores = DB.getTable('Tutor_Academico');
 
         const instPref = instituciones.find(i => i.id_institucion === item.id_institucion_preferencia);
-        const textoPref = instPref 
-            ? `${instPref.nombre_colegio} (${instPref.id_institucion})` 
-            : (item.id_institucion_preferencia === 'POR_ASIGNAR' 
-                ? 'A criterio del Coordinador' 
-                : (item.id_institucion_preferencia || 'Sin preferencia especificada'));
-        document.getElementById('aprob-info-preferencia').innerText = textoPref;
+        const nomPref = instPref
+            ? `${instPref.nombre_colegio || instPref.nombre} (${instPref.id_institucion})`
+            : (item.institucion_preferencia || (item.id_institucion_preferencia === 'POR_ASIGNAR'
+                ? 'A criterio del Coordinador'
+                : (item.id_institucion_preferencia || 'Sin preferencia especificada')));
+        document.getElementById('aprob-info-preferencia').innerText = nomPref;
 
-        // Llenar selectores del modal de aprobación
         const selTutor = document.getElementById('aprob-tutor');
-        selTutor.innerHTML = '<option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>' + 
-            tutores.map(t => `<option value="${t.documento}">${t.nombre} (${t.documento})</option>`).join('');
+        selTutor.innerHTML = '<option value="">-- No asignar tutor todavía (Dejar pendiente) --</option>' +
+            tutores.map(t => {
+                const docTu = t.documento_tu || t.documento;
+                return `<option value="${docTu}">${t.nombre} (${docTu})</option>`;
+            }).join('');
 
         const selInst = document.getElementById('aprob-institucion');
-        selInst.innerHTML = '<option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>' + 
-            instituciones.map(i => `<option value="${i.id_institucion}" ${i.id_institucion === item.id_institucion_preferencia ? 'selected' : ''}>${i.nombre_colegio} (${i.id_institucion})</option>`).join('');
+        selInst.innerHTML = '<option value="">-- No asignar colegio todavía (Dejar pendiente) --</option>' +
+            instituciones.map(i => `<option value="${i.id_institucion}" ${i.id_institucion === item.id_institucion_preferencia ? 'selected' : ''}>${i.nombre_colegio || i.nombre} (${i.id_institucion})</option>`).join('');
 
         const selTipo = document.getElementById('aprob-tipo');
-        const sem = parseInt(item.semestre) || 7;
+        const sem = parseInt(item.semestre, 10) || 7;
         selTipo.value = sem <= 6 ? 'TP-01' : (sem === 7 ? 'TP-02' : 'TP-03');
 
         abrirModal('modal-aprobar-solicitud');
@@ -1050,71 +1422,79 @@
     /**
      * Manejador de confirmación del modal de aprobación de solicitud.
      */
-    document.getElementById('form-aprobar-solicitud').addEventListener('submit', function(e) {
+    document.getElementById('form-aprobar-solicitud').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const idx = parseInt(document.getElementById('aprob-idx').value);
-        let solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
-        const item = solicitudes[idx];
+        const idSol = document.getElementById('aprob-idx').value;
+        const solicitudes = DB.getSolicitudes();
+        const item = solicitudes.find(s =>
+            s.id_solicitud === idSol || s.id === idSol || s.correo === idSol
+        );
         if (!item) return;
 
-        // 1. Dar de alta en tabla Estudiante
-        let estudiante = DB.findBy('Estudiante', 'correo', item.correo);
-        let idAsignado = '';
-        if (!estudiante) {
-            const nuevoId = 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0');
-            idAsignado = nuevoId;
-            DB.insert('Estudiante', {
-                id_estudiante: nuevoId,
-                nombre: item.nombre,
-                correo: item.correo,
-                semestre: parseInt(item.semestre) || 7,
-                clave: item.clave || 'estudiante123'
-            });
-        } else {
-            idAsignado = estudiante.id_estudiante;
+        try {
+            // 1. Dar de alta en tabla Estudiante de Supabase
+            let estudiante = DB.findBy('Estudiante', 'correo', item.correo);
+            let idAsignado = '';
+            let docAsignado = '';
+            if (!estudiante) {
+                const nuevoId = generarCodigoCorrelativo(DB.getTable('Estudiante'), 'id_estudiante', 'EST-2024-', 2);
+                const estCreado = await DB.insert('Estudiante', {
+                    id_estudiante: nuevoId,
+                    nombre: item.nombre,
+                    correo: item.correo,
+                    semestre: item.semestre ? (parseInt(item.semestre, 10) || null) : null,
+                    clave: item.clave || 'estudiante123'
+                });
+                idAsignado = estCreado.id_estudiante || nuevoId;
+                docAsignado = estCreado.documento || idAsignado;
+            } else {
+                idAsignado = estudiante.id_estudiante;
+                docAsignado = estudiante.documento;
+            }
+
+            // 2. Retirar solicitud procesada directamente de Supabase
+            const idEliminar = item.id_solicitud || item.id || item.correo;
+            await DB.deleteSolicitud(idEliminar);
+
+            // 3. Asignación deliberada de práctica según selección en modal
+            const tutorSel = document.getElementById('aprob-tutor').value;
+            const instSel = document.getElementById('aprob-institucion').value;
+            const tipoSel = document.getElementById('aprob-tipo').value;
+
+            if (tutorSel && instSel) {
+                const nuevoIdPrac = generarCodigoCorrelativo(DB.getTable('Practica'), 'id_practica', 'PRAC-', 3);
+                const sem = parseInt(item.semestre, 10) || 7;
+
+                await DB.insert('Practica', {
+                    id_practica: nuevoIdPrac,
+                    id_estudiante: idAsignado,
+                    documento_estudiante: docAsignado,
+                    documento_tu: tutorSel,
+                    documento: tutorSel,
+                    id_institucion: instSel,
+                    id_tipo: tipoSel,
+                    estado: 'En Curso',
+                    fecha_inicio: new Date().toISOString().split('T')[0],
+                    horas_objetivo: sem >= 8 ? 80 : (sem >= 7 ? 60 : 50)
+                });
+
+                alert(`¡Solicitud de ${item.nombre} APROBADA con éxito!\n\nEstudiante matriculado (ID: ${idAsignado}) con código de práctica ${nuevoIdPrac}.\nEl estudiante ya puede iniciar sesión desde cualquier computador.`);
+            } else {
+                alert(`¡Solicitud de ${item.nombre} APROBADA con éxito!\n\nEstudiante matriculado (ID: ${idAsignado}).\nEstado: Pendiente de asignación de tutor y colegio receptor.`);
+            }
+
+            cerrarModal('modal-aprobar-solicitud');
+            cargarTodo();
+        } catch (err) {
+            alert(err.message || 'No fue posible aprobar la solicitud en Supabase.');
         }
-
-        // 2. Retirar de solicitudes en espera
-        const idEliminar = item.id_solicitud || item.id || item.correo;
-        fetch('/api/solicitudes/' + encodeURIComponent(idEliminar), { method: 'DELETE' }).catch(() => {});
-        solicitudes.splice(idx, 1);
-        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudes));
-
-        // 3. Asignación deliberada según lo escogido en el modal
-        const tutorSel = document.getElementById('aprob-tutor').value;
-        const instSel = document.getElementById('aprob-institucion').value;
-        const tipoSel = document.getElementById('aprob-tipo').value;
-
-        if (tutorSel && instSel) {
-            const practicas = DB.getTable('Practica');
-            const nuevoIdPrac = 'PRAC-' + String(practicas.length + 1).padStart(3, '0');
-            const sem = parseInt(item.semestre) || 7;
-
-            DB.insert('Practica', {
-                id_practica: nuevoIdPrac,
-                id_estudiante: idAsignado,
-                documento: tutorSel,
-                id_institucion: instSel,
-                id_tipo: tipoSel,
-                estado: 'En Curso',
-                fecha_inicio: new Date().toISOString().split('T')[0],
-                horas_objetivo: sem >= 8 ? 80 : (sem >= 7 ? 60 : 50)
-            });
-
-            alert(`¡Solicitud de ${item.nombre} APROBADA con éxito!\n\nEstudiante matriculado (ID: ${idAsignado}) con código de práctica ${nuevoIdPrac}.\nTutor Asignado: ${tutorSel}\nInstitución Receptora: ${instSel}\n\nEl estudiante ya puede iniciar sesión en la plataforma con sus credenciales.`);
-        } else {
-            alert(`¡Solicitud de ${item.nombre} APROBADA con éxito!\n\nEstudiante matriculado (ID: ${idAsignado}).\n⚠️ Estado: Pendiente de asignación de tutor y colegio receptor.\nPuedes asignarlos formalmente cuando desees desde la pestaña "Asignación de Prácticas".\n\nEl estudiante ya puede iniciar sesión en la plataforma.`);
-        }
-
-        cerrarModal('modal-aprobar-solicitud');
-        cargarTodo();
     });
 
     /**
      * Abre el modal de asignación de práctica preseleccionando al estudiante.
-     * 
+     *
      * @function abrirModalAsignarPracticaParaEstudiante
-     * @param {string} idEstudiante - Identificador del estudiante (ej: EST-2024-05).
+     * @param {string} idEstudiante - Identificador del estudiante.
      * @returns {void}
      */
     function abrirModalAsignarPracticaParaEstudiante(idEstudiante) {
@@ -1125,35 +1505,38 @@
     }
 
     /**
-     * Compatibilidad: Procesa y acepta la solicitud directamente abriendo el modal.
-     */
-    function procesarAltaAspirante(idx) {
-        abrirModalAprobarAspirante(idx);
-    }
-
-    /**
-     * Rechaza y descarta una solicitud de inscripción en espera.
-     * 
+     * Rechaza y elimina una solicitud de inscripción directamente en Supabase.
+     *
+     * @async
      * @function rechazarSolicitudAspirante
-     * @param {number} idx - Índice de la solicitud en la lista.
-     * @returns {void}
+     * @param {string} idSolicitud - ID o correo de la solicitud.
+     * @returns {Promise<void>}
      */
-    function rechazarSolicitudAspirante(idx) {
-        let solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
-        const item = solicitudes[idx];
+    async function rechazarSolicitudAspirante(idSolicitud) {
+        const solicitudes = DB.getSolicitudes();
+        const item = solicitudes.find(s =>
+            s.id_solicitud === idSolicitud || s.id === idSolicitud || s.correo === idSolicitud
+        );
         if (!item) return;
 
-        if (confirm(`¿Estás seguro de que deseas rechazar la solicitud de ${item.nombre} (${item.correo})?`)) {
+        const confirmado = await mostrarConfirmacion(
+            'Rechazar Solicitud de Aspirante',
+            `¿Estás seguro de que deseas rechazar y eliminar la solicitud de ${item.nombre} (${item.correo})?`,
+            'Sí, Rechazar Solicitud'
+        );
+        if (!confirmado) return;
+
+        try {
             const idEliminar = item.id_solicitud || item.id || item.correo;
-            fetch('/api/solicitudes/' + encodeURIComponent(idEliminar), { method: 'DELETE' }).catch(() => {});
-            solicitudes.splice(idx, 1);
-            localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudes));
-            alert(`Solicitud de ${item.nombre} rechazada y descartada.`);
+            await DB.deleteSolicitud(idEliminar);
             cargarTodo();
+            mostrarToast(`Solicitud de ${item.nombre} rechazada y eliminada.`);
+        } catch (err) {
+            mostrarToast(err.message || 'No se pudo eliminar la solicitud.', 'error');
         }
     }
 
-    // Escuchar evento de sincronización de datos con el backend (PostgreSQL / Supabase)
+    // Escuchar evento de sincronización de datos con Supabase
     window.addEventListener('db:sincronizado', function() {
         cargarTodo();
     });
@@ -1163,8 +1546,8 @@
     // ========================================================================
 
     /**
-     * Abre el modal para registrar un nuevo docente asesor con campos limpios.
-     * 
+     * Abre el modal CRUD para registrar un nuevo Docente Asesor en Supabase.
+     *
      * @function abrirModalDocente
      * @returns {void}
      */
@@ -1177,19 +1560,20 @@
     }
 
     /**
-     * Carga la información de un docente asesor existente en el modal para su modificación.
-     * 
+     * Carga los datos de un Tutor Académico existente en el modal para su edición.
+     *
      * @function editarDocente
-     * @param {string} documento - Documento único del tutor académico a editar.
+     * @param {string} documento - Documento identificador del tutor (`documento_tu`).
      * @returns {void}
      */
     function editarDocente(documento) {
-        const tut = DB.findBy('Tutor_Academico', 'documento', documento);
+        const tut = DB.findBy('Tutor_Academico', 'documento_tu', documento) || DB.findBy('Tutor_Academico', 'documento', documento);
         if (tut) {
+            const docTu = tut.documento_tu || tut.documento;
             abrirModalDocente();
-            document.getElementById('titulo-modal-docente').innerText = `Editar Docente ${documento}`;
-            document.getElementById('doc-id-editar').value = tut.documento;
-            document.getElementById('doc-documento').value = tut.documento;
+            document.getElementById('titulo-modal-docente').innerText = `Editar Docente ${docTu}`;
+            document.getElementById('doc-id-editar').value = docTu;
+            document.getElementById('doc-documento').value = docTu;
             document.getElementById('doc-documento').setAttribute('readonly', 'true');
             document.getElementById('doc-nombre').value = tut.nombre;
             document.getElementById('doc-correo').value = tut.correo;
@@ -1199,24 +1583,34 @@
     }
 
     /**
-     * Elimina un docente asesor del sistema previa confirmación modal.
-     * 
+     * Solicita confirmación modal y elimina un Docente Asesor vía DELETE REST en Supabase,
+     * desvinculando previamente sus prácticas asignadas en el backend.
+     *
+     * @async
      * @function eliminarDocente
      * @param {string} documento - Documento del tutor a eliminar.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    function eliminarDocente(documento) {
-        if (confirm(`¿Eliminar al docente asesor ${documento}?`)) {
-            DB.delete('Tutor_Academico', 'documento', documento);
+    async function eliminarDocente(documento) {
+        const confirmado = await mostrarConfirmacion(
+            'Eliminar Docente Asesor',
+            `¿Deseas eliminar al docente asesor ${documento}? Si tiene prácticas asignadas, quedarán disponibles para reasignación.`
+        );
+        if (!confirmado) return;
+
+        try {
+            await DB.delete('Tutor_Academico', 'documento_tu', documento);
             cargarTodo();
-            alert(`Docente asesor eliminado.`);
+            mostrarToast(`Docente asesor ${documento} eliminado de Supabase.`);
+        } catch (err) {
+            mostrarToast(err.message || 'No se pudo eliminar el docente.', 'error');
         }
     }
 
     /**
-     * Manejador de guardado y actualización para el CRUD de Docentes Asesores.
+     * Procesa el envío del formulario CRUD de Docentes Asesores (INSERT o UPDATE en Supabase).
      */
-    document.getElementById('form-docente-crud').addEventListener('submit', function(e) {
+    document.getElementById('form-docente-crud').addEventListener('submit', async function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('doc-id-editar').value;
         const doc = document.getElementById('doc-documento').value.trim();
@@ -1225,20 +1619,25 @@
         const especialidad = document.getElementById('doc-especialidad').value.trim();
         const clave = document.getElementById('doc-clave').value;
 
-        if (idEditar) {
-            DB.update('Tutor_Academico', 'documento', idEditar, {
-                nombre, correo, especialidad, clave
-            });
-            alert(`Docente asesor actualizado exitosamente.`);
-        } else {
-            DB.insert('Tutor_Academico', {
-                documento: doc,
-                nombre, correo, especialidad, clave
-            });
-            alert(`Docente asesor ${nombre} registrado exitosamente.`);
+        try {
+            if (idEditar) {
+                await DB.update('Tutor_Academico', 'documento_tu', idEditar, {
+                    nombre, correo, especialidad, clave
+                });
+                alert('Docente asesor actualizado exitosamente en Supabase.');
+            } else {
+                await DB.insert('Tutor_Academico', {
+                    documento_tu: doc,
+                    documento: doc,
+                    nombre, correo, especialidad, clave
+                });
+                alert(`Docente asesor ${nombre} registrado exitosamente en Supabase.`);
+            }
+            cerrarModal('modal-crud-docente');
+            cargarTodo();
+        } catch (err) {
+            alert(err.message || 'Error al guardar el docente asesor.');
         }
-        cerrarModal('modal-crud-docente');
-        cargarTodo();
     });
 
     // ========================================================================
@@ -1246,34 +1645,37 @@
     // ========================================================================
 
     /**
-     * Despliega el modal de asignación de práctica y puebla los selectores con las
-     * listas actualizadas de estudiantes, tutores, colegios y modalidades.
-     * 
+     * Pobla selectores de estudiantes, tutores, colegios y modalidades, y abre el modal
+     * para asignar una nueva Práctica Pedagógica.
+     *
      * @function abrirModalAsignarPractica
      * @returns {void}
      */
     function abrirModalAsignarPractica() {
         document.getElementById('titulo-modal-practica').innerText = 'Asignar Nueva Práctica';
         document.getElementById('prac-id-editar').value = '';
-        
+
         const estudiantes = DB.getTable('Estudiante');
         const tutores = DB.getTable('Tutor_Academico');
         const instituciones = DB.getTable('Institucion');
         const tipos = DB.getTable('Tipo_Practica');
 
         document.getElementById('prac-estudiante').innerHTML = estudiantes.map(e => `<option value="${e.id_estudiante}">${e.nombre} (${e.id_estudiante})</option>`).join('');
-        document.getElementById('prac-tutor').innerHTML = tutores.map(t => `<option value="${t.documento}">${t.nombre} (${t.documento})</option>`).join('');
-        document.getElementById('prac-institucion').innerHTML = instituciones.map(i => `<option value="${i.id_institucion}">${i.nombre_colegio}</option>`).join('');
-        document.getElementById('prac-tipo').innerHTML = tipos.map(tp => `<option value="${tp.id_tipo}">${tp.descripcion}</option>`).join('');
+        document.getElementById('prac-tutor').innerHTML = tutores.map(t => {
+            const docTu = t.documento_tu || t.documento;
+            return `<option value="${docTu}">${t.nombre} (${docTu})</option>`;
+        }).join('');
+        document.getElementById('prac-institucion').innerHTML = instituciones.map(i => `<option value="${i.id_institucion}">${i.nombre_colegio || i.nombre}</option>`).join('');
+        document.getElementById('prac-tipo').innerHTML = tipos.map(tp => `<option value="${tp.id_tipo}">${tp.nombre || tp.descripcion}</option>`).join('');
 
         abrirModal('modal-asignar-practica');
     }
 
     /**
-     * Carga una práctica existente en el modal para editar sus participantes o estado.
-     * 
+     * Precarga una práctica existente en el modal para reasignar tutor, sede o estado.
+     *
      * @function editarPractica
-     * @param {string} idPractica - Código de la práctica a modificar (ej: PRAC-001).
+     * @param {string} idPractica - Código de la práctica (`id_practica`).
      * @returns {void}
      */
     function editarPractica(idPractica) {
@@ -1283,7 +1685,7 @@
             document.getElementById('titulo-modal-practica').innerText = `Editar Práctica ${idPractica}`;
             document.getElementById('prac-id-editar').value = p.id_practica;
             document.getElementById('prac-estudiante').value = p.id_estudiante;
-            document.getElementById('prac-tutor').value = p.documento;
+            document.getElementById('prac-tutor').value = p.documento_tu || p.documento;
             document.getElementById('prac-institucion').value = p.id_institucion;
             document.getElementById('prac-tipo').value = p.id_tipo;
             document.getElementById('prac-estado').value = p.estado;
@@ -1291,24 +1693,34 @@
     }
 
     /**
-     * Elimina una práctica asignada del sistema previa confirmación.
-     * 
+     * Confirma y elimina una práctica junto con sus bitácoras, evidencias y evaluaciones
+     * en el esquema `seguimiento_practicas` mediante eliminación coordinada entre microservicios.
+     *
+     * @async
      * @function eliminarPractica
      * @param {string} idPractica - Código de la práctica a eliminar.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    function eliminarPractica(idPractica) {
-        if (confirm(`¿Eliminar la práctica ${idPractica}?`)) {
-            DB.delete('Practica', 'id_practica', idPractica);
+    async function eliminarPractica(idPractica) {
+        const confirmado = await mostrarConfirmacion(
+            'Eliminar Práctica Académica',
+            `¿Deseas eliminar la práctica ${idPractica}? Se eliminarán también sus bitácoras, evidencias y evaluaciones vinculadas.`
+        );
+        if (!confirmado) return;
+
+        try {
+            await DB.delete('Practica', 'id_practica', idPractica);
             cargarTodo();
-            alert(`Práctica eliminada.`);
+            mostrarToast(`Práctica ${idPractica} eliminada de Supabase.`);
+        } catch (err) {
+            mostrarToast(err.message || 'No se pudo eliminar la práctica.', 'error');
         }
     }
 
     /**
-     * Manejador de guardado y asignación de prácticas pedagógicas.
+     * Procesa el formulario de creación o actualización de Práctica en Supabase.
      */
-    document.getElementById('form-practica').addEventListener('submit', function(e) {
+    document.getElementById('form-practica').addEventListener('submit', async function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('prac-id-editar').value;
         const est = document.getElementById('prac-estudiante').value;
@@ -1317,27 +1729,32 @@
         const tipo = document.getElementById('prac-tipo').value;
         const estado = document.getElementById('prac-estado').value;
 
-        if (idEditar) {
-            DB.update('Practica', 'id_practica', idEditar, {
-                id_estudiante: est, documento: tut, id_institucion: inst, id_tipo: tipo, estado: estado
-            });
-            alert(`Práctica ${idEditar} actualizada.`);
-        } else {
-            const nuevoId = 'PRAC-' + String(DB.getTable('Practica').length + 1).padStart(3, '0');
-            DB.insert('Practica', {
-                id_practica: nuevoId,
-                id_estudiante: est,
-                documento: tut,
-                id_institucion: inst,
-                id_tipo: tipo,
-                estado: estado,
-                fecha_inicio: new Date().toISOString().split('T')[0],
-                horas_objetivo: 80
-            });
-            alert(`Práctica ${nuevoId} asignada exitosamente.`);
+        try {
+            if (idEditar) {
+                await DB.update('Practica', 'id_practica', idEditar, {
+                    id_estudiante: est, documento_tu: tut, documento: tut, id_institucion: inst, id_tipo: tipo, estado: estado
+                });
+                alert(`Práctica ${idEditar} actualizada en Supabase.`);
+            } else {
+                const nuevoId = generarCodigoCorrelativo(DB.getTable('Practica'), 'id_practica', 'PRAC-', 3);
+                await DB.insert('Practica', {
+                    id_practica: nuevoId,
+                    id_estudiante: est,
+                    documento_tu: tut,
+                    documento: tut,
+                    id_institucion: inst,
+                    id_tipo: tipo,
+                    estado: estado,
+                    fecha_inicio: new Date().toISOString().split('T')[0],
+                    horas_objetivo: 80
+                });
+                alert(`Práctica ${nuevoId} asignada exitosamente en Supabase.`);
+            }
+            cerrarModal('modal-asignar-practica');
+            cargarTodo();
+        } catch (err) {
+            alert(err.message || 'Error al guardar la práctica.');
         }
-        cerrarModal('modal-asignar-practica');
-        cargarTodo();
     });
 
     // ========================================================================
@@ -1345,8 +1762,8 @@
     // ========================================================================
 
     /**
-     * Abre el modal para dar de alta a un estudiante.
-     * 
+     * Abre el modal CRUD limpio para registrar un nuevo estudiante en el padrón oficial.
+     *
      * @function abrirModalEstudiante
      * @returns {void}
      */
@@ -1358,10 +1775,10 @@
     }
 
     /**
-     * Carga la información de un alumno en el modal de edición.
-     * 
+     * Carga en el modal la ficha del estudiante seleccionado para edición de datos.
+     *
      * @function editarEstudiante
-     * @param {string} idEstudiante - Identificador del estudiante (ej: EST-2024-01).
+     * @param {string} idEstudiante - Código institucional del estudiante (`id_estudiante`).
      * @returns {void}
      */
     function editarEstudiante(idEstudiante) {
@@ -1372,56 +1789,71 @@
             document.getElementById('est-id-editar').value = est.id_estudiante;
             document.getElementById('est-nombre').value = est.nombre;
             document.getElementById('est-correo').value = est.correo;
-            document.getElementById('est-semestre').value = est.semestre;
+            document.getElementById('est-semestre').value = est.semestre || '';
             document.getElementById('est-clave').value = est.clave || 'estudiante123';
         }
     }
 
     /**
-     * Elimina un estudiante de la base de datos tras confirmación del usuario.
-     * 
+     * Solicita confirmación modal y elimina un estudiante junto con sus prácticas,
+     * bitácoras, evidencias y evaluaciones dependientes en Supabase.
+     *
+     * @async
      * @function eliminarEstudiante
      * @param {string} idEstudiante - Código del estudiante a eliminar.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    function eliminarEstudiante(idEstudiante) {
-        if (confirm(`¿Eliminar al estudiante ${idEstudiante}?`)) {
-            DB.delete('Estudiante', 'id_estudiante', idEstudiante);
+    async function eliminarEstudiante(idEstudiante) {
+        const confirmado = await mostrarConfirmacion(
+            'Eliminar Estudiante',
+            `¿Deseas eliminar al estudiante ${idEstudiante}? También se retirarán sus prácticas y bitácoras asociadas.`
+        );
+        if (!confirmado) return;
+
+        try {
+            await DB.delete('Estudiante', 'id_estudiante', idEstudiante);
             cargarTodo();
-            alert(`Estudiante eliminado.`);
+            mostrarToast(`Estudiante ${idEstudiante} eliminado de Supabase.`);
+        } catch (err) {
+            mostrarToast(err.message || 'No se pudo eliminar el estudiante.', 'error');
         }
     }
 
     /**
-     * Manejador de persistencia para el CRUD de estudiantes.
+     * Procesa el formulario CRUD de Estudiante (creación o actualización en Supabase).
      */
-    document.getElementById('form-estudiante-crud').addEventListener('submit', function(e) {
+    document.getElementById('form-estudiante-crud').addEventListener('submit', async function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('est-id-editar').value;
         const nombre = document.getElementById('est-nombre').value.trim();
         const correo = document.getElementById('est-correo').value.trim();
-        const semestre = parseInt(document.getElementById('est-semestre').value);
+        const semRaw = document.getElementById('est-semestre').value;
+        const semestre = semRaw ? (parseInt(semRaw, 10) || null) : null;
         const clave = document.getElementById('est-clave').value;
 
-        if (idEditar) {
-            DB.update('Estudiante', 'id_estudiante', idEditar, { nombre, correo, semestre, clave });
-            alert(`Estudiante actualizado.`);
-        } else {
-            const nuevoId = 'EST-2024-' + String(DB.getTable('Estudiante').length + 1).padStart(2, '0');
-            DB.insert('Estudiante', { id_estudiante: nuevoId, nombre, correo, semestre, clave });
-            alert(`Estudiante ${nuevoId} creado.`);
+        try {
+            if (idEditar) {
+                await DB.update('Estudiante', 'id_estudiante', idEditar, { nombre, correo, semestre, clave });
+                alert('Estudiante actualizado en Supabase.');
+            } else {
+                const nuevoId = generarCodigoCorrelativo(DB.getTable('Estudiante'), 'id_estudiante', 'EST-2024-', 2);
+                const creado = await DB.insert('Estudiante', { id_estudiante: nuevoId, nombre, correo, semestre, clave });
+                alert(`Estudiante ${creado.id_estudiante || nuevoId} creado en Supabase.`);
+            }
+            cerrarModal('modal-crud-estudiante');
+            cargarTodo();
+        } catch (err) {
+            alert(err.message || 'Error al guardar el estudiante.');
         }
-        cerrarModal('modal-crud-estudiante');
-        cargarTodo();
     });
 
     // ========================================================================
-    // 6. MÓDULO CRUD: INSTITUCIONES RECEPTORAS Y COLEGIOS
+    // 6. MÓDULO CRUD: INSTITUCIONES RECEPTORAS Y CONVENIOS
     // ========================================================================
 
     /**
-     * Abre el modal para registrar un nuevo colegio o centro de práctica.
-     * 
+     * Abre el modal CRUD limpio para registrar una nueva Institución Receptora (colegio).
+     *
      * @function abrirModalInstitucion
      * @returns {void}
      */
@@ -1433,10 +1865,10 @@
     }
 
     /**
-     * Carga los datos de una institución en el modal para editar dirección, contacto o teléfono.
-     * 
+     * Carga en el modal la información de una Institución Receptora existente para editarla.
+     *
      * @function editarInstitucion
-     * @param {string} idInst - Código de la institución (ej: INST-01).
+     * @param {string} idInst - Identificador único de la institución (`id_institucion`).
      * @returns {void}
      */
     function editarInstitucion(idInst) {
@@ -1445,7 +1877,7 @@
             abrirModalInstitucion();
             document.getElementById('titulo-modal-institucion').innerText = `Editar Institución ${idInst}`;
             document.getElementById('inst-id-editar').value = inst.id_institucion;
-            document.getElementById('inst-nombre').value = inst.nombre_colegio;
+            document.getElementById('inst-nombre').value = inst.nombre_colegio || inst.nombre;
             document.getElementById('inst-direccion').value = inst.direccion;
             document.getElementById('inst-correo').value = inst.correo || 'colegio@udi.edu.co';
             document.getElementById('inst-contacto').value = inst.contacto || inst.telefono || '';
@@ -1453,24 +1885,34 @@
     }
 
     /**
-     * Elimina una institución del sistema tras confirmación.
-     * 
+     * Confirma y elimina una Institución Receptora de Supabase; sus convenios asociados
+     * se eliminan y las prácticas vinculadas quedan sin sede asignada.
+     *
+     * @async
      * @function eliminarInstitucion
-     * @param {string} idInst - Código de la institución a eliminar.
-     * @returns {void}
+     * @param {string} idInst - Identificador de la institución a eliminar.
+     * @returns {Promise<void>}
      */
-    function eliminarInstitucion(idInst) {
-        if (confirm(`¿Eliminar la institución ${idInst}?`)) {
-            DB.delete('Institucion', 'id_institucion', idInst);
+    async function eliminarInstitucion(idInst) {
+        const confirmado = await mostrarConfirmacion(
+            'Eliminar Institución Receptora',
+            `¿Deseas eliminar la institución ${idInst}? Sus convenios se eliminarán y las prácticas asociadas quedarán sin sede asignada.`
+        );
+        if (!confirmado) return;
+
+        try {
+            await DB.delete('Institucion', 'id_institucion', idInst);
             cargarTodo();
-            alert(`Institución eliminada.`);
+            mostrarToast(`Institución ${idInst} eliminada de Supabase.`);
+        } catch (err) {
+            mostrarToast(err.message || 'No se pudo eliminar la institución.', 'error');
         }
     }
 
     /**
-     * Manejador de guardado para el CRUD de Instituciones receptoras.
+     * Procesa el formulario CRUD de Institución Receptora (creación o actualización en Supabase).
      */
-    document.getElementById('form-institucion-crud').addEventListener('submit', function(e) {
+    document.getElementById('form-institucion-crud').addEventListener('submit', async function(e) {
         e.preventDefault();
         const idEditar = document.getElementById('inst-id-editar').value;
         const nombre = document.getElementById('inst-nombre').value.trim();
@@ -1478,23 +1920,98 @@
         const correo = document.getElementById('inst-correo').value.trim();
         const contacto = document.getElementById('inst-contacto').value.trim();
 
-        if (idEditar) {
-            DB.update('Institucion', 'id_institucion', idEditar, { nombre_colegio: nombre, direccion, correo, contacto });
-            alert(`Institución actualizada.`);
-        } else {
-            const nuevoId = 'INST-' + String(DB.getTable('Institucion').length + 1).padStart(2, '0');
-            DB.insert('Institucion', {
-                id_institucion: nuevoId, nombre_colegio: nombre, direccion, correo, clave: 'colegio123', contacto
-            });
-            alert(`Institución ${nuevoId} creada.`);
+        try {
+            if (idEditar) {
+                await DB.update('Institucion', 'id_institucion', idEditar, { nombre, nombre_colegio: nombre, direccion, correo, contacto });
+                alert('Institución actualizada en Supabase.');
+            } else {
+                const nuevoId = generarCodigoCorrelativo(DB.getTable('Institucion'), 'id_institucion', 'INST-', 2);
+                const creada = await DB.insert('Institucion', {
+                    id_institucion: nuevoId, nombre, nombre_colegio: nombre, direccion, correo, clave: 'colegio123', contacto
+                });
+                alert(`Institución ${creada.id_institucion || nuevoId} creada en Supabase.`);
+            }
+            cerrarModal('modal-crud-institucion');
+            cargarTodo();
+        } catch (err) {
+            alert(err.message || 'Error al guardar la institución.');
         }
-        cerrarModal('modal-crud-institucion');
-        cargarTodo();
+    });
+
+    /**
+     * Abre el modal para proyectar un nuevo convenio interinstitucional con fechas iniciales sugeridas.
+     *
+     * @function abrirModalConvenio
+     * @returns {void}
+     */
+    function abrirModalConvenio() {
+        const instituciones = DB.getTable('Institucion');
+        const sel = document.getElementById('conv-institucion');
+        sel.innerHTML = instituciones.map(i => `<option value="${i.id_institucion}">${i.nombre_colegio || i.nombre}</option>`).join('');
+        document.getElementById('form-convenio-crud').reset();
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('conv-inicio').value = hoy;
+        document.getElementById('conv-fin').value = '2027-12-31';
+        abrirModal('modal-crud-convenio');
+    }
+
+    /**
+     * Confirma y elimina un convenio interinstitucional en Supabase.
+     *
+     * @async
+     * @function eliminarConvenio
+     * @param {string} idConv - Código del convenio (`id_convenio`).
+     * @returns {Promise<void>}
+     */
+    async function eliminarConvenio(idConv) {
+        const confirmado = await mostrarConfirmacion(
+            'Eliminar Convenio Institucional',
+            `¿Deseas eliminar el convenio ${idConv} de la base de datos?`
+        );
+        if (!confirmado) return;
+
+        try {
+            await DB.delete('Convenio', 'id_convenio', idConv);
+            cargarTodo();
+            mostrarToast(`Convenio ${idConv} eliminado de Supabase.`);
+        } catch (err) {
+            mostrarToast(err.message || 'No se pudo eliminar el convenio.', 'error');
+        }
+    }
+
+    /**
+     * Procesa el formulario de registro de un nuevo convenio (estado inicial Pendiente Firma Director).
+     */
+    document.getElementById('form-convenio-crud').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const idInst = document.getElementById('conv-institucion').value;
+        const resolucion = document.getElementById('conv-resolucion').value.trim();
+        const fecha_inicio = document.getElementById('conv-inicio').value;
+        const fecha_vencimiento = document.getElementById('conv-fin').value;
+        const cupos_autorizados = parseInt(document.getElementById('conv-cupos').value, 10) || 10;
+
+        try {
+            const nuevoId = generarCodigoCorrelativo(DB.getTable('Convenio'), 'id_convenio', 'CONV-2026-', 2);
+            await DB.insert('Convenio', {
+                id_convenio: nuevoId,
+                id_institucion: idInst,
+                resolucion,
+                fecha_inicio,
+                fecha_vencimiento,
+                cupos_autorizados,
+                estado: 'Pendiente Firma Director'
+            });
+            cerrarModal('modal-crud-convenio');
+            cargarTodo();
+            alert(`Convenio ${nuevoId} registrado exitosamente en Supabase.`);
+        } catch (err) {
+            alert(err.message || 'Error al guardar el convenio.');
+        }
     });
 
     /**
      * Invoca el diálogo nativo de impresión para emitir el reporte consolidado formal.
-     * 
+     *
      * @function imprimirReporte
      * @returns {void}
      */
@@ -1502,8 +2019,11 @@
         window.print();
     }
 
-    // Inicializa la carga de todos los datos al finalizar el parseo del DOM
-    window.onload = cargarTodo;
+    // Inicializa la carga sincronizando con Supabase al finalizar el parseo del DOM
+    window.onload = async function() {
+        await DB.syncWithBackend();
+        cargarTodo();
+    };
 </script>
 
 </body>

@@ -24,19 +24,19 @@
     "telefono": "3123456789"
   },
   {
-    "documento": "EST-2024-04",
-    "nombre": "maria",
-    "apellido": "",
+    "documento": "1098234504",
+    "nombre": "María Camila",
+    "apellido": "Sotomayor Peña",
     "correo": "marias@udi.edu.co",
     "semestre": 6,
-    "telefono": ""
+    "telefono": "3145678901"
   },
   {
-    "documento": "EST-2024-05",
-    "nombre": "maria",
-    "apellido": "",
+    "documento": "1098234505",
+    "nombre": "María Fernanda",
+    "apellido": "Vargas Suárez",
     "correo": "maria@udi.edu.co",
-    "semestre": 1,
-    "telefono": ""
+    "semestre": null,
+    "telefono": "3189012345"
   }
 ]

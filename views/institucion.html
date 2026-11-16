@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Institución Receptora - Gestión de Prácticas UDI</title>
+    <title>Institución Receptora - Software para la Gestión y Seguimiento de Prácticas Académicas</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <!-- Barra superior del panel de la institución receptora / colegio -->
 <header class="barra-superior">
     <div>
-        <h2 style="margin: 0; font-size: 20px;">Panel de Control - Institución Receptora</h2>
+        <h2 style="margin: 0; font-size: 20px;">Software para la Gestión y Seguimiento de Prácticas Académicas · Institución Receptora</h2>
         <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando institución...</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
@@ -62,7 +62,7 @@
     <div class="seccion-tabla" style="margin-top: 30px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <h3 style="margin: 0;">Consulta y Validación de Estudiantes Practicantes</h3>
-            <span style="font-size: 12px; color: #64748b;">(UML: Caso de Uso 'Consultar Estado de las Prácticas')</span>
+            <span style="font-size: 12px; color: #64748b;">Validación presencial de estudiantes en sede escolar</span>
         </div>
         <table class="tabla-datos" id="tabla-colegio-practicas">
             <thead>
@@ -92,6 +92,12 @@
 <script src="../js/db.js"></script>
 
 <script>
+    /**
+     * @fileoverview Controlador del Portal de la Institución Receptora (views/institucion.html).
+     * @description Presenta los estudiantes asignados al colegio receptor, totaliza las horas
+     * ejecutadas en sede y permite validar formalmente la asistencia presencial en aula
+     * actualizando el campo `validado_institucion` en Supabase vía API REST.
+     */
     // ========================================================================
     // 1. CONTROL DE ACCESO Y SEGURIDAD POR SESIÓN
     // ========================================================================
@@ -102,28 +108,27 @@
         // Redirigido por la guardia de seguridad
     }
 
-    const instId = sesion.id_institucion || sesion.id || 'INST-01';
-    const institucionObj = DB.findBy('Institucion', 'id_institucion', instId) || DB.findBy('Institucion', 'correo', sesion.correo);
-
-    if (institucionObj) {
-        document.getElementById('usuario-sesion-badge').innerText = `Institución: ${institucionObj.nombre_colegio} (${institucionObj.id_institucion})`;
-        document.getElementById('inst-nombre-header').innerText = institucionObj.nombre_colegio;
-        document.getElementById('inst-dir-header').innerText = institucionObj.direccion;
-    }
-
-    // ========================================================================
-    // 2. CONSULTAR PRÁCTICAS ASIGNADAS A ESTA INSTITUCIÓN RECEPTORA
-    // ========================================================================
+    const instId = sesion ? (sesion.id_institucion || sesion.id || 'INST-01') : 'INST-01';
+    let institucionObj = null;
 
     /**
      * Consulta las prácticas asignadas a la institución educativa autenticada.
      * Computa horas totales desarrolladas en la sede escolar, total de bitácoras
      * presentadas y renderiza la tabla de control y validación de practicantes.
-     * 
+     *
      * @function cargarPracticasSede
      * @returns {void}
      */
     function cargarPracticasSede() {
+        if (!sesion) return;
+        institucionObj = DB.findBy('Institucion', 'id_institucion', instId) || DB.findBy('Institucion', 'correo', sesion.correo);
+        if (institucionObj) {
+            const nomInst = institucionObj.nombre_colegio || institucionObj.nombre;
+            document.getElementById('usuario-sesion-badge').innerText = `Institución: ${nomInst} (${institucionObj.id_institucion})`;
+            document.getElementById('inst-nombre-header').innerText = nomInst;
+            document.getElementById('inst-dir-header').innerText = institucionObj.direccion || '-';
+        }
+
         const idActual = institucionObj ? institucionObj.id_institucion : instId;
         const practicas = DB.filterBy('Practica', 'id_institucion', idActual);
         const estudiantes = DB.getTable('Estudiante');
@@ -135,7 +140,7 @@
         // Horas y bitácoras asociadas a estas prácticas
         const misPracticasIds = practicas.map(p => p.id_practica);
         const misActividades = actividades.filter(a => misPracticasIds.includes(a.id_practica));
-        const totalHoras = misActividades.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+        const totalHoras = misActividades.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0, 10), 0);
 
         document.getElementById('total-horas-sede').innerText = `${totalHoras} hrs`;
         document.getElementById('total-bitacoras-sede').innerText = misActividades.length;
@@ -149,27 +154,29 @@
         }
 
         practicas.forEach(p => {
-            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante);
-            const tut = tutores.find(t => t.documento === p.documento);
+            const est = estudiantes.find(e => e.id_estudiante === p.id_estudiante || e.documento === p.documento_estudiante);
+            const docTu = p.documento_tu || p.documento;
+            const tut = tutores.find(t => (t.documento_tu || t.documento) === docTu);
             const acts = actividades.filter(a => a.id_practica === p.id_practica);
-            const horasEst = acts.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0), 0);
+            const horasEst = acts.reduce((acc, curr) => acc + parseInt(curr.horas_realizadas || 0, 10), 0);
 
             const colorEstado = p.estado === 'En Curso' ? '#15803d' : '#b45309';
             const bgEstado = p.estado === 'En Curso' ? '#dcfce7' : '#fef3c7';
+            const textoSemestre = (est && est.semestre) ? `Semestre ${est.semestre}` : 'N/A';
+
+            const accionValidacion = p.validado_institucion
+                ? `<span style="background: #dcfce7; color: #15803d; padding: 5px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">✓ Asistencia Validada</span>`
+                : `<button onclick="validarHoras('${p.id_practica}')" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">✓ Validar Asistencia</button>`;
 
             const fila = `
                 <tr>
                     <td><strong>${p.id_practica}</strong></td>
                     <td><strong>${est ? est.nombre : p.id_estudiante}</strong></td>
-                    <td>Semestre ${est ? est.semestre : '-'}</td>
-                    <td>${tut ? tut.nombre : p.documento}</td>
+                    <td>${textoSemestre}</td>
+                    <td>${tut ? tut.nombre : (docTu || '-')}</td>
                     <td><strong>${horasEst} hrs</strong> (${acts.length} bitácoras)</td>
                     <td><span style="background: ${bgEstado}; color: ${colorEstado}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">${p.estado}</span></td>
-                    <td>
-                        <button onclick="validarHoras('${p.id_practica}')" style="background-color: #0f766e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
-                            ✓ Validar Asistencia
-                        </button>
-                    </td>
+                    <td>${accionValidacion}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -177,19 +184,32 @@
     }
 
     /**
-     * Acción de la institución receptora: valida el cumplimiento presencial y asistencia
+     * Acción de la institución receptora: valida y persiste el cumplimiento presencial
      * del estudiante en las aulas escolares de la sede según el convenio.
-     * 
+     *
+     * @async
      * @function validarHoras
      * @param {string} idPractica - Identificador de la práctica validada.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    function validarHoras(idPractica) {
-        alert(`¡Asistencia y cumplimiento presencial de la práctica ${idPractica} validados formalmente por la institución receptora!`);
+    async function validarHoras(idPractica) {
+        try {
+            await DB.update('Practica', 'id_practica', idPractica, {
+                validado_institucion: true,
+                fecha_validacion_sede: new Date().toISOString().split('T')[0]
+            });
+            cargarPracticasSede();
+            alert(`¡Asistencia y cumplimiento presencial de la práctica ${idPractica} validados formalmente por la institución receptora!`);
+        } catch (err) {
+            alert(err.message || 'No fue posible validar la asistencia.');
+        }
     }
 
-    // Carga inicial al completar el ciclo de vida del DOM
-    window.onload = cargarPracticasSede;
+    // Carga inicial sincronizando con Supabase al completar el ciclo de vida del DOM
+    window.onload = async function() {
+        await DB.syncWithBackend();
+        cargarPracticasSede();
+    };
     window.addEventListener('db:sincronizado', cargarPracticasSede);
 </script>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Gestión de Prácticas</title>
+    <title>Iniciar Sesión - Software para la Gestión y Seguimiento de Prácticas Académicas</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -30,8 +30,8 @@
 
         <img src="images/logo.png" alt="Logo UDI" class="logo-login-circular">
 
-        <h1 style="color: #ffffff !important; font-size: 26px; margin-bottom: 10px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-            Sistema de Gestión de Prácticas
+        <h1 style="color: #ffffff !important; font-size: 24px; margin-bottom: 10px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            Software para la Gestión y Seguimiento de Prácticas Académicas
         </h1>
         <p style="color: #e2e8f0 !important; font-size: 14px; margin-bottom: 30px;">
             Ingresa tus credenciales autorizadas por la institución
@@ -104,7 +104,7 @@
     <div style="background: #ffffff; color: #1e293b; max-width: 480px; width: 100%; border-radius: 12px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); text-align: left; position: relative;">
         <h3 style="margin-top: 0; color: #1e3a8a; font-size: 20px;">Radicación de Solicitud de Práctica</h3>
         <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
-            Diligencia tus datos para ingresar al registro de postulaciones del sistema (UML: Estudiante).
+            Diligencia tus datos para ingresar al registro de postulaciones del sistema.
         </p>
         <form id="form-radicar-solicitud">
             <div style="margin-bottom: 12px;">
@@ -116,8 +116,9 @@
                 <input type="email" id="sol-correo" required placeholder="ejemplo@udi.edu.co" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
             </div>
             <div style="margin-bottom: 12px;">
-                <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Semestre Académico:</label>
-                <select id="sol-semestre" required style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 4px;">Semestre Académico (Opcional):</label>
+                <select id="sol-semestre" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    <option value="">-- No especificado / Opcional --</option>
                     <option value="6">6° Semestre - Observación Pedagógica (TP-01)</option>
                     <option value="7" selected>7° Semestre - Inmersión Pedagógica (TP-02)</option>
                     <option value="8">8° Semestre - Práctica Integral (TP-03)</option>
@@ -159,6 +160,12 @@
 <script src="js/db.js"></script>
 
 <script>
+    /**
+     * @fileoverview Controlador de la pantalla de inicio de sesión y radicación de solicitudes (index.html).
+     * @description Gestiona la autenticación contra la API REST (/api/login), el panel de acceso rápido
+     * para demostraciones (Ctrl + Shift + D), el registro de nuevas postulaciones en Supabase
+     * (POST /api/solicitudes) y el indicador en tiempo real de estado de la base de datos.
+     */
     /**
      * Carga credenciales y perfiles de prueba en los campos de formulario
      * para facilitar la sustentación y demostración rápida ante jurados de la UDI.
@@ -212,39 +219,68 @@
      * Captura las credenciales ingresadas, invoca el método DB.login() y redirige
      * a la vista correspondiente según el rol autorizado o alerta al usuario si fallan.
      */
-    document.getElementById('form-login').addEventListener('submit', function(event) {
+    document.getElementById('form-login').addEventListener('submit', async function(event) {
         event.preventDefault();
 
         const emailInput = document.getElementById('email').value.trim();
         const passwordInput = document.getElementById('password').value;
         const rolSeleccionado = document.getElementById('rol').value;
 
-        // Autenticación contra la capa de datos Vanilla DB
-        const resultado = DB.login(emailInput, passwordInput, rolSeleccionado);
-
-        if (resultado.success) {
-            window.location.href = resultado.redirectUrl;
-        } else {
-            alert(resultado.message || 'Credenciales incorrectas. Verifica tus datos y el rol.');
+        try {
+            const resultado = await DB.login(emailInput, passwordInput, rolSeleccionado);
+            if (resultado && resultado.success) {
+                window.location.href = resultado.redirectUrl;
+            } else {
+                alert((resultado && resultado.message) || 'Credenciales incorrectas. Verifica tus datos y el rol.');
+            }
+        } catch (err) {
+            alert(err.message || 'No se pudo autenticar contra el servidor.');
         }
     });
 
     /**
-     * Despliega la ventana modal de radicación de solicitud para nuevos aspirantes.
-     * 
-     * @function abrirModalRadicar
-     * @param {Event} [e] - Evento de clic en el enlace para prevenir la navegación por defecto.
+     * Pobla dinámicamente las instituciones receptoras registradas en Supabase
+     * dentro del modal de radicación de solicitudes.
+     *
+     * @function poblarInstitucionesSolicitud
      * @returns {void}
      */
-    function abrirModalRadicar(e) {
+    function poblarInstitucionesSolicitud() {
+        const select = document.getElementById('sol-institucion');
+        if (!select) return;
+        const instituciones = DB.getTable('Institucion');
+        if (!instituciones || instituciones.length === 0) return;
+
+        const valorActual = select.value;
+        select.innerHTML = instituciones.map(i => {
+            const nombre = i.nombre_colegio || i.nombre || i.id_institucion;
+            const ciudad = i.ciudad ? ` (${i.ciudad})` : '';
+            return `<option value="${i.id_institucion}">${nombre}${ciudad}</option>`;
+        }).join('') + '<option value="POR_ASIGNAR">A designar por el Coordinador de Prácticas</option>';
+
+        if (valorActual && Array.from(select.options).some(o => o.value === valorActual)) {
+            select.value = valorActual;
+        }
+    }
+
+    /**
+     * Despliega la ventana modal de radicación de solicitud para nuevos aspirantes.
+     *
+     * @function abrirModalRadicar
+     * @param {Event} [e] - Evento de clic en el enlace para prevenir la navegación por defecto.
+     * @returns {Promise<void>}
+     */
+    async function abrirModalRadicar(e) {
         if (e) e.preventDefault();
+        await DB.syncWithBackend();
+        poblarInstitucionesSolicitud();
         const modal = document.getElementById('modal-radicar');
         modal.style.display = 'flex';
     }
 
     /**
      * Cierra la ventana modal de radicación y restablece los campos del formulario.
-     * 
+     *
      * @function cerrarModalRadicar
      * @returns {void}
      */
@@ -256,60 +292,66 @@
 
     /**
      * Manejador del formulario de radicación de aspirantes.
-     * Encola la postulación en estado de ESPERA (solicitudes_aspirantes) para que
-     * el Coordinador de Práctica sea quien formalmente la revise y acepte.
-     * NO activa al estudiante para login hasta su aprobación oficial.
+     * Persiste la postulación directamente en Supabase PostgreSQL para que
+     * el Coordinador de Práctica la revise desde cualquier equipo.
      */
-    document.getElementById('form-radicar-solicitud').addEventListener('submit', function(e) {
+    document.getElementById('form-radicar-solicitud').addEventListener('submit', async function(e) {
         e.preventDefault();
         const nombre = document.getElementById('sol-nombre').value.trim();
         const correo = document.getElementById('sol-correo').value.trim().toLowerCase();
-        const semestre = parseInt(document.getElementById('sol-semestre').value);
-        const institucionPref = document.getElementById('sol-institucion').value;
+        const semestreRaw = document.getElementById('sol-semestre').value;
+        const semestre = semestreRaw ? (parseInt(semestreRaw, 10) || null) : null;
+        const selectInst = document.getElementById('sol-institucion');
+        const institucionPref = selectInst.value;
+        const institucionPrefNombre = selectInst.options[selectInst.selectedIndex]
+            ? selectInst.options[selectInst.selectedIndex].text
+            : institucionPref;
         const clave = document.getElementById('sol-clave').value;
 
-        // 1. Validar si ya existe como estudiante matriculado y activo en el sistema
-        const existente = DB.findBy('Estudiante', 'correo', correo);
-        if (existente) {
-            alert(`El correo ${correo} ya se encuentra registrado y matriculado en el sistema.`);
-            return;
+        try {
+            await DB.syncWithBackend();
+
+            // 1. Validar si ya existe como estudiante matriculado y activo en el sistema
+            const existente = DB.findBy('Estudiante', 'correo', correo);
+            if (existente) {
+                alert(`El correo ${correo} ya se encuentra registrado y matriculado en el sistema.`);
+                return;
+            }
+
+            // 2. Validar si ya cuenta con una solicitud previa en Supabase
+            const solicitudes = DB.getSolicitudes();
+            const solicitudExistente = solicitudes.find(s => (s.correo || '').toLowerCase() === correo);
+            if (solicitudExistente) {
+                alert(`Ya has radicado previamente una solicitud con este correo (${correo}).\n\nTu solicitud se encuentra en estado de ESPERA. Debes aguardar a que el Coordinador de Prácticas la apruebe.`);
+                return;
+            }
+
+            // 3. Radicar directamente en Supabase PostgreSQL vía API REST
+            const idSolicitud = 'ASP-' + String(Date.now()).slice(-6);
+            const nuevaSolicitud = {
+                id_solicitud: idSolicitud,
+                id: idSolicitud,
+                nombre: nombre,
+                correo: correo,
+                semestre: semestre,
+                id_institucion_preferencia: institucionPref,
+                institucion_preferencia: institucionPrefNombre,
+                clave: clave,
+                estado: 'Pendiente',
+                fecha: new Date().toLocaleDateString('es-CO')
+            };
+
+            const creada = await DB.createSolicitud(nuevaSolicitud);
+            const radicadoFinal = creada.id_solicitud || idSolicitud;
+
+            alert(`¡Solicitud radicada con éxito en la nube!\n\nTu radicado es: ${radicadoFinal}\nColegio de preferencia: ${institucionPrefNombre}\nEstado: EN ESPERA DE APROBACIÓN\n\nEl Coordinador de Prácticas debe revisar y aceptar tu solicitud antes de que puedas iniciar sesión.`);
+            cerrarModalRadicar();
+        } catch (err) {
+            alert(err.message || 'No fue posible radicar la solicitud en el servidor.');
         }
-
-        // 2. Validar si ya cuenta con una solicitud previa en lista de espera
-        const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
-        const solicitudExistente = solicitudes.find(s => (s.correo || '').toLowerCase() === correo);
-        if (solicitudExistente) {
-            alert(`Ya has radicado previamente una solicitud con este correo (${correo}).\n\nTu solicitud se encuentra en estado de ESPERA. Debes aguardar a que el Coordinador de Prácticas la apruebe.`);
-            return;
-        }
-
-        // 3. Crear el registro exclusivamente en la bandeja de aspirantes en espera
-        const idSolicitud = 'ASP-' + String(solicitudes.length + 1).padStart(3, '0');
-        const nuevaSolicitud = {
-            id_solicitud: idSolicitud,
-            id: idSolicitud,
-            nombre: nombre,
-            correo: correo,
-            semestre: semestre,
-            id_institucion_preferencia: institucionPref,
-            clave: clave,
-            estado: 'Pendiente',
-            fecha: new Date().toLocaleDateString('es-CO')
-        };
-        solicitudes.push(nuevaSolicitud);
-        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudes));
-
-        // Enviar al servidor para sincronización multiplataforma (VS Code y preview)
-        fetch('/api/solicitudes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(nuevaSolicitud)
-        }).catch(() => {});
-
-        // 4. Notificar al aspirante que debe esperar la aprobación del coordinador
-        alert(`¡Solicitud radicada con éxito!\n\nTu radicado es: ${idSolicitud}\nEstado: EN ESPERA DE APROBACIÓN\n\nEl Coordinador de Prácticas debe revisar y aceptar tu solicitud antes de que puedas iniciar sesión.`);
-        cerrarModalRadicar();
     });
+
+    window.addEventListener('db:sincronizado', poblarInstitucionesSolicitud);
 
     /**
      * Escuchador global de teclado en la ventana (Window EventListener).
@@ -334,7 +376,12 @@
 
     /**
      * Comprueba en tiempo real si el servidor está conectado a PostgreSQL en Supabase
-     * o en modo local, actualizando el distintivo visual del inicio de sesión.
+     * o operando con persistencia local de respaldo, actualizando el distintivo del login.
+     *
+     * @async
+     * @function verificarEstadoBaseDatos
+     * @param {boolean} [mostrarAlerta=false] - Indica si se debe mostrar el diálogo informativo.
+     * @returns {Promise<void>}
      */
     async function verificarEstadoBaseDatos(mostrarAlerta = false) {
         const badgeIcono = document.getElementById('login-db-icono');
@@ -347,13 +394,15 @@
                     if (badgeIcono) badgeIcono.innerText = '🟢';
                     if (badgeTexto) badgeTexto.innerText = 'Supabase PostgreSQL (Conectado)';
                     if (mostrarAlerta) {
-                        alert(`✅ BASE DE DATOS EN LA NUBE CONECTADA\n\nMotor: PostgreSQL en Supabase\nEstado: Conexión ACTIVA y lista para sustentación\nAlumnos registrados: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}`);
+                        alert(`✅ BASE DE DATOS EN LA NUBE CONECTADA\n\nMotor: PostgreSQL (${data.destino_configurado || 'Supabase'})\nEstado: Conexión ACTIVA\nAlumnos registrados: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}`);
                     }
                 } else {
                     if (badgeIcono) badgeIcono.innerText = '🟡';
-                    if (badgeTexto) badgeTexto.innerText = 'Modo Local (Sin .env)';
+                    if (badgeTexto) badgeTexto.innerText = data.tiene_archivo_env
+                        ? 'Modo Local (Respaldo Activo)'
+                        : 'Modo Local (Sin .env)';
                     if (mostrarAlerta) {
-                        alert(`ℹ️ ESTADO ACTUAL DE LA BASE DE DATOS\n\n${data.mensaje}\n\nEstudiantes en disco: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}\n\n👉 Para conectar PostgreSQL en la nube:\n1. Duplica el archivo .env.example como .env\n2. Ingresa tus credenciales de Supabase\n3. Reinicia el servidor con npm run dev`);
+                        alert(`ℹ️ ESTADO ACTUAL DE LA BASE DE DATOS\n\n${data.mensaje}\n\nEstudiantes en respaldo local: ${data.total_estudiantes_servidor}\nHora servidor: ${data.servidor_hora}`);
                     }
                 }
             } else {

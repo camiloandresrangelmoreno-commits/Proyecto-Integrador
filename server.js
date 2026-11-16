@@ -1,12 +1,16 @@
 /**
  * ============================================================================
- * SISTEMA INTEGRAL DE GESTIÓN DE PRÁCTICAS ACADÉMICAS (UDI)
- * SERVIDOR PRINCIPAL BACKEND (NODE.JS + EXPRESS + NODEMON)
+ * SOFTWARE PARA LA GESTIÓN Y SEGUIMIENTO DE PRÁCTICAS ACADÉMICAS (UDI)
+ * SERVIDOR PRINCIPAL BACKEND - VERSIÓN RELEASE 1.0 (NODE.JS + EXPRESS)
  * ============================================================================
- * 
- * Arquitectura: API RESTful multi-esquema conectada a PostgreSQL en Supabase.
- * - Esquema 1 (gestion_academica): Estudiante, Tutor, Institución, Tipo, Práctica.
- * - Esquema 2 (seguimiento_practicas): Bitácora, Evidencia, Evaluación.
+ *
+ * Arquitectura de Microservicios:
+ *  - Microservicio 1 (gestion_academica): Estudiante, Tutor_Academico,
+ *    Institucion, Tipo_Practica, Practica, Solicitudes, Convenio y Coordinador.
+ *  - Microservicio 2 (seguimiento_practicas): Bitacora, Evidencia y Evaluacion.
+ *  - Orquestación API REST (/api/reportes/consolidado): Integra ambos
+ *    microservicios exclusivamente mediante los identificadores `id_practica`
+ *    y `documento_tu`.
  */
 
 import express from 'express';
@@ -18,132 +22,89 @@ import dotenv from 'dotenv';
 import { dbAcademica } from './backend/dbAcademica.js';
 import { dbSeguimiento } from './backend/dbSeguimiento.js';
 
-// Carga de variables de entorno desde el archivo .env
-dotenv.config();
-
-// Configuración de respaldo automática: garantiza conexión inmediata a PostgreSQL en Supabase
-// en cualquier PC o entorno donde se descomprima el proyecto, sin requerir configuración manual.
-const SUPABASE_FALLBACK_URL = 'postgresql://postgres.ywadbrsmyswfgmvkfxjn:Integrador123%23@aws-0-us-east-1.pooler.supabase.com:5432/postgres';
-if (!process.env.DATABASE_URL_ACADEMICA) {
-    process.env.DATABASE_URL_ACADEMICA = SUPABASE_FALLBACK_URL;
-}
-if (!process.env.DATABASE_URL_SEGUIMIENTO) {
-    process.env.DATABASE_URL_SEGUIMIENTO = SUPABASE_FALLBACK_URL;
-}
+// Priorizar las variables declaradas en el archivo .env local sobre variables heredadas
+dotenv.config({ override: true });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ARCHIVO_SOLICITUDES = path.join(__dirname, 'backend', 'solicitudes.json');
-const ARCHIVO_ESTUDIANTES = path.join(__dirname, 'backend', 'estudiantes.json');
+const ARCHIVO_ENV = path.join(__dirname, '.env');
 
 /**
- * Lee de manera síncrona el listado persistente de estudiantes en disco.
- * @returns {Array<Object>} Arreglo de estudiantes matriculados.
+ * Extrae de forma segura el identificador de proyecto o host de una URI PostgreSQL
+ * sin exponer credenciales ni contraseñas.
+ *
+ * @param {string|undefined} uri - Cadena de conexión PostgreSQL.
+ * @returns {string} Host o referencia de proyecto detectada.
  */
-function leerEstudiantesServidor() {
+function obtenerReferenciaConexion(uri) {
+    if (!uri) return 'No configurada';
     try {
-        if (fs.existsSync(ARCHIVO_ESTUDIANTES)) {
-            const contenido = fs.readFileSync(ARCHIVO_ESTUDIANTES, 'utf-8');
-            return JSON.parse(contenido || '[]');
+        const matchUsuario = uri.match(/postgres\.([a-z0-9]+)/i);
+        const url = new URL(uri);
+        if (matchUsuario && matchUsuario[1]) {
+            return `Supabase (${matchUsuario[1]} @ ${url.hostname})`;
         }
-    } catch (e) {
-        console.error('Error al leer estudiantes en disco:', e.message);
-    }
-    return [];
-}
-
-/**
- * Persiste en disco el listado de estudiantes para sincronización continua.
- * @param {Array<Object>} lista
- */
-function guardarEstudiantesServidor(lista) {
-    try {
-        fs.writeFileSync(ARCHIVO_ESTUDIANTES, JSON.stringify(lista, null, 2), 'utf-8');
-    } catch (e) {
-        console.error('Error al guardar estudiantes en disco:', e.message);
-    }
-}
-
-/**
- * Lee de manera síncrona el listado persistente de solicitudes de aspirantes.
- * @returns {Array<Object>} Arreglo de postulaciones pendientes.
- */
-function leerSolicitudesServidor() {
-    try {
-        if (fs.existsSync(ARCHIVO_SOLICITUDES)) {
-            const contenido = fs.readFileSync(ARCHIVO_SOLICITUDES, 'utf-8');
-            return JSON.parse(contenido || '[]');
-        }
-    } catch (e) {
-        console.error('Error al leer solicitudes:', e.message);
-    }
-    return [];
-}
-
-/**
- * Escribe y persiste en disco el listado actualizado de solicitudes de aspirantes.
- * @param {Array<Object>} lista - Colección de solicitudes a guardar.
- */
-function guardarSolicitudesServidor(lista) {
-    try {
-        fs.writeFileSync(ARCHIVO_SOLICITUDES, JSON.stringify(lista, null, 2), 'utf-8');
-    } catch (e) {
-        console.error('Error al guardar solicitudes:', e.message);
+        return url.hostname;
+    } catch (_) {
+        return 'Configuración personalizada';
     }
 }
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ============================================================================
-// CONFIGURACIÓN DE MIDDLEWARES
+// CONFIGURACIÓN DE MIDDLEWARES Y ARCHIVOS ESTÁTICOS
 // ============================================================================
 
-// Habilitar CORS para permitir solicitudes entre diferentes orígenes si es requerido
 app.use(cors());
-
-// Parseo automático de cuerpos de solicitud en formato JSON
 app.use(express.json());
-
-// Servicio de archivos estáticos del frontend (HTML, CSS, JS e imágenes)
 app.use(express.static(__dirname, { extensions: ['html', 'htm'] }));
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/CSS', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 
 // ============================================================================
-// ENDPOINTS DE MONITOREO Y SALUD DEL SISTEMA
+// ENDPOINTS DE MONITOREO Y AUTENTICACIÓN EN LA NUBE
 // ============================================================================
 
 /**
  * GET /api/estado-servidor
- * Verifica el estado en tiempo real del servidor y de ambas bases de datos en la nube.
- * @returns {Object} JSON con métricas, esquemas activos y total de registros.
+ * Retorna el estado de salud de los dos microservicios y métricas globales en tiempo real.
  */
 app.get('/api/estado-servidor', async (req, res) => {
     try {
-        const [estudiantes, practicas, bitacoras, evaluaciones] = await Promise.all([
+        const [diagAcad, diagSeg, estudiantes, practicas, solicitudes, convenios, bitacoras, evaluaciones] = await Promise.all([
+            dbAcademica.verificarConexion(),
+            dbSeguimiento.verificarConexion(),
             dbAcademica.getEstudiantes(),
             dbAcademica.getPracticas(),
+            dbAcademica.getSolicitudes(),
+            dbAcademica.getConvenios(),
             dbSeguimiento.getBitacoras(),
             dbSeguimiento.getEvaluaciones()
         ]);
 
         res.status(200).json({
-            sistema: 'Sistema de Gestión de Prácticas Pedagógicas UDI',
-            version: '2.0.0 (Segunda Entrega)',
-            entorno: process.env.NODE_ENV || 'development',
+            sistema: 'Software para la Gestión y Seguimiento de Prácticas Académicas',
+            version: '1.0.0 (Release)',
+            entorno: process.env.NODE_ENV || 'production',
+            modo_operacion: diagAcad.conectado && diagSeg.conectado ? 'Nube (PostgreSQL Supabase)' : 'Local Persistente (JSON Failover)',
             bases_datos: {
                 db_1: {
                     nombre: dbAcademica.nombre,
-                    estado: dbAcademica.estado,
-                    entidades: ['Estudiante', 'Tutor_Academico', 'Institucion', 'Tipo_Practica', 'Practica'],
+                    conectado_postgresql: diagAcad.conectado,
+                    estado: diagAcad.mensaje,
+                    entidades: ['Estudiante', 'Tutor_Academico', 'Institucion', 'Tipo_Practica', 'Practica', 'Solicitudes', 'Convenio', 'Coordinador'],
                     total_estudiantes: estudiantes.length,
-                    total_practicas: practicas.length
+                    total_practicas: practicas.length,
+                    total_solicitudes: solicitudes.length,
+                    total_convenios: convenios.length
                 },
                 db_2: {
                     nombre: dbSeguimiento.nombre,
-                    estado: dbSeguimiento.estado,
+                    conectado_postgresql: diagSeg.conectado,
+                    estado: diagSeg.mensaje,
                     entidades: ['Bitacora', 'Evidencia', 'Evaluacion'],
                     total_bitacoras: bitacoras.length,
                     total_evaluaciones: evaluaciones.length
@@ -155,18 +116,171 @@ app.get('/api/estado-servidor', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/estado-db
+ * Diagnóstico en vivo de la conectividad PostgreSQL en Supabase y conteo real en servidor.
+ */
+app.get('/api/estado-db', async (req, res) => {
+    const tieneArchivoEnv = fs.existsSync(ARCHIVO_ENV);
+    const tieneEnvAcademica = !!process.env.DATABASE_URL_ACADEMICA;
+    const tieneEnvSeguimiento = !!process.env.DATABASE_URL_SEGUIMIENTO;
+
+    const [diagAcad, diagSeg, estudiantes] = await Promise.all([
+        dbAcademica.verificarConexion(),
+        dbSeguimiento.verificarConexion(),
+        dbAcademica.getEstudiantes()
+    ]);
+
+    const postgresActivo = diagAcad.conectado && diagSeg.conectado;
+    const destino = obtenerReferenciaConexion(process.env.DATABASE_URL_ACADEMICA);
+
+    res.status(200).json({
+        conectado_a_postgresql: postgresActivo,
+        tiene_archivo_env: tieneArchivoEnv,
+        tiene_variables_env: tieneEnvAcademica && tieneEnvSeguimiento,
+        destino_configurado: destino,
+        mensaje: postgresActivo
+            ? `Conectado exitosamente a PostgreSQL en ${destino}.`
+            : `${diagAcad.mensaje} Destino configurado: ${destino}.`,
+        total_estudiantes_servidor: estudiantes.length,
+        servidor_hora: new Date().toLocaleTimeString('es-CO')
+    });
+});
+
+/**
+ * POST /api/auth/login
+ * Autentica al usuario directamente contra las tablas persistidas en Supabase PostgreSQL.
+ */
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const correoLimpio = String(req.body.correo || '').trim().toLowerCase();
+        const claveLimpia = String(req.body.password || req.body.clave || '').trim();
+        const rol = String(req.body.rol || '').trim().toLowerCase();
+
+        if (!correoLimpio || !claveLimpia || !rol) {
+            return res.status(400).json({ success: false, message: 'Debes diligenciar correo, contraseña y rol.' });
+        }
+
+        if (rol === 'director' || rol === 'coordinador') {
+            const coordinadores = await dbAcademica.getCoordinadores();
+            const match = coordinadores.find(c => {
+                const esDir = String(c.id_coordinador || '').startsWith('DIR') || c.rol === 'director';
+                const rolCorrecto = rol === 'director' ? esDir : !esDir;
+                return rolCorrecto && String(c.correo || '').toLowerCase() === correoLimpio && (c.clave === claveLimpia || c.password === claveLimpia);
+            });
+            if (match) {
+                return res.status(200).json({
+                    success: true,
+                    user: {
+                        id: match.id_coordinador,
+                        nombre: match.nombre,
+                        correo: match.correo,
+                        rol,
+                        departamento: match.departamento
+                    },
+                    redirectUrl: rol === 'director' ? 'views/dashboard.html' : 'views/coordinador.html'
+                });
+            }
+        } else if (rol === 'docente') {
+            const tutores = await dbAcademica.getTutores();
+            const tutor = tutores.find(t =>
+                String(t.correo || '').toLowerCase() === correoLimpio && (t.clave === claveLimpia || t.password === claveLimpia)
+            );
+            if (tutor) {
+                return res.status(200).json({
+                    success: true,
+                    user: {
+                        id: tutor.documento_tu,
+                        documento: tutor.documento_tu,
+                        documento_tu: tutor.documento_tu,
+                        nombre: tutor.nombre,
+                        correo: tutor.correo,
+                        rol: 'docente',
+                        especialidad: tutor.especialidad
+                    },
+                    redirectUrl: 'views/docente.html'
+                });
+            }
+        } else if (rol === 'estudiante') {
+            const [solicitudes, estudiantes] = await Promise.all([
+                dbAcademica.getSolicitudes(),
+                dbAcademica.getEstudiantes()
+            ]);
+
+            const solicitudEnEspera = solicitudes.find(s =>
+                String(s.correo || '').toLowerCase() === correoLimpio && (s.estado === 'Pendiente' || !s.estado)
+            );
+            if (solicitudEnEspera) {
+                return res.status(403).json({
+                    success: false,
+                    message: `Acceso restringido: Tu solicitud de inscripción para ${solicitudEnEspera.nombre} está en estado de ESPERA (Pendiente de Aprobación).\n\nEl Coordinador de Práctica debe revisar y aceptar tu solicitud antes de que puedas iniciar sesión.`
+                });
+            }
+
+            const estudiante = estudiantes.find(e =>
+                String(e.correo || '').toLowerCase() === correoLimpio && (e.clave === claveLimpia || e.password === claveLimpia)
+            );
+            if (estudiante) {
+                return res.status(200).json({
+                    success: true,
+                    user: {
+                        id: estudiante.id_estudiante,
+                        id_estudiante: estudiante.id_estudiante,
+                        documento: estudiante.documento,
+                        nombre: estudiante.nombre,
+                        correo: estudiante.correo,
+                        rol: 'estudiante',
+                        semestre: estudiante.semestre ?? null
+                    },
+                    redirectUrl: 'views/estudiante.html'
+                });
+            }
+
+            if (estudiantes.some(e => String(e.correo || '').toLowerCase() === correoLimpio)) {
+                return res.status(401).json({ success: false, message: 'Contraseña incorrecta. Por favor verifica tu clave.' });
+            }
+            return res.status(404).json({
+                success: false,
+                message: 'Estudiante no registrado o aún no aprobado por el Coordinador de Prácticas.'
+            });
+        } else if (rol === 'institucion') {
+            const instituciones = await dbAcademica.getInstituciones();
+            const institucion = instituciones.find(i =>
+                String(i.correo || '').toLowerCase() === correoLimpio && (i.clave === claveLimpia || i.password === claveLimpia)
+            );
+            if (institucion) {
+                return res.status(200).json({
+                    success: true,
+                    user: {
+                        id: institucion.id_institucion,
+                        id_institucion: institucion.id_institucion,
+                        nombre: institucion.nombre_colegio || institucion.nombre,
+                        correo: institucion.correo,
+                        rol: 'institucion',
+                        direccion: institucion.direccion
+                    },
+                    redirectUrl: 'views/institucion.html'
+                });
+            }
+        }
+
+        return res.status(401).json({ success: false, message: 'Credenciales inválidas para el rol académico seleccionado.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: `Error de autenticación: ${error.message}` });
+    }
+});
+
 // ============================================================================
-// RUTAS API: GESTIÓN DE SOLICITUDES DE ASPIRANTES (SINCRONIZACIÓN MULTIPLATAFORMA)
+// RUTAS API: SOLICITUDES DE ASPIRANTES (PostgreSQL gestion_academica.solicitudes)
 // ============================================================================
 
 /**
  * GET /api/solicitudes
- * Consulta las solicitudes radicadas por estudiantes en espera de aprobación.
+ * Consulta las solicitudes radicadas por aspirantes directamente en PostgreSQL.
  */
-app.get('/api/solicitudes', (req, res) => {
+app.get('/api/solicitudes', async (req, res) => {
     try {
-        const solicitudes = leerSolicitudesServidor();
-        res.status(200).json(solicitudes);
+        res.status(200).json(await dbAcademica.getSolicitudes());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -174,23 +288,31 @@ app.get('/api/solicitudes', (req, res) => {
 
 /**
  * POST /api/solicitudes
- * Radica una nueva postulación en espera de revisión por el Coordinador.
+ * Radica una nueva postulación de práctica en `gestion_academica.solicitudes`.
  */
-app.post('/api/solicitudes', (req, res) => {
+app.post('/api/solicitudes', async (req, res) => {
     try {
-        const solicitudes = leerSolicitudesServidor();
         const nueva = req.body;
-        if (!nueva || !nueva.correo) {
-            return res.status(400).json({ error: 'Datos incompletos para radicar solicitud.' });
+        if (!nueva || !nueva.correo || !nueva.nombre) {
+            return res.status(400).json({ error: 'Nombre y correo son obligatorios para radicar solicitud.' });
         }
-        const index = solicitudes.findIndex(s => (s.correo || '').toLowerCase() === nueva.correo.toLowerCase());
-        if (index >= 0) {
-            solicitudes[index] = nueva;
-        } else {
-            solicitudes.push(nueva);
+
+        const [estudiantes, solicitudes] = await Promise.all([
+            dbAcademica.getEstudiantes(),
+            dbAcademica.getSolicitudes()
+        ]);
+        const correoNorm = String(nueva.correo).trim().toLowerCase();
+
+        if (estudiantes.some(e => String(e.correo || '').toLowerCase() === correoNorm)) {
+            return res.status(409).json({ error: `El correo ${correoNorm} ya se encuentra matriculado en el sistema.` });
         }
-        guardarSolicitudesServidor(solicitudes);
-        res.status(201).json(nueva);
+
+        if (solicitudes.some(s => String(s.correo || '').toLowerCase() === correoNorm)) {
+            return res.status(409).json({ error: `Ya existe una solicitud pendiente para el correo ${correoNorm}.` });
+        }
+
+        const creada = await dbAcademica.insertSolicitud(nueva);
+        res.status(201).json(creada);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -198,123 +320,52 @@ app.post('/api/solicitudes', (req, res) => {
 
 /**
  * DELETE /api/solicitudes/:id
- * Remueve una solicitud una vez aceptada, matriculada o rechazada por el Coordinador.
+ * Remueve una solicitud procesada (aprobada o rechazada) de PostgreSQL.
  */
-app.delete('/api/solicitudes/:id', (req, res) => {
+app.delete('/api/solicitudes/:id', async (req, res) => {
     try {
-        let solicitudes = leerSolicitudesServidor();
-        const identificador = decodeURIComponent(req.params.id).toLowerCase();
-        solicitudes = solicitudes.filter(s => 
-            String(s.id || '').toLowerCase() !== identificador &&
-            String(s.id_solicitud || '').toLowerCase() !== identificador &&
-            String(s.correo || '').toLowerCase() !== identificador
-        );
-        guardarSolicitudesServidor(solicitudes);
-        res.status(200).json({ mensaje: `Solicitud ${req.params.id} procesada exitosamente.` });
+        const identificador = decodeURIComponent(req.params.id || '').trim();
+        const eliminada = await dbAcademica.deleteSolicitud(identificador);
+        res.status(200).json({
+            ok: true,
+            eliminado: eliminada,
+            mensaje: `Solicitud ${identificador} procesada exitosamente.`
+        });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ ok: false, error: error.message });
     }
 });
 
 // ============================================================================
-// RUTAS API: BASE DE DATOS 1 (GESTIÓN ACADÉMICA)
+// RUTAS API: MICROSERVICIO 1 (GESTIÓN ACADÉMICA - gestion_academica)
 // ============================================================================
-
-/**
- * GET /api/estado-db
- * Diagnóstico en vivo de la conexión con PostgreSQL en Supabase.
- */
-app.get('/api/estado-db', async (req, res) => {
-    const tieneEnvAcademica = !!process.env.DATABASE_URL_ACADEMICA;
-    const tieneEnvSeguimiento = !!process.env.DATABASE_URL_SEGUIMIENTO;
-    let postgresActivo = false;
-    let mensajeDetallado = '';
-
-    try {
-        await dbAcademica.getTiposPractica();
-        postgresActivo = true;
-        mensajeDetallado = 'Conectado exitosamente a PostgreSQL en Supabase en la nube.';
-    } catch (err) {
-        mensajeDetallado = `Error al conectar con PostgreSQL: ${err.message}. Operando con respaldo local.`;
-    }
-
-    res.status(200).json({
-        conectado_a_postgresql: postgresActivo,
-        tiene_variables_env: true,
-        mensaje: mensajeDetallado,
-        total_estudiantes_servidor: leerEstudiantesServidor().length,
-        servidor_hora: new Date().toLocaleTimeString('es-CO')
-    });
-});
 
 /**
  * GET /api/academica/estudiantes
- * Retorna todos los estudiantes matriculados (desde PostgreSQL o réplica local en disco).
+ * Lista todos los estudiantes matriculados en `gestion_academica.Estudiante`.
  */
 app.get('/api/academica/estudiantes', async (req, res) => {
     try {
-        let estudiantes = [];
-        if (process.env.DATABASE_URL_ACADEMICA) {
-            try {
-                estudiantes = await dbAcademica.getEstudiantes();
-            } catch (errDb) {
-                console.warn('Aviso: PostgreSQL no respondió, usando datos de estudiantes en disco:', errDb.message);
-            }
-        }
-        if (!estudiantes || estudiantes.length === 0) {
-            estudiantes = leerEstudiantesServidor();
-        } else {
-            guardarEstudiantesServidor(estudiantes);
-        }
-        res.status(200).json(estudiantes);
+        res.status(200).json(await dbAcademica.getEstudiantes());
     } catch (error) {
-        res.status(200).json(leerEstudiantesServidor());
+        res.status(500).json({ error: error.message });
     }
 });
 
 /**
  * POST /api/academica/estudiantes
- * Registra un nuevo estudiante garantizando persistencia en disco y PostgreSQL.
+ * Registra un nuevo estudiante en `gestion_academica.Estudiante` (semestre opcional).
  */
 app.post('/api/academica/estudiantes', async (req, res) => {
     try {
-        const { documento, nombre, apellido, correo, semestre, telefono } = req.body;
-        if (!documento || !nombre || !correo || !semestre) {
+        const { documento, id_estudiante, nombre, correo } = req.body;
+        if ((!documento && !id_estudiante) || !nombre || !correo) {
             return res.status(400).json({
-                error: 'Parámetros incompletos. Documento, nombre, correo y semestre son obligatorios.'
+                error: 'Parámetros incompletos. Documento/ID, nombre y correo son obligatorios.'
             });
         }
-        const nuevoEstudiante = {
-            id_estudiante: documento.startsWith('EST') ? documento : `EST-2024-${String(documento).slice(-2)}`,
-            documento,
-            nombre,
-            apellido: apellido || '',
-            correo,
-            semestre: parseInt(semestre) || 7,
-            telefono: telefono || '',
-            clave: req.body.clave || 'estudiante123'
-        };
-
-        // Guardar en disco para sincronización entre VS Code y todos los navegadores
-        const listaDisco = leerEstudiantesServidor();
-        const idx = listaDisco.findIndex(e => e.correo === correo || e.documento === documento);
-        if (idx >= 0) {
-            listaDisco[idx] = nuevoEstudiante;
-        } else {
-            listaDisco.push(nuevoEstudiante);
-        }
-        guardarEstudiantesServidor(listaDisco);
-
-        // Guardar en PostgreSQL si está configurado
-        if (process.env.DATABASE_URL_ACADEMICA) {
-            try {
-                await dbAcademica.insertEstudiante({ documento, nombre, apellido, correo, semestre, telefono });
-            } catch (ePostgres) {
-                console.warn('Aviso PostgreSQL:', ePostgres.message);
-            }
-        }
-
-        res.status(201).json(nuevoEstudiante);
+        const creado = await dbAcademica.insertEstudiante(req.body);
+        res.status(201).json(creado);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -322,13 +373,13 @@ app.post('/api/academica/estudiantes', async (req, res) => {
 
 /**
  * PUT /api/academica/estudiantes/:documento
- * Actualiza los datos de un estudiante por su documento.
+ * Actualiza los datos académicos o credenciales de un estudiante por documento o ID.
  */
 app.put('/api/academica/estudiantes/:documento', async (req, res) => {
     try {
         const estudianteActualizado = await dbAcademica.updateEstudiante(req.params.documento, req.body);
         if (!estudianteActualizado) {
-            return res.status(404).json({ error: `Estudiante con documento ${req.params.documento} no encontrado.` });
+            return res.status(404).json({ error: `Estudiante ${req.params.documento} no encontrado.` });
         }
         res.status(200).json(estudianteActualizado);
     } catch (error) {
@@ -338,28 +389,36 @@ app.put('/api/academica/estudiantes/:documento', async (req, res) => {
 
 /**
  * DELETE /api/academica/estudiantes/:documento
- * Elimina un estudiante de la base de datos.
+ * Elimina en cascada primero bitácoras/evidencias/evaluaciones de sus prácticas
+ * en el Microservicio 2 (`seguimiento_practicas`) y luego borra prácticas y estudiante
+ * en `gestion_academica`.
  */
 app.delete('/api/academica/estudiantes/:documento', async (req, res) => {
     try {
-        const eliminado = await dbAcademica.deleteEstudiante(req.params.documento);
-        if (!eliminado) {
-            return res.status(404).json({ error: `Estudiante con documento ${req.params.documento} no encontrado.` });
+        const doc = decodeURIComponent(req.params.documento || '').trim();
+        const practicasAsociadas = await dbAcademica.getPracticasByEstudiante(doc);
+        for (const idPrac of practicasAsociadas) {
+            await dbSeguimiento.deleteByPractica(idPrac);
         }
-        res.status(200).json({ mensaje: `Estudiante ${req.params.documento} eliminado exitosamente.` });
+        const resultado = await dbAcademica.deleteEstudiante(doc);
+        res.status(200).json({
+            ok: true,
+            eliminado: resultado.deleted,
+            practicasEliminadas: practicasAsociadas,
+            mensaje: `Estudiante ${doc} eliminado exitosamente.`
+        });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ ok: false, error: error.message });
     }
 });
 
 /**
  * GET /api/academica/tutores
- * Obtiene el listado de docentes asesores.
+ * Lista los docentes asesores registrados en `gestion_academica.Tutor_Academico`.
  */
 app.get('/api/academica/tutores', async (req, res) => {
     try {
-        const tutores = await dbAcademica.getTutores();
-        res.status(200).json(tutores);
+        res.status(200).json(await dbAcademica.getTutores());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -367,25 +426,59 @@ app.get('/api/academica/tutores', async (req, res) => {
 
 /**
  * POST /api/academica/tutores
- * Registra un nuevo docente asesor en el sistema.
+ * Crea un nuevo tutor académico identificado por `documento_tu`.
  */
 app.post('/api/academica/tutores', async (req, res) => {
     try {
-        const nuevoTutor = await dbAcademica.insertTutor(req.body);
-        res.status(201).json(nuevoTutor);
+        res.status(201).json(await dbAcademica.insertTutor(req.body));
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
 /**
+ * PUT /api/academica/tutores/:documento
+ * Actualiza los datos o especialidad de un docente asesor.
+ */
+app.put('/api/academica/tutores/:documento', async (req, res) => {
+    try {
+        const actualizado = await dbAcademica.updateTutor(req.params.documento, req.body);
+        if (!actualizado) {
+            return res.status(404).json({ error: `Tutor ${req.params.documento} no encontrado.` });
+        }
+        res.status(200).json(actualizado);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/academica/tutores/:documento
+ * Desvincula primero evaluaciones en `seguimiento_practicas` y prácticas en
+ * `gestion_academica` antes de eliminar al docente asesor.
+ */
+app.delete('/api/academica/tutores/:documento', async (req, res) => {
+    try {
+        const doc = decodeURIComponent(req.params.documento || '').trim();
+        await dbSeguimiento.unlinkTutor(doc);
+        const eliminado = await dbAcademica.deleteTutor(doc);
+        res.status(200).json({
+            ok: true,
+            eliminado,
+            mensaje: `Tutor ${doc} eliminado exitosamente.`
+        });
+    } catch (error) {
+        res.status(500).json({ ok: false, error: error.message });
+    }
+});
+
+/**
  * GET /api/academica/instituciones
- * Consulta los colegios e instituciones receptoras con convenio.
+ * Consulta las instituciones receptoras registradas en `gestion_academica.Institucion`.
  */
 app.get('/api/academica/instituciones', async (req, res) => {
     try {
-        const instituciones = await dbAcademica.getInstituciones();
-        res.status(200).json(instituciones);
+        res.status(200).json(await dbAcademica.getInstituciones());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -393,17 +486,27 @@ app.get('/api/academica/instituciones', async (req, res) => {
 
 /**
  * POST /api/academica/instituciones
- * Registra una nueva institución receptora con convenio.
- * 
- * @name POST /api/academica/instituciones
- * @param {Object} req.body - Datos de la institución (id_institucion, nombre, direccion, ciudad, telefono).
- * @returns {Object} 201 - Registro de la institución creada.
- * @returns {Object} 400 - Mensaje de error por validación o duplicidad.
+ * Registra una nueva institución educativa receptora con sus credenciales de acceso.
  */
 app.post('/api/academica/instituciones', async (req, res) => {
     try {
-        const nuevaInstitucion = await dbAcademica.insertInstitucion(req.body);
-        res.status(201).json(nuevaInstitucion);
+        res.status(201).json(await dbAcademica.insertInstitucion(req.body));
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+/**
+ * PUT /api/academica/instituciones/:id
+ * Actualiza información de contacto, dirección o correo de una sede escolar.
+ */
+app.put('/api/academica/instituciones/:id', async (req, res) => {
+    try {
+        const actualizada = await dbAcademica.updateInstitucion(req.params.id, req.body);
+        if (!actualizada) {
+            return res.status(404).json({ error: `Institución ${req.params.id} no encontrada.` });
+        }
+        res.status(200).json(actualizada);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -411,34 +514,118 @@ app.post('/api/academica/instituciones', async (req, res) => {
 
 /**
  * DELETE /api/academica/instituciones/:id
- * Elimina una institución receptora por su identificador único.
- * 
- * @name DELETE /api/academica/instituciones/:id
- * @param {string} req.params.id - Identificador único de la institución (ej: INST-01).
- * @returns {Object} 200 - Mensaje de confirmación de eliminación exitosa.
- * @returns {Object} 404 - Si la institución no existe.
- * @returns {Object} 400 - Si la eliminación falla por restricción de clave foránea.
+ * Desvincula prácticas, actualiza preferencias en solicitudes y elimina convenios
+ * dependientes antes de borrar la institución receptora.
  */
 app.delete('/api/academica/instituciones/:id', async (req, res) => {
     try {
-        const eliminada = await dbAcademica.deleteInstitucion(req.params.id);
-        if (!eliminada) {
-            return res.status(404).json({ error: `Institución ${req.params.id} no encontrada.` });
-        }
-        res.status(200).json({ mensaje: `Institución ${req.params.id} eliminada exitosamente.` });
+        const idInst = decodeURIComponent(req.params.id || '').trim();
+        const eliminada = await dbAcademica.deleteInstitucion(idInst);
+        res.status(200).json({
+            ok: true,
+            eliminado: eliminada,
+            mensaje: `Institución ${idInst} eliminada exitosamente.`
+        });
+    } catch (error) {
+        res.status(500).json({ ok: false, error: error.message });
+    }
+});
+
+// CONVENIOS INTERINSTITUCIONALES
+
+/**
+ * GET /api/academica/convenios
+ * Lista todos los convenios interinstitucionales almacenados en `gestion_academica.convenio`.
+ */
+app.get('/api/academica/convenios', async (req, res) => {
+    try {
+        res.status(200).json(await dbAcademica.getConvenios());
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/academica/convenios
+ * Registra un nuevo convenio institucional con vigencia y cupos autorizados.
+ */
+app.post('/api/academica/convenios', async (req, res) => {
+    try {
+        res.status(201).json(await dbAcademica.insertConvenio(req.body));
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
 /**
+ * PUT /api/academica/convenios/:id
+ * Actualiza un convenio (por ejemplo al estampar firma rectoral del Director).
+ */
+app.put('/api/academica/convenios/:id', async (req, res) => {
+    try {
+        const actualizado = await dbAcademica.updateConvenio(req.params.id, req.body);
+        if (!actualizado) {
+            return res.status(404).json({ error: `Convenio ${req.params.id} no encontrado.` });
+        }
+        res.status(200).json(actualizado);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/academica/convenios/:id
+ * Elimina un convenio institucional por su código único `id_convenio`.
+ */
+app.delete('/api/academica/convenios/:id', async (req, res) => {
+    try {
+        const idConv = decodeURIComponent(req.params.id || '').trim();
+        const eliminado = await dbAcademica.deleteConvenio(idConv);
+        res.status(200).json({
+            ok: true,
+            eliminado,
+            mensaje: `Convenio ${idConv} eliminado exitosamente.`
+        });
+    } catch (error) {
+        res.status(500).json({ ok: false, error: error.message });
+    }
+});
+
+// COORDINADORES
+
+/**
+ * GET /api/academica/coordinadores
+ * Consulta las cuentas administrativas de Coordinación y Dirección de Programa.
+ */
+app.get('/api/academica/coordinadores', async (req, res) => {
+    try {
+        res.status(200).json(await dbAcademica.getCoordinadores());
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/academica/coordinadores
+ * Crea una nueva cuenta administrativa en `gestion_academica.coordinador`.
+ */
+app.post('/api/academica/coordinadores', async (req, res) => {
+    try {
+        res.status(201).json(await dbAcademica.insertCoordinador(req.body));
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// TIPOS DE PRÁCTICA Y PRÁCTICAS
+
+/**
  * GET /api/academica/tipos-practica
- * Consulta las modalidades de práctica según el Decreto 1075 de 2015.
+ * Lista las modalidades oficiales de práctica según el Decreto 1075 de 2015.
  */
 app.get('/api/academica/tipos-practica', async (req, res) => {
     try {
-        const tipos = await dbAcademica.getTiposPractica();
-        res.status(200).json(tipos);
+        res.status(200).json(await dbAcademica.getTiposPractica());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -446,12 +633,11 @@ app.get('/api/academica/tipos-practica', async (req, res) => {
 
 /**
  * GET /api/academica/practicas
- * Consulta las asignaciones de práctica con sus relaciones consolidadas.
+ * Lista las asignaciones de prácticas académicas con datos resueltos de estudiante, tutor e institución.
  */
 app.get('/api/academica/practicas', async (req, res) => {
     try {
-        const practicas = await dbAcademica.getPracticas();
-        res.status(200).json(practicas);
+        res.status(200).json(await dbAcademica.getPracticas());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -459,56 +645,85 @@ app.get('/api/academica/practicas', async (req, res) => {
 
 /**
  * POST /api/academica/practicas
- * Crea una nueva asignación de práctica relacionando estudiante, tutor, colegio y tipo.
+ * Asigna una nueva práctica académica vinculando estudiante, tutor, sede y modalidad.
  */
 app.post('/api/academica/practicas', async (req, res) => {
     try {
-        const nuevaPractica = await dbAcademica.insertPractica(req.body);
-        res.status(201).json(nuevaPractica);
+        res.status(201).json(await dbAcademica.insertPractica(req.body));
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
+/**
+ * PUT /api/academica/practicas/:id
+ * Actualiza estado, horas, validación presencial de sede o autorización final de culminación.
+ */
+app.put('/api/academica/practicas/:id', async (req, res) => {
+    try {
+        const actualizada = await dbAcademica.updatePractica(req.params.id, req.body);
+        if (!actualizada) {
+            return res.status(404).json({ error: `Práctica ${req.params.id} no encontrada.` });
+        }
+        res.status(200).json(actualizada);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/academica/practicas/:id
+ * Elimina en cascada las bitácoras, evidencias y evaluaciones asociadas en el
+ * Microservicio 2 (`seguimiento_practicas`) antes de borrar la práctica principal.
+ */
+app.delete('/api/academica/practicas/:id', async (req, res) => {
+    try {
+        const idPrac = decodeURIComponent(req.params.id || '').trim();
+        await dbSeguimiento.deleteByPractica(idPrac);
+        const eliminada = await dbAcademica.deletePractica(idPrac);
+        res.status(200).json({
+            ok: true,
+            eliminado: eliminada,
+            mensaje: `Práctica ${idPrac} eliminada exitosamente.`
+        });
+    } catch (error) {
+        res.status(500).json({ ok: false, error: error.message });
+    }
+});
+
 // ============================================================================
-// RUTAS API: BASE DE DATOS 2 (SEGUIMIENTO DE PRÁCTICAS)
+// RUTAS API: MICROSERVICIO 2 (SEGUIMIENTO DE PRÁCTICAS - seguimiento_practicas)
 // ============================================================================
 
 /**
  * GET /api/seguimiento/bitacoras
- * Consulta el historial de bitácoras registradas.
+ * Consulta todas las bitácoras registradas ordenadas de la más reciente a la más antigua.
  */
 app.get('/api/seguimiento/bitacoras', async (req, res) => {
     try {
-        const bitacoras = await dbSeguimiento.getBitacoras();
-        res.status(200).json(bitacoras);
+        res.status(200).json(await dbSeguimiento.getBitacoras());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
 /**
- * POST /api/bitacoras  o  POST /api/seguimiento/bitacoras
- * Implementación exacta del Diagrama de Secuencia UML:
- * - Recibe id_practica, fecha, descripcion, horas, archivo.
- * - Registra la bitácora en la BD y anexa la evidencia.
- * - Retorna HTTP 201 Created con mensaje de éxito.
+ * POST /api/seguimiento/bitacoras | POST /api/bitacoras
+ * Registra una bitácora de jornada formativa y, si incluye archivo soporte,
+ * persiste automáticamente el registro vinculado en `seguimiento_practicas.Evidencia`.
  */
 app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], async (req, res) => {
     try {
         const { id_practica, fecha, descripcion, archivo, horas } = req.body;
-        
         const bitacorasExistentes = await dbSeguimiento.getBitacoras();
-        const idGenerado = req.body.id_bitacora || `BIT-${String(bitacorasExistentes.length + 1).padStart(3, '0')}`;
-        
+        const idGenerado = req.body.id_bitacora || `BIT-${Date.now().toString().slice(-4)}`;
+
         let practicaAsignada = id_practica;
         if (!practicaAsignada) {
-            try {
-                const practicasDb = await dbAcademica.getPracticas();
-                if (practicasDb && practicasDb.length > 0) {
-                    practicaAsignada = practicasDb[practicasDb.length - 1].id_practica;
-                }
-            } catch (e) {}
+            const practicasDb = await dbAcademica.getPracticas();
+            if (practicasDb && practicasDb.length > 0) {
+                practicaAsignada = practicasDb[practicasDb.length - 1].id_practica;
+            }
         }
 
         const nuevaBitacora = {
@@ -517,28 +732,27 @@ app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], async (req, res) => {
             descripcion: descripcion || 'Jornada pedagógica desarrollada en aula',
             observaciones: req.body.observaciones || null,
             estado: req.body.estado || 'Pendiente',
+            horas: parseInt(horas, 10) || 4,
             id_practica: practicaAsignada || 'PRAC-001'
         };
 
         const bitacoraCreada = await dbSeguimiento.insertBitacora(nuevaBitacora);
 
-        // Si se adjuntó archivo de soporte, se inserta la evidencia asociada (Composición UML)
         if (archivo) {
             const evidenciasExistentes = await dbSeguimiento.getEvidencias();
-            const idEvidencia = `EVI-${String(evidenciasExistentes.length + 1).padStart(3, '0')}`;
+            const idEvidencia = `EVI-${String(evidenciasExistentes.length + 1).padStart(3, '0')}-${Date.now().toString().slice(-3)}`;
             await dbSeguimiento.insertEvidencia({
                 id_evidencia: idEvidencia,
                 fecha: nuevaBitacora.fecha,
                 nombre: `Evidencia_${nuevaBitacora.id_bitacora}`,
                 tipo: 'Documento PDF',
-                archivo: archivo,
-                descripcion: `Soporte de ${horas || 4} horas de práctica`,
+                archivo,
+                descripcion: `Soporte de ${nuevaBitacora.horas} horas de práctica`,
                 id_practica: nuevaBitacora.id_practica,
                 id_bitacora: nuevaBitacora.id_bitacora
             });
         }
 
-        // Respuesta HTTP 201 Created como lo exige el Diagrama de Secuencia
         res.status(201).json({
             mensaje: 'Bitácora y evidencias registradas exitosamente',
             bitacora: bitacoraCreada
@@ -550,7 +764,7 @@ app.post(['/api/seguimiento/bitacoras', '/api/bitacoras'], async (req, res) => {
 
 /**
  * PUT /api/seguimiento/bitacoras/:id
- * Actualiza el estado ('Aprobado' / 'Rechazado') y observaciones de una bitácora.
+ * Actualiza el estado de aprobación ('Aprobado', 'Rechazado', 'Pendiente') y observaciones docentes.
  */
 app.put('/api/seguimiento/bitacoras/:id', async (req, res) => {
     try {
@@ -566,12 +780,11 @@ app.put('/api/seguimiento/bitacoras/:id', async (req, res) => {
 
 /**
  * GET /api/seguimiento/evidencias
- * Consulta todas las evidencias digitales registradas.
+ * Lista todos los soportes digitales registrados en `seguimiento_practicas.Evidencia`.
  */
 app.get('/api/seguimiento/evidencias', async (req, res) => {
     try {
-        const evidencias = await dbSeguimiento.getEvidencias();
-        res.status(200).json(evidencias);
+        res.status(200).json(await dbSeguimiento.getEvidencias());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -579,12 +792,11 @@ app.get('/api/seguimiento/evidencias', async (req, res) => {
 
 /**
  * GET /api/seguimiento/evaluaciones
- * Consulta todas las evaluaciones emitidas por tutores académicos.
+ * Lista todas las evaluaciones pedagógicas emitidas en `seguimiento_practicas.Evaluacion`.
  */
 app.get('/api/seguimiento/evaluaciones', async (req, res) => {
     try {
-        const evaluaciones = await dbSeguimiento.getEvaluaciones();
-        res.status(200).json(evaluaciones);
+        res.status(200).json(await dbSeguimiento.getEvaluaciones());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -592,7 +804,7 @@ app.get('/api/seguimiento/evaluaciones', async (req, res) => {
 
 /**
  * POST /api/seguimiento/evaluaciones
- * Registra una evaluación formal emitida por el tutor académico.
+ * Registra una calificación cuantitativa (0.0 a 5.0) emitida por un tutor (`documento_tu`).
  */
 app.post('/api/seguimiento/evaluaciones', async (req, res) => {
     try {
@@ -604,18 +816,179 @@ app.post('/api/seguimiento/evaluaciones', async (req, res) => {
 });
 
 // ============================================================================
-// ENRUTAMIENTO PRINCIPAL DE LA APLICACIÓN
+// ORQUESTACIÓN INTER-MICROSERVICIOS: REPORTES E INFORMES CONSOLIDADOS
 // ============================================================================
+
+/**
+ * GET /api/reportes/consolidado
+ * Orquestador REST de auditoría académica entre ambos microservicios.
+ */
+app.get('/api/reportes/consolidado', async (req, res) => {
+    try {
+        const [
+            estudiantes,
+            tutores,
+            instituciones,
+            tiposPractica,
+            practicas,
+            convenios,
+            solicitudes,
+            bitacoras,
+            evidencias,
+            evaluaciones
+        ] = await Promise.all([
+            dbAcademica.getEstudiantes(),
+            dbAcademica.getTutores(),
+            dbAcademica.getInstituciones(),
+            dbAcademica.getTiposPractica(),
+            dbAcademica.getPracticas(),
+            dbAcademica.getConvenios(),
+            dbAcademica.getSolicitudes(),
+            dbSeguimiento.getBitacoras(),
+            dbSeguimiento.getEvidencias(),
+            dbSeguimiento.getEvaluaciones()
+        ]);
+
+        const filtroEstado = (req.query.estado || '').trim().toLowerCase();
+        const filtroBusqueda = (req.query.q || '').trim().toLowerCase();
+
+        let registrosConsolidados = practicas.map(p => {
+            const estudiante = estudiantes.find(e => e.documento === p.documento || e.id_estudiante === p.id_estudiante);
+            const tutor = tutores.find(t => t.documento_tu === p.documento_tu);
+            const institucion = instituciones.find(i => i.id_institucion === p.id_institucion);
+            const tipo = tiposPractica.find(tp => tp.id_tipo === p.id_tipo);
+
+            const bitacorasPractica = bitacoras.filter(b => b.id_practica === p.id_practica);
+            const bitacorasAprobadas = bitacorasPractica.filter(b => b.estado === 'Aprobado');
+            const bitacorasPendientes = bitacorasPractica.filter(b => b.estado === 'Pendiente');
+            const evidenciasPractica = evidencias.filter(ev => ev.id_practica === p.id_practica);
+
+            const idsBitacoras = bitacorasPractica.map(b => b.id_bitacora);
+            const evaluacionesPractica = evaluaciones.filter(ev =>
+                ev.id_practica === p.id_practica ||
+                (ev.id_bitacora && idsBitacoras.includes(ev.id_bitacora))
+            );
+
+            const horasAprobadasBitacoras = bitacorasAprobadas.reduce((acc, b) => acc + (parseInt(b.horas, 10) || 4), 0);
+            const horasRegistradasBitacoras = bitacorasPractica.reduce((acc, b) => acc + (parseInt(b.horas, 10) || 4), 0);
+            const horasAprobadas = Math.max(horasAprobadasBitacoras, parseInt(p.horas_cumplidas, 10) || 0);
+            const horasObjetivo = parseInt(p.horas_objetivo, 10) || 80;
+            const porcentajeCumplimiento = horasObjetivo > 0
+                ? Math.min(100, Math.round((horasAprobadas / horasObjetivo) * 100))
+                : 0;
+
+            const calificacionPromedio = evaluacionesPractica.length > 0
+                ? Number((evaluacionesPractica.reduce((acc, ev) => acc + parseFloat(ev.calificacion || 0), 0) / evaluacionesPractica.length).toFixed(1))
+                : null;
+
+            const nombreEstudiante = estudiante
+                ? estudiante.nombre
+                : (p.estudiante_completo || p.documento);
+            const nombreTutor = tutor
+                ? tutor.nombre
+                : (p.tutor_completo || p.documento_tu);
+
+            return {
+                id_practica: p.id_practica,
+                documento_estudiante: p.documento,
+                estudiante_nombre: nombreEstudiante,
+                estudiante_correo: estudiante ? estudiante.correo : (p.estudiante_correo || '-'),
+                semestre: estudiante ? estudiante.semestre : null,
+                documento_tu: p.documento_tu,
+                tutor_nombre: nombreTutor,
+                id_institucion: p.id_institucion,
+                institucion_nombre: institucion ? (institucion.nombre_colegio || institucion.nombre) : (p.institucion_nombre || p.id_institucion),
+                id_tipo: p.id_tipo,
+                tipo_nombre: tipo ? tipo.nombre : (p.tipo_nombre || p.id_tipo),
+                fecha_ini: p.fecha_ini,
+                fecha_fin: p.fecha_fin,
+                horas_aprobadas: horasAprobadas,
+                horas_registradas: horasRegistradasBitacoras,
+                horas_objetivo: horasObjetivo,
+                porcentaje_cumplimiento: porcentajeCumplimiento,
+                total_bitacoras: bitacorasPractica.length,
+                bitacoras_aprobadas: bitacorasAprobadas.length,
+                bitacoras_pendientes: bitacorasPendientes.length,
+                total_evidencias: evidenciasPractica.length,
+                calificacion_promedio: calificacionPromedio,
+                validado_institucion: Boolean(p.validado_institucion),
+                estado: p.estado || 'En Curso'
+            };
+        });
+
+        if (filtroEstado && filtroEstado !== 'todos') {
+            registrosConsolidados = registrosConsolidados.filter(r =>
+                r.estado.toLowerCase() === filtroEstado
+            );
+        }
+
+        if (filtroBusqueda) {
+            registrosConsolidados = registrosConsolidados.filter(r =>
+                r.id_practica.toLowerCase().includes(filtroBusqueda) ||
+                r.estudiante_nombre.toLowerCase().includes(filtroBusqueda) ||
+                r.tutor_nombre.toLowerCase().includes(filtroBusqueda) ||
+                r.institucion_nombre.toLowerCase().includes(filtroBusqueda)
+            );
+        }
+
+        const notasValidas = registrosConsolidados
+            .map(r => r.calificacion_promedio)
+            .filter(n => n !== null);
+        const promedioCalificaciones = notasValidas.length > 0
+            ? Number((notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length).toFixed(2))
+            : 0;
+
+        const cumplimientoPromedioPct = registrosConsolidados.length > 0
+            ? Math.round(registrosConsolidados.reduce((acc, r) => acc + r.porcentaje_cumplimiento, 0) / registrosConsolidados.length)
+            : 0;
+
+        const horasAprobadasTotales = registrosConsolidados.reduce((acc, r) => acc + r.horas_aprobadas, 0);
+
+        res.status(200).json({
+            fecha_generacion: new Date().toISOString(),
+            normativa: 'Decreto 1075 de 2015 - MEN',
+            resumen_auditoria: {
+                total_practicas: registrosConsolidados.length,
+                total_estudiantes: estudiantes.length,
+                total_tutores: tutores.length,
+                total_instituciones: instituciones.length,
+                total_convenios: convenios.length,
+                total_solicitudes: solicitudes.length,
+                practicas_en_curso: registrosConsolidados.filter(r => r.estado === 'En Curso').length,
+                practicas_culminadas: registrosConsolidados.filter(r => r.estado === 'Culminada').length,
+                horas_aprobadas_totales: horasAprobadasTotales,
+                cumplimiento_promedio_pct: cumplimientoPromedioPct,
+                promedio_calificaciones: promedioCalificaciones,
+                total_bitacoras: bitacoras.length,
+                total_evidencias: evidencias.length
+            },
+            registros: registrosConsolidados
+        });
+    } catch (error) {
+        res.status(500).json({ error: `Error al generar informe consolidado: ${error.message}` });
+    }
+});
+
+// ============================================================================
+// ENRUTAMIENTO PRINCIPAL Y AUTO-MIGRACIÓN AL ARRANCAR
+// ============================================================================
+
+/**
+ * GET /
+ * Sirve el portal de inicio de sesión principal (`index.html`).
+ */
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Iniciar servidor en el puerto 3000
-app.listen(PORT, () => {
-    console.log(`=======================================================`);
-    console.log(`  SISTEMA DE GESTIÓN DE PRÁCTICAS UDI (BACKEND ACTIVO) `);
-    console.log(`  Servidor Node.js + Express en: http://localhost:${PORT}`);
-    console.log(`  BD 1: ${dbAcademica.nombre}`);
-    console.log(`  BD 2: ${dbSeguimiento.nombre}`);
-    console.log(`=======================================================`);
+/**
+ * Inicialización del servidor HTTP y verificación/auto-migración de ambos
+ * esquemas PostgreSQL en Supabase (`gestion_academica` y `seguimiento_practicas`).
+ */
+app.listen(PORT, async () => {
+    await Promise.all([
+        dbAcademica.inicializarEsquema(),
+        dbSeguimiento.inicializarEsquema()
+    ]);
+    console.log(`[Release 1.0] Software para la Gestión y Seguimiento de Prácticas Académicas activo en http://localhost:${PORT}`);
 });

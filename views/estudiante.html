@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Estudiante - Gestión de Prácticas UDI</title>
+    <title>Estudiante - Software para la Gestión y Seguimiento de Prácticas Académicas</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
 <header class="barra-superior">
     <div>
-        <h2 style="margin: 0; font-size: 20px;">Panel del Estudiante - Prácticas Pedagógicas</h2>
+        <h2 style="margin: 0; font-size: 20px;">Software para la Gestión y Seguimiento de Prácticas Académicas · Estudiante</h2>
         <span id="usuario-sesion-badge" style="font-size: 13px; color: #94a3b8;">Cargando sesión...</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
@@ -84,7 +84,7 @@
     <div class="seccion-tabla" style="background-color: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; max-width: 700px; margin-top: 30px;">
         <h3 style="margin-top: 0; color: #1e3a8a;">Registrar Nueva Bitácora de Actividades</h3>
         <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
-            Documenta las actividades pedagógicas y anexa la evidencia obligatoria (Secuencia UML: VistaBitacora &rarr; SeguimientoControl).
+            Documenta las actividades pedagógicas y anexa la evidencia obligatoria de tu jornada.
         </p>
         
         <form id="form-bitacora-real">
@@ -108,7 +108,7 @@
             <div class="grupo-campo">
                 <label for="evidencia" style="color: #334155 !important;">Enlace o Ruta del Archivo de Evidencia (PDF / Drive):</label>
                 <input type="url" id="evidencia" placeholder="https://drive.google.com/file/d/evidencia-practica.pdf" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
-                <small style="color: #64748b; font-size: 11px;">Relación UML: Toda Actividad incluye de forma obligatoria 1 o más registros de Evidencia.</small>
+                <small style="color: #64748b; font-size: 11px;">Adjunta de forma obligatoria el enlace o documento soporte de la actividad.</small>
             </div>
 
             <button type="submit" id="btn-guardar-bitacora" style="background-color: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px;">
@@ -284,44 +284,47 @@
 <script src="../js/db.js"></script>
 
 <script>
+    /**
+     * @fileoverview Controlador del Portal del Estudiante Practicante (views/estudiante.html).
+     * @description Sincroniza la práctica asignada, calcula el avance porcentual de horas frente
+     * a la meta MEN, registra nuevas bitácoras con evidencia (POST /api/seguimiento/bitacoras),
+     * consulta evaluaciones del tutor y abre el visor de soporte FO-EP-07.
+     */
     // 1. VALIDAR SEGURIDAD Y CONTROL DE SESIÓN
     const sesion = DB.requireRole('estudiante', '../index.html');
     if (!sesion) {
         // Redirigido automáticamente
     }
 
-    // Identificar el estudiante logueado
-    const estudianteObj = DB.findBy('Estudiante', 'correo', sesion.correo) || 
-                          DB.findBy('Estudiante', 'id_estudiante', sesion.id_estudiante) ||
-                          sesion;
-    const estudianteId = estudianteObj.id_estudiante || sesion.id_estudiante || 'EST-NUEVO';
+    let estudianteObj = sesion || {};
+    let estudianteId = (sesion && (sesion.id_estudiante || sesion.documento)) || 'EST-NUEVO';
+    let practica = null;
 
-    document.getElementById('usuario-sesion-badge').innerText = `Estudiante: ${sesion.nombre} (${estudianteId})`;
+    if (sesion) {
+        document.getElementById('usuario-sesion-badge').innerText = `Estudiante: ${sesion.nombre} (${estudianteId})`;
+    }
 
-    // 2. BUSCAR PRÁCTICA DEL ESTUDIANTE EN LA BASE DE DATOS
-    let practica = DB.findBy('Practica', 'id_estudiante', estudianteId) || 
-                   DB.findBy('Practica', 'id_estudiante', estudianteObj.documento);
+    /**
+     * Resuelve la ficha del estudiante autenticado y su práctica asignada desde los datos sincronizados.
+     * @function resolverContextoEstudiante
+     * @returns {void}
+     */
+    function resolverContextoEstudiante() {
+        if (!sesion) return;
+        estudianteObj = DB.findBy('Estudiante', 'correo', sesion.correo) ||
+                        DB.findBy('Estudiante', 'id_estudiante', sesion.id_estudiante) ||
+                        DB.findBy('Estudiante', 'documento', sesion.documento) ||
+                        sesion;
+        estudianteId = estudianteObj.id_estudiante || estudianteObj.documento || sesion.id_estudiante || 'EST-NUEVO';
+        document.getElementById('usuario-sesion-badge').innerText = `Estudiante: ${estudianteObj.nombre || sesion.nombre} (${estudianteId})`;
 
-    // Si el estudiante no tiene aún práctica registrada, asegurar que tenga su código individual
-    if (!practica && estudianteId) {
-        const practicasTotales = DB.getTable('Practica');
-        const nuevoNum = String(practicasTotales.length + 1).padStart(3, '0');
-        const tutores = DB.getTable('Tutor_Academico');
-        const colegios = DB.getTable('Institucion');
-        const tut = tutores[practicasTotales.length % (tutores.length || 1)] || { documento: 'DOC-1098234' };
-        const col = colegios[practicasTotales.length % (colegios.length || 1)] || { id_institucion: 'INST-01' };
-        const sem = parseInt(estudianteObj.semestre) || 7;
-        practica = {
-            id_practica: `PRAC-${nuevoNum}`,
-            id_estudiante: estudianteId,
-            documento: tut.documento || tut.documento_tu || 'DOC-1098234',
-            id_institucion: col.id_institucion || 'INST-01',
-            id_tipo: sem <= 4 ? 'TP-01' : (sem <= 7 ? 'TP-02' : 'TP-03'),
-            estado: 'En Curso',
-            fecha_inicio: new Date().toISOString().split('T')[0],
-            horas_objetivo: sem >= 8 ? 80 : (sem >= 5 ? 60 : 50)
-        };
-        DB.insert('Practica', practica);
+        const practicas = DB.getTable('Practica');
+        practica = practicas.find(p =>
+            p.id_estudiante === estudianteId ||
+            p.id_estudiante === estudianteObj.documento ||
+            (estudianteObj.documento && p.documento_estudiante === estudianteObj.documento)
+        ) || null;
+        actualizarCabeceraPractica(practica);
     }
 
     /**
@@ -344,23 +347,22 @@
         }
 
         const institucion = DB.findBy('Institucion', 'id_institucion', p.id_institucion);
-        const tutor = DB.findBy('Tutor_Academico', 'documento', p.documento);
+        const docTu = p.documento_tu || p.documento;
+        const tutor = DB.findBy('Tutor_Academico', 'documento_tu', docTu) || DB.findBy('Tutor_Academico', 'documento', docTu);
         const tipoPractica = DB.findBy('Tipo_Practica', 'id_tipo', p.id_tipo);
 
-        document.getElementById('info-practica-id').innerText = `${p.id_practica} - ${tipoPractica ? tipoPractica.descripcion : 'Práctica Integral'}`;
+        document.getElementById('info-practica-id').innerText = `${p.id_practica} - ${tipoPractica ? (tipoPractica.nombre || tipoPractica.descripcion) : 'Práctica Integral'}`;
         const badge = document.getElementById('badge-estado-practica');
         badge.innerText = p.estado;
         badge.style.background = p.estado === 'En Curso' ? '#dcfce7' : '#fef3c7';
         badge.style.color = p.estado === 'En Curso' ? '#15803d' : '#b45309';
 
-        document.getElementById('info-institucion').innerText = institucion ? institucion.nombre_colegio : (p.id_institucion || 'Pendiente');
+        document.getElementById('info-institucion').innerText = institucion ? (institucion.nombre_colegio || institucion.nombre) : (p.id_institucion || 'Pendiente');
         document.getElementById('info-institucion-dir').innerText = institucion ? institucion.direccion : '-';
-        document.getElementById('info-tutor').innerText = tutor ? tutor.nombre : (p.documento || 'Pendiente');
+        document.getElementById('info-tutor').innerText = tutor ? tutor.nombre : (docTu || 'Pendiente');
         document.getElementById('info-tutor-email').innerText = tutor ? tutor.correo : '-';
-        document.getElementById('info-tipo-practica').innerText = tipoPractica ? tipoPractica.descripcion : (p.id_tipo || 'Práctica Pedagógica');
+        document.getElementById('info-tipo-practica').innerText = tipoPractica ? (tipoPractica.nombre || tipoPractica.descripcion) : (p.id_tipo || 'Práctica Pedagógica');
     }
-
-    actualizarCabeceraPractica(practica);
 
     // ========================================================================
     // 3. CARGA Y PRESENTACIÓN DE ACTIVIDADES, EVIDENCIAS Y EVALUACIONES
@@ -438,7 +440,8 @@
         if (evaluaciones.length === 0) {
             tbodyEvaluaciones.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 25px;">Aún no se han emitido evaluaciones oficiales para esta práctica (0 evaluaciones).</td></tr>`;
         } else {
-            const tutor = practica ? DB.findBy('Tutor_Academico', 'documento', practica.documento) : null;
+            const docTuPrac = practica ? (practica.documento_tu || practica.documento) : '';
+            const tutor = docTuPrac ? (DB.findBy('Tutor_Academico', 'documento_tu', docTuPrac) || DB.findBy('Tutor_Academico', 'documento', docTuPrac)) : null;
             evaluaciones.forEach(ev => {
                 const filaEv = `
                     <tr>
@@ -467,70 +470,48 @@
      * 5. Respuesta HTTP 201 Created (simulada/sincronizada)
      * 6. Notificación y actualización reactiva de la interfaz
      */
-    document.getElementById('form-bitacora-real').addEventListener('submit', function(e) {
+    document.getElementById('form-bitacora-real').addEventListener('submit', async function(e) {
         e.preventDefault();
 
+        if (!practica) {
+            alert('Aún no tienes una práctica académica asignada por el Coordinador. Comunícate con Coordinación para formalizar tu colegio y tutor antes de registrar bitácoras.');
+            return;
+        }
+
         const fecha = document.getElementById('fecha').value;
-        const horas = parseInt(document.getElementById('horas').value);
+        const horas = parseInt(document.getElementById('horas').value, 10);
         const descripcion = document.getElementById('descripcion').value.trim();
         const archivoEvidencia = document.getElementById('evidencia').value.trim();
 
-        // Generar IDs correlativos
-        const totalActividades = DB.getTable('Actividad').length;
-        const nuevoIdActividad = 'ACT-' + String(totalActividades + 1).padStart(3, '0');
-        const nuevoIdEvidencia = 'EVI-' + String(DB.getTable('Evidencia').length + 1).padStart(3, '0');
+        const nuevoIdActividad = 'ACT-' + String(Date.now()).slice(-6);
 
-        // Si el estudiante no tenía práctica asignada, generar su propia práctica única
-        if (!practica) {
-            const totalPracticas = DB.getTable('Practica').length;
-            const nuevoIdPractica = 'PRAC-' + String(totalPracticas + 1).padStart(3, '0');
-            practica = {
-                id_practica: nuevoIdPractica,
-                id_estudiante: estudianteId,
-                documento: 'DOC-1098234',
-                id_institucion: 'INST-01',
-                id_tipo: 'TP-01',
-                estado: 'En Curso',
-                fecha_inicio: fecha,
-                horas_objetivo: 80
-            };
-            DB.insert('Practica', practica);
-            actualizarCabeceraPractica(practica);
+        try {
+            await DB.insert('Actividad', {
+                id_actividad: nuevoIdActividad,
+                id_practica: practica.id_practica,
+                fecha: fecha,
+                descripcion: descripcion,
+                horas_realizadas: horas,
+                evidencia: archivoEvidencia || `Evidencia_Practica_${nuevoIdActividad}.pdf`,
+                estado_aprovacion: 'Pendiente'
+            });
+
+            document.getElementById('form-bitacora-real').reset();
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+            resolverContextoEstudiante();
+            renderizarDatos();
+
+            alert('Bitácora y evidencias registradas exitosamente. Enviada a supervisión del tutor académico.');
+        } catch (err) {
+            alert(err.message || 'No se pudo registrar la bitácora en la base de datos.');
         }
-
-        // Insertar Actividad (Diagrama de Clases)
-        const nuevaActividad = {
-            id_actividad: nuevoIdActividad,
-            id_practica: practica.id_practica,
-            fecha: fecha,
-            descripcion: descripcion,
-            horas_realizadas: horas,
-            estado_aprovacion: 'Pendiente'
-        };
-        DB.insert('Actividad', nuevaActividad);
-
-        // Insertar Evidencia obligatoria (<<Include>> Asociar Evidencias a Actividades)
-        const nuevaEvidencia = {
-            id_evidencia: nuevoIdEvidencia,
-            id_actividad: nuevoIdActividad,
-            id_practica: practica.id_practica,
-            ruta_archivo: archivoEvidencia || `Evidencia_Practica_${nuevoIdActividad}.pdf`
-        };
-        DB.insert('Evidencia', nuevaEvidencia);
-
-        // Limpiar formulario y refrescar vista
-        document.getElementById('form-bitacora-real').reset();
-        document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
-        renderizarDatos();
-
-        // Mensaje del Diagrama de Secuencia
-        alert("Bitácora y evidencias registradas exitosamente (HTTP 201 Created). Enviada a supervisión del tutor académico.");
     });
 
-    // Cargar los datos al iniciar la página
-    window.onload = function() {
-        // Establecer fecha de hoy en el campo fecha
+    // Cargar los datos sincronizados con Supabase al iniciar la página
+    window.onload = async function() {
         document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        await DB.syncWithBackend();
+        resolverContextoEstudiante();
         renderizarDatos();
     };
 
@@ -587,6 +568,12 @@
 
     let evidenciaActivaParaDescarga = null;
 
+    /**
+     * Abre el modal oficial de soporte FO-EP-07 para la actividad seleccionada.
+     * @function abrirModalEvidencia
+     * @param {string} idActividad - Identificador único de la actividad/bitácora.
+     * @returns {void}
+     */
     function abrirModalEvidencia(idActividad) {
         const actividades = DB.getTable('Actividad');
         const evidencias = DB.getTable('Evidencia');
@@ -609,7 +596,8 @@
         };
 
         const p = practicas.find(pr => pr.id_practica === act.id_practica) || practica || practicas[0];
-        const tut = p ? tutores.find(t => t.documento === p.documento) : tutores[0];
+        const docTu = p ? (p.documento_tu || p.documento) : '';
+        const tut = docTu ? tutores.find(t => (t.documento_tu || t.documento) === docTu) : tutores[0];
         const inst = p ? instituciones.find(i => i.id_institucion === p.id_institucion) : instituciones[0];
 
         const detalle = DETALLES_EVIDENCIAS_CATALOGO[idActividad] || {
@@ -628,7 +616,7 @@
         document.getElementById('m-evi-estudiante').innerText = sesion.nombre;
         document.getElementById('m-evi-estudiante-correo').innerText = sesion.correo;
         document.getElementById('m-evi-tutor').innerText = tut ? tut.nombre : 'Mg. Carlos Alberto Gómez Silva';
-        document.getElementById('m-evi-institucion').innerText = inst ? inst.nombre_colegio : 'Institución Educativa Receptora';
+        document.getElementById('m-evi-institucion').innerText = inst ? (inst.nombre_colegio || inst.nombre) : 'Institución Educativa Receptora';
 
         document.getElementById('m-evi-descripcion').innerText = act.descripcion;
         document.getElementById('m-evi-metodologia').innerText = detalle.metodologia;
@@ -646,11 +634,21 @@
         modal.style.display = 'flex';
     }
 
+    /**
+     * Cierra el visor modal de evidencia FO-EP-07.
+     * @function cerrarModalEvidencia
+     * @returns {void}
+     */
     function cerrarModalEvidencia() {
         const modal = document.getElementById('modal-visor-evidencia');
         modal.style.display = 'none';
     }
 
+    /**
+     * Genera y descarga el soporte documental FO-EP-07 en formato imprimible.
+     * @function descargarEvidenciaPDF
+     * @returns {void}
+     */
     function descargarEvidenciaPDF() {
         if (!evidenciaActivaParaDescarga) return;
         const { act, evi, p, tut, inst, detalle } = evidenciaActivaParaDescarga;
@@ -714,8 +712,7 @@
 
     // Sincronización en tiempo real desde Supabase y el servidor
     window.addEventListener('db:sincronizado', function() {
-        practica = DB.findBy('Practica', 'id_estudiante', estudianteId) || DB.findBy('Practica', 'id_estudiante', estudianteObj.documento);
-        actualizarCabeceraPractica(practica);
+        resolverContextoEstudiante();
         renderizarDatos();
     });
 </script>

@@ -1,652 +1,668 @@
 /**
  * ============================================================================
- * SISTEMA INTEGRAL DE GESTIÓN DE PRÁCTICAS ACADÉMICAS (UDI)
- * CAPA DE DATOS Y PERSISTENCIA CLIENTE (JAVASCRIPT VANILLA PURO)
+ * SOFTWARE PARA LA GESTIÓN Y SEGUIMIENTO DE PRÁCTICAS ACADÉMICAS (UDI)
+ * CAPA DE DATOS Y SINCRONIZACIÓN CLIENTE (100% API REST / SUPABASE)
  * ============================================================================
- * 
- * Basado estrictamente en los diagramas UML del proyecto:
- * - Diagrama de Casos de Uso (Estudiante, Tutor Académico, Coordinador, Institución)
- * - Diagrama de Secuencia (Registro de Bitácora y Evidencia: HTTP 201 Created)
- * - Diagrama de Clases (Estudiante, Tutor, Institución, Tipo, Práctica, Actividad, Evidencia, Evaluación)
- * 
- * Funcionalidad:
- * Provee almacenamiento local de contingencia (localStorage) y sincronización
- * asíncrona bidireccional con el backend en Node.js y PostgreSQL en Supabase.
+ *
+ * Arquitectura Cliente:
+ *  Todos los listados y entidades operativas se consultan y persisten
+ *  exclusivamente contra la API REST conectada a Supabase PostgreSQL:
+ *   - Microservicio 1: Gestión Académica (`/api/academica/*`, `/api/solicitudes`)
+ *   - Microservicio 2: Seguimiento de Prácticas (`/api/seguimiento/*`)
+ *   - Orquestación y Reportes (`/api/reportes/consolidado`)
+ *
+ * Nota: `localStorage` se utiliza únicamente para mantener la sesión activa
+ * del usuario autenticado (`SIGP_SESION_ACTIVA`).
  */
 
-// Clave única para aislamiento de la memoria local en el navegador (V5 con 5 estudiantes oficiales normalizados)
-const CLAVE_ALMACENAMIENTO_LOCAL = 'SIGP_DATABASE_UDI_V5';
-
-// Estructura semilla inicial modelada exactamente según el Diagrama de Clases UML
-const datosSemillaInicial = {
-    Estudiante: [
-        { id_estudiante: 'EST-2024-01', documento: '1098234501', nombre: 'Camilo Andrés Rangel Moreno', correo: 'estudiante@udi.edu.co', semestre: 7, clave: 'estudiante123' },
-        { id_estudiante: 'EST-2024-02', documento: '1098234502', nombre: 'Edwin Fabián Quiroga Díaz', correo: 'edwin.quiroga@udi.edu.co', semestre: 8, clave: 'edwin123' },
-        { id_estudiante: 'EST-2024-03', documento: '1098234503', nombre: 'Laura Valentina Morales Gómez', correo: 'laura.morales@udi.edu.co', semestre: 6, clave: 'laura123' },
-        { id_estudiante: 'EST-2024-04', documento: '1098234504', nombre: 'María Camila Sotomayor Peña', correo: 'marias@udi.edu.co', semestre: 6, clave: 'estudiante123' },
-        { id_estudiante: 'EST-2024-05', documento: '1098234505', nombre: 'María Fernanda Vargas Suárez', correo: 'maria@udi.edu.co', semestre: 7, clave: 'estudiante123' }
-    ],
-    Tutor_Academico: [
-        { documento: 'DOC-1098234', documento_tu: 'DOC-1098234', nombre: 'Mg. Carlos Alberto Gómez Silva', correo: 'docente@udi.edu.co', clave: 'docente123', especialidad: 'Didáctica de la Lengua' },
-        { documento: 'DOC-1098567', documento_tu: 'DOC-1098567', nombre: 'Dra. Sandra Milena Peña Castillo', correo: 'sandra.pena@udi.edu.co', clave: 'sandra123', especialidad: 'Pedagogía Infantil' }
-    ],
-    Coordinador: [
-        { id_coordinador: 'COORD-001', nombre: 'Dra. María Elena Torres', correo: 'coordinador@udi.edu.co', clave: 'coordinador123', departamento: 'Coordinación de Prácticas Pedagógicas' },
-        { id_coordinador: 'DIR-001', nombre: 'Dr. Roberto Mendoza (Director)', correo: 'director@udi.edu.co', clave: 'director123', departamento: 'Dirección de Programa' }
-    ],
-    Institucion: [
-        { id_institucion: 'INST-01', nombre_colegio: 'Colegio Custodio García Rovira', direccion: 'Cra 15 # 45-20, Bucaramanga', correo: 'colegio@udi.edu.co', clave: 'colegio123', telefono: '607-6345000', contacto: 'Lic. Martha Gómez' },
-        { id_institucion: 'INST-02', nombre_colegio: 'Instituto Técnico Dámaso Zapata', direccion: 'Calle 10 # 28-35, Bucaramanga', correo: 'damaso@udi.edu.co', clave: 'damaso123', telefono: '607-6452211', contacto: 'Esp. Jairo Ortiz' },
-        { id_institucion: 'INST-03', nombre_colegio: 'Colegio Santander Sede A', direccion: 'Calle 9 # 15-40, Bucaramanga', correo: 'santander@udi.edu.co', clave: 'santander123', telefono: '607-6321900', contacto: 'Dra. Beatriz Rico' }
-    ],
-    Tipo_Practica: [
-        { id_tipo: 'TP-01', descripcion: 'Práctica de Observación Pedagógica I' },
-        { id_tipo: 'TP-02', descripcion: 'Práctica de Inmersión y Diagnóstico II' },
-        { id_tipo: 'TP-03', descripcion: 'Práctica Pedagógica Integral e Intervención III' }
-    ],
-    Practica: [
-        {
-            id_practica: 'PRAC-001',
-            id_estudiante: 'EST-2024-01',
-            documento: 'DOC-1098234',
-            id_institucion: 'INST-01',
-            id_tipo: 'TP-03',
-            estado: 'En Curso',
-            fecha_inicio: '2026-02-01',
-            horas_objetivo: 80
-        },
-        {
-            id_practica: 'PRAC-002',
-            id_estudiante: 'EST-2024-02',
-            documento: 'DOC-1098234',
-            id_institucion: 'INST-02',
-            id_tipo: 'TP-03',
-            estado: 'En Curso',
-            fecha_inicio: '2026-02-01',
-            horas_objetivo: 80
-        },
-        {
-            id_practica: 'PRAC-003',
-            id_estudiante: 'EST-2024-03',
-            documento: 'DOC-1098567',
-            id_institucion: 'INST-03',
-            id_tipo: 'TP-02',
-            estado: 'En Curso',
-            fecha_inicio: '2026-03-01',
-            horas_objetivo: 60
-        },
-        {
-            id_practica: 'PRAC-004',
-            id_estudiante: 'EST-2024-04',
-            documento: 'DOC-1098567',
-            id_institucion: 'INST-01',
-            id_tipo: 'TP-01',
-            estado: 'En Curso',
-            fecha_inicio: '2026-03-01',
-            horas_objetivo: 50
-        }
-    ],
-    Actividad: [
-        {
-            id_actividad: 'ACT-001',
-            id_practica: 'PRAC-001',
-            fecha: '2026-03-05',
-            descripcion: 'Diagnóstico de lectura y escritura en grado 4°A. Aplicación de prueba diagnóstica y rúbrica.',
-            horas_realizadas: 4,
-            estado_aprovacion: 'Aprobado'
-        },
-        {
-            id_actividad: 'ACT-002',
-            id_practica: 'PRAC-001',
-            fecha: '2026-03-12',
-            descripcion: 'Diseño e implementación de taller de comprensión lectora mediante el uso de cuentos interactivos.',
-            horas_realizadas: 5,
-            estado_aprovacion: 'Aprobado'
-        },
-        {
-            id_actividad: 'ACT-003',
-            id_practica: 'PRAC-001',
-            fecha: '2026-03-19',
-            descripcion: 'Acompañamiento pedagógico en aula regular y refuerzo a estudiantes con barreras para el aprendizaje.',
-            horas_realizadas: 4,
-            estado_aprovacion: 'Pendiente'
-        },
-        {
-            id_actividad: 'ACT-004',
-            id_practica: 'PRAC-002',
-            fecha: '2026-03-10',
-            descripcion: 'Observación participante en clase de Ciencias Sociales y formulación de plan de clase integrado.',
-            horas_realizadas: 6,
-            estado_aprovacion: 'Aprobado'
-        },
-        {
-            id_actividad: 'ACT-005',
-            id_practica: 'PRAC-002',
-            fecha: '2026-03-18',
-            descripcion: 'Diseño de rúbrica de evaluación formativa y taller de geografía interactiva con mapas temáticos.',
-            horas_realizadas: 5,
-            estado_aprovacion: 'Aprobado'
-        },
-        {
-            id_actividad: 'ACT-006',
-            id_practica: 'PRAC-003',
-            fecha: '2026-03-08',
-            descripcion: 'Diagnóstico situacional del aula de inclusión y caracterización de estilos de aprendizaje bajo el modelo DUA.',
-            horas_realizadas: 5,
-            estado_aprovacion: 'Aprobado'
-        },
-        {
-            id_actividad: 'ACT-007',
-            id_practica: 'PRAC-003',
-            fecha: '2026-03-16',
-            descripcion: 'Implementación de material manipulativo para estimulación sensoriomotora en lenguaje inicial.',
-            horas_realizadas: 5,
-            estado_aprovacion: 'Aprobado'
-        },
-        {
-            id_actividad: 'ACT-008',
-            id_practica: 'PRAC-004',
-            fecha: '2026-03-14',
-            descripcion: 'Observación guiada en aula y registro etnográfico de dinámicas de convivencia escolar.',
-            horas_realizadas: 4,
-            estado_aprovacion: 'Aprobado'
-        },
-        {
-            id_actividad: 'ACT-009',
-            id_practica: 'PRAC-004',
-            fecha: '2026-03-21',
-            descripcion: 'Apoyo en organización de rincones de lectura y actividades lúdicas de iniciación literaria.',
-            horas_realizadas: 4,
-            estado_aprovacion: 'Pendiente'
-        }
-    ],
-    Evidencia: [
-        {
-            id_evidencia: 'EVI-001',
-            id_actividad: 'ACT-001',
-            id_practica: 'PRAC-001',
-            ruta_archivo: 'https://drive.google.com/file/d/diagnostico-grado-4a.pdf'
-        },
-        {
-            id_evidencia: 'EVI-002',
-            id_actividad: 'ACT-002',
-            id_practica: 'PRAC-001',
-            ruta_archivo: 'https://drive.google.com/file/d/taller-comprension-lectora.pdf'
-        },
-        {
-            id_evidencia: 'EVI-003',
-            id_actividad: 'ACT-003',
-            id_practica: 'PRAC-001',
-            ruta_archivo: 'https://drive.google.com/file/d/registro-acompanamiento-semana3.pdf'
-        },
-        {
-            id_evidencia: 'EVI-004',
-            id_actividad: 'ACT-004',
-            id_practica: 'PRAC-002',
-            ruta_archivo: 'https://drive.google.com/file/d/plan-clase-sociales-evidencia.pdf'
-        },
-        {
-            id_evidencia: 'EVI-005',
-            id_actividad: 'ACT-005',
-            id_practica: 'PRAC-002',
-            ruta_archivo: 'https://drive.google.com/file/d/rubrica-geografia-interactiva.pdf'
-        },
-        {
-            id_evidencia: 'EVI-006',
-            id_actividad: 'ACT-006',
-            id_practica: 'PRAC-003',
-            ruta_archivo: 'https://drive.google.com/file/d/diagnostico-aula-inclusion-damaso.pdf'
-        },
-        {
-            id_evidencia: 'EVI-007',
-            id_actividad: 'ACT-007',
-            id_practica: 'PRAC-003',
-            ruta_archivo: 'https://drive.google.com/file/d/guia-material-manipulativo.pdf'
-        },
-        {
-            id_evidencia: 'EVI-008',
-            id_actividad: 'ACT-008',
-            id_practica: 'PRAC-004',
-            ruta_archivo: 'https://drive.google.com/file/d/diario-campo-observacion-santander.pdf'
-        },
-        {
-            id_evidencia: 'EVI-009',
-            id_actividad: 'ACT-009',
-            id_practica: 'PRAC-004',
-            ruta_archivo: 'https://drive.google.com/file/d/registro-rincones-lectura.pdf'
-        }
-    ],
-    Evaluacion: [
-        {
-            id_evaluacion: 'EVAL-001',
-            id_practica: 'PRAC-001',
-            documento: 'DOC-1098234',
-            calificacion: 4.8,
-            observaciones: 'Excelente pertinencia en el diseño de los instrumentos y sólida fundamentación pedagógica.',
-            fecha_evaluacion: '2026-03-15'
-        },
-        {
-            id_evaluacion: 'EVAL-002',
-            id_practica: 'PRAC-002',
-            documento: 'DOC-1098234',
-            calificacion: 4.7,
-            observaciones: 'Excelente iniciativa en la formulación de secuencias didácticas de ciencias sociales.',
-            fecha_evaluacion: '2026-03-20'
-        },
-        {
-            id_evaluacion: 'EVAL-003',
-            id_practica: 'PRAC-003',
-            documento: 'DOC-1098567',
-            calificacion: 4.9,
-            observaciones: 'Compromiso ejemplar con los estudiantes de inclusión y gran sensibilidad pedagógica.',
-            fecha_evaluacion: '2026-03-22'
-        },
-        {
-            id_evaluacion: 'EVAL-004',
-            id_practica: 'PRAC-004',
-            documento: 'DOC-1098567',
-            calificacion: 4.6,
-            observaciones: 'Muy buena capacidad de observación e identificación de necesidades socioeducativas en aula.',
-            fecha_evaluacion: '2026-03-25'
-        }
-    ],
-    Convenio: [
-        {
-            id_convenio: 'CONV-2026-01',
-            id_institucion: 'INST-01',
-            resolucion: 'RES-MEN-045/2026',
-            cupos_autorizados: 15,
-            fecha_inicio: '2026-01-15',
-            fecha_vencimiento: '2027-01-15',
-            estado: 'Firmado y Vigente',
-            firmado_por: 'Dr. Roberto Mendoza (Director)'
-        },
-        {
-            id_convenio: 'CONV-2026-02',
-            id_institucion: 'INST-02',
-            resolucion: 'RES-MEN-089/2026',
-            cupos_autorizados: 10,
-            fecha_inicio: '2026-02-01',
-            fecha_vencimiento: '2027-02-01',
-            estado: 'Pendiente Firma Rectoral',
-            firmado_por: null
-        },
-        {
-            id_convenio: 'CONV-2026-03',
-            id_institucion: 'INST-03',
-            resolucion: 'RES-MEN-112/2026',
-            cupos_autorizados: 12,
-            fecha_inicio: '2026-03-01',
-            fecha_vencimiento: '2027-03-01',
-            estado: 'Pendiente Firma Rectoral',
-            firmado_por: null
-        }
-    ]
-};
+/**
+ * Normaliza el campo `semestre` permitiendo nulos o ausencia en Estudiante.
+ * @param {*} valor - Valor recibido del formulario o backend.
+ * @returns {number|null} Entero válido o null.
+ */
+function normalizarSemestreCliente(valor) {
+    if (valor === undefined || valor === null || valor === '' || String(valor).toLowerCase() === 'undefined') return null;
+    const parsed = parseInt(valor, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+}
 
 /**
- * Objeto singleton que encapsula las operaciones de datos, sesiones y sincronización.
+ * Sanea cadenas de texto evitando literales "undefined" o "null".
+ * @param {*} valor - Valor a limpiar.
+ * @param {string} [porDefecto=''] - Valor por defecto.
+ * @returns {string} Texto saneado.
+ */
+function limpiarTextoCliente(valor, porDefecto = '') {
+    if (valor === undefined || valor === null) return porDefecto;
+    const s = String(valor).trim();
+    if (!s || s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null') return porDefecto;
+    return s;
+}
+
+/**
+ * Almacén reactivo en memoria (RAM), poblado exclusivamente desde la API del servidor.
+ */
+const almacenMemoria = {
+    Estudiante: [],
+    Tutor_Academico: [],
+    Coordinador: [],
+    Institucion: [],
+    Tipo_Practica: [
+        { id_tipo: 'TP-01', nombre: 'Práctica de Observación Pedagógica I', descripcion: 'Práctica de Observación Pedagógica I' },
+        { id_tipo: 'TP-02', nombre: 'Práctica de Inmersión y Diagnóstico II', descripcion: 'Práctica de Inmersión y Diagnóstico II' },
+        { id_tipo: 'TP-03', nombre: 'Práctica Pedagógica Integral e Intervención III', descripcion: 'Práctica Pedagógica Integral e Intervención III' }
+    ],
+    Practica: [],
+    Actividad: [],
+    Evidencia: [],
+    Evaluacion: [],
+    Convenio: [],
+    Solicitudes: []
+};
+
+let sincronizacionEnCurso = null;
+
+/**
+ * Objeto singleton que encapsula las operaciones CRUD contra la API REST,
+ * control de sesión y generación de informes consolidados.
  */
 const DB = {
     /**
-     * Inicializa el almacén en localStorage si no existe o sincroniza tablas nuevas.
+     * Inicializa el cliente eliminando cualquier caché obsoleta de tablas en `localStorage`
+     * para garantizar sincronización real multi-computador desde Supabase.
+     * @returns {void}
      */
     init() {
-        if (!localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL)) {
-            localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosSemillaInicial));
-        } else {
-            try {
-                const datosGuardados = JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL));
-                let huboActualizaciones = false;
-                if (!datosGuardados.Convenio) {
-                    datosGuardados.Convenio = datosSemillaInicial.Convenio;
-                    huboActualizaciones = true;
-                }
-                if (huboActualizaciones) {
-                    localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosGuardados));
-                }
-            } catch (error) {
-                localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datosSemillaInicial));
-            }
-        }
-
-        // Saneamiento de consistencia: si hay aspirantes en espera en solicitudes_aspirantes,
-        // garantizar que no existan aún en la tabla oficial Estudiante hasta que el Coordinador los apruebe
         try {
-            const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
-            const correosEnEspera = solicitudes
-                .filter(s => s.estado === 'Pendiente' || !s.estado)
-                .map(s => String(s.correo || '').trim().toLowerCase());
-
-            if (correosEnEspera.length > 0) {
-                const datos = JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL));
-                if (datos && Array.isArray(datos.Estudiante)) {
-                    const cantOriginal = datos.Estudiante.length;
-                    datos.Estudiante = datos.Estudiante.filter(e => 
-                        !correosEnEspera.includes(String(e.correo || '').trim().toLowerCase())
-                    );
-                    if (datos.Estudiante.length !== cantOriginal) {
-                        localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datos));
-                    }
-                }
-            }
-        } catch (e) {
-            // Ignorar errores de parseo
-        }
+            localStorage.removeItem('SIGP_DATABASE_UDI_V5');
+            localStorage.removeItem('solicitudes_aspirantes');
+        } catch (_) {}
     },
 
     /**
-     * Lee y retorna todas las colecciones de datos almacenadas.
-     * @returns {Object} Objeto completo con todas las tablas.
+     * Retorna el almacén en memoria actual con todas las colecciones cargadas desde el servidor.
+     * @returns {Object} Diccionario completo de entidades.
      */
     getAll() {
-        this.init();
-        try {
-            return JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO_LOCAL)) || datosSemillaInicial;
-        } catch (error) {
-            console.error('Error al parsear base de datos local:', error);
-            return datosSemillaInicial;
-        }
+        return almacenMemoria;
     },
 
     /**
-     * Persiste el objeto completo en localStorage.
-     * @param {Object} datos - Estructura de datos a guardar.
-     */
-    saveAll(datos) {
-        localStorage.setItem(CLAVE_ALMACENAMIENTO_LOCAL, JSON.stringify(datos));
-    },
-
-    /**
-     * Sincroniza bidireccionalmente el almacén local con los endpoints del servidor en Supabase.
-     * Descarga estudiantes, solicitudes, bitácoras y prácticas actualizadas para que
-     * cualquier cambio realizado en la nube o en otro navegador (VS Code o vista previa)
-     * se refleje de manera inmediata e idéntica.
-     * 
+     * Sincroniza todas las entidades en tiempo real directamente desde la API REST conectada a Supabase.
+     * Reemplaza los listados en memoria con el estado exacto del servidor.
+     *
      * @async
-     * @function syncWithBackend
-     * @returns {Promise<boolean>}
+     * @returns {Promise<boolean>} Verdadero si la sincronización finalizó correctamente.
      */
     async syncWithBackend() {
-        try {
-            const datos = this.getAll();
-            let huboCambios = false;
+        if (sincronizacionEnCurso) return sincronizacionEnCurso;
 
-            // 1. Sincronizar estudiantes desde PostgreSQL
+        sincronizacionEnCurso = (async () => {
             try {
-                const resEst = await fetch('/api/academica/estudiantes');
-                if (resEst.ok) {
-                    const estudiantesNube = await resEst.json();
-                    if (Array.isArray(estudiantesNube)) {
-                        estudiantesNube.forEach(est => {
-                            const doc = String(est.documento || '').trim();
-                            const id = doc.startsWith('EST') ? doc : `EST-2024-${doc.slice(-2)}`;
-                            const indice = (datos.Estudiante || []).findIndex(e => 
-                                String(e.correo || '').toLowerCase() === String(est.correo || '').toLowerCase() ||
-                                String(e.id_estudiante || '') === id ||
-                                String(e.documento || '') === doc
+                const [
+                    resEst,
+                    resSol,
+                    resTut,
+                    resInst,
+                    resTipos,
+                    resPrac,
+                    resConv,
+                    resCoord,
+                    resBit,
+                    resEvi,
+                    resEval
+                ] = await Promise.allSettled([
+                    fetch('/api/academica/estudiantes', { cache: 'no-store' }),
+                    fetch('/api/solicitudes', { cache: 'no-store' }),
+                    fetch('/api/academica/tutores', { cache: 'no-store' }),
+                    fetch('/api/academica/instituciones', { cache: 'no-store' }),
+                    fetch('/api/academica/tipos-practica', { cache: 'no-store' }),
+                    fetch('/api/academica/practicas', { cache: 'no-store' }),
+                    fetch('/api/academica/convenios', { cache: 'no-store' }),
+                    fetch('/api/academica/coordinadores', { cache: 'no-store' }),
+                    fetch('/api/seguimiento/bitacoras', { cache: 'no-store' }),
+                    fetch('/api/seguimiento/evidencias', { cache: 'no-store' }),
+                    fetch('/api/seguimiento/evaluaciones', { cache: 'no-store' })
+                ]);
+
+                // 1. Estudiantes
+                if (resEst.status === 'fulfilled' && resEst.value.ok) {
+                    const lista = await resEst.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Estudiante = lista.map(est => {
+                            const doc = limpiarTextoCliente(est.documento || est.id_estudiante);
+                            const idEst = limpiarTextoCliente(est.id_estudiante) || (doc.startsWith('EST') ? doc : `EST-2024-${doc.slice(-2)}`);
+                            return {
+                                id_estudiante: idEst,
+                                documento: doc,
+                                nombre: limpiarTextoCliente(est.nombre),
+                                correo: limpiarTextoCliente(est.correo).toLowerCase(),
+                                semestre: normalizarSemestreCliente(est.semestre),
+                                telefono: limpiarTextoCliente(est.telefono),
+                                clave: limpiarTextoCliente(est.clave || est.password, 'estudiante123')
+                            };
+                        });
+                    }
+                }
+
+                // 2. Instituciones (unificando nombre y nombre_colegio)
+                if (resInst.status === 'fulfilled' && resInst.value.ok) {
+                    const lista = await resInst.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Institucion = lista.map(i => {
+                            const nombreUnificado = limpiarTextoCliente(i.nombre_colegio || i.nombre, i.id_institucion);
+                            return {
+                                id_institucion: limpiarTextoCliente(i.id_institucion),
+                                nombre: nombreUnificado,
+                                nombre_colegio: nombreUnificado,
+                                direccion: limpiarTextoCliente(i.direccion, 'Por definir'),
+                                ciudad: limpiarTextoCliente(i.ciudad, 'Bucaramanga'),
+                                correo: limpiarTextoCliente(i.correo, `${String(i.id_institucion || '').toLowerCase()}@udi.edu.co`).toLowerCase(),
+                                clave: limpiarTextoCliente(i.clave || i.password, 'colegio123'),
+                                telefono: limpiarTextoCliente(i.telefono || i.contacto),
+                                contacto: limpiarTextoCliente(i.contacto || i.telefono)
+                            };
+                        });
+                    }
+                }
+
+                // 3. Solicitudes de aspirantes
+                if (resSol.status === 'fulfilled' && resSol.value.ok) {
+                    const lista = await resSol.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Solicitudes = lista.map(s => {
+                            const idPref = limpiarTextoCliente(s.id_institucion_preferencia, 'POR_ASIGNAR');
+                            const instMatch = almacenMemoria.Institucion.find(i => i.id_institucion === idPref);
+                            const nomPref = instMatch
+                                ? instMatch.nombre_colegio
+                                : (limpiarTextoCliente(s.institucion_preferencia) || (idPref === 'POR_ASIGNAR' ? 'A criterio del Coordinador' : idPref));
+                            return {
+                                id_solicitud: limpiarTextoCliente(s.id_solicitud || s.id),
+                                id: limpiarTextoCliente(s.id_solicitud || s.id),
+                                nombre: limpiarTextoCliente(s.nombre),
+                                correo: limpiarTextoCliente(s.correo).toLowerCase(),
+                                semestre: normalizarSemestreCliente(s.semestre),
+                                id_institucion_preferencia: idPref,
+                                institucion_preferencia: nomPref,
+                                estado: limpiarTextoCliente(s.estado, 'Pendiente'),
+                                fecha: limpiarTextoCliente(s.fecha, 'Reciente'),
+                                clave: limpiarTextoCliente(s.clave || s.password, 'estudiante123')
+                            };
+                        });
+                    }
+                }
+
+                // 4. Tutores académicos (unificando documento_tu y documento)
+                if (resTut.status === 'fulfilled' && resTut.value.ok) {
+                    const lista = await resTut.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Tutor_Academico = lista.map(t => {
+                            const docTu = limpiarTextoCliente(t.documento_tu || t.documento);
+                            return {
+                                documento_tu: docTu,
+                                documento: docTu,
+                                nombre: limpiarTextoCliente(t.nombre),
+                                correo: limpiarTextoCliente(t.correo).toLowerCase(),
+                                especialidad: limpiarTextoCliente(t.especialidad, 'Pedagogía y Didáctica'),
+                                telefono: limpiarTextoCliente(t.telefono),
+                                clave: limpiarTextoCliente(t.clave || t.password, 'docente123')
+                            };
+                        }).filter(t => t.documento_tu !== '');
+                    }
+                }
+
+                // 5. Tipos de Práctica
+                if (resTipos.status === 'fulfilled' && resTipos.value.ok) {
+                    const lista = await resTipos.value.json();
+                    if (Array.isArray(lista) && lista.length > 0) {
+                        almacenMemoria.Tipo_Practica = lista.map(tp => ({
+                            id_tipo: tp.id_tipo,
+                            nombre: tp.nombre || tp.descripcion,
+                            descripcion: tp.nombre || tp.descripcion
+                        }));
+                    }
+                }
+
+                // 6. Prácticas
+                if (resPrac.status === 'fulfilled' && resPrac.value.ok) {
+                    const lista = await resPrac.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Practica = lista.map(p => {
+                            const estMatch = almacenMemoria.Estudiante.find(e =>
+                                e.documento === p.documento || e.id_estudiante === p.id_estudiante || e.id_estudiante === p.documento
                             );
-                            const nombreCompleto = est.apellido ? `${est.nombre} ${est.apellido}`.trim() : est.nombre;
-                            if (indice === -1) {
-                                datos.Estudiante.push({
-                                    id_estudiante: id,
-                                    documento: doc,
-                                    nombre: nombreCompleto,
-                                    correo: est.correo,
-                                    semestre: parseInt(est.semestre) || 7,
-                                    clave: 'estudiante123'
-                                });
-                                huboCambios = true;
-                            } else {
-                                datos.Estudiante[indice].nombre = nombreCompleto || datos.Estudiante[indice].nombre;
-                                datos.Estudiante[indice].semestre = parseInt(est.semestre) || datos.Estudiante[indice].semestre;
-                            }
+                            const idEst = estMatch
+                                ? estMatch.id_estudiante
+                                : (limpiarTextoCliente(p.id_estudiante) || limpiarTextoCliente(p.documento));
+                            const docTu = limpiarTextoCliente(p.documento_tu, 'DOC-1098234');
+                            return {
+                                id_practica: limpiarTextoCliente(p.id_practica),
+                                id_estudiante: idEst,
+                                documento_estudiante: limpiarTextoCliente(p.documento_estudiante || p.documento),
+                                documento: docTu,
+                                documento_tu: docTu,
+                                id_institucion: limpiarTextoCliente(p.id_institucion, 'INST-01'),
+                                id_tipo: limpiarTextoCliente(p.id_tipo, 'TP-01'),
+                                estado: limpiarTextoCliente(p.estado, 'En Curso'),
+                                fecha_inicio: limpiarTextoCliente(p.fecha_ini || p.fecha_inicio, '2026-02-01'),
+                                horas_cumplidas: parseInt(p.horas_cumplidas, 10) || 0,
+                                horas_objetivo: parseInt(p.horas_objetivo, 10) || 80,
+                                validado_institucion: Boolean(p.validado_institucion),
+                                autorizado_director: Boolean(p.autorizado_director)
+                            };
                         });
                     }
                 }
-            } catch (e) {}
 
-            // 2. Sincronizar solicitudes de aspirantes desde el servidor
-            try {
-                const resSol = await fetch('/api/solicitudes');
-                if (resSol.ok) {
-                    const solicitudesNube = await resSol.json();
-                    if (Array.isArray(solicitudesNube)) {
-                        localStorage.setItem('solicitudes_aspirantes', JSON.stringify(solicitudesNube));
+                // 7. Convenios
+                if (resConv.status === 'fulfilled' && resConv.value.ok) {
+                    const lista = await resConv.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Convenio = lista;
                     }
                 }
-            } catch (e) {}
 
-            // 3. Sincronizar prácticas desde la base de datos
-            try {
-                const resPrac = await fetch('/api/academica/practicas');
-                if (resPrac.ok) {
-                    const practicasNube = await resPrac.json();
-                    if (Array.isArray(practicasNube)) {
-                        practicasNube.forEach(p => {
-                            const existe = (datos.Practica || []).some(pr => pr.id_practica === p.id_practica);
-                            if (!existe) {
-                                datos.Practica.push({
-                                    id_practica: p.id_practica,
-                                    id_estudiante: p.documento ? (p.documento.startsWith('EST') ? p.documento : `EST-2024-${p.documento.slice(-2)}`) : 'EST-2024-01',
-                                    documento: p.documento_tu || 'DOC-1098234',
-                                    id_institucion: p.id_institucion || 'INST-01',
-                                    id_tipo: p.id_tipo || 'TP-01',
-                                    estado: p.estado || 'En Curso',
-                                    fecha_inicio: p.fecha_ini || '2026-02-01',
-                                    horas_objetivo: 80
-                                });
-                                huboCambios = true;
-                            }
+                // 8. Coordinadores
+                if (resCoord.status === 'fulfilled' && resCoord.value.ok) {
+                    const lista = await resCoord.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Coordinador = lista;
+                    }
+                }
+
+                // 9. Bitácoras -> Actividades
+                if (resBit.status === 'fulfilled' && resBit.value.ok) {
+                    const lista = await resBit.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Actividad = lista.map(b => ({
+                            id_actividad: b.id_bitacora,
+                            id_practica: b.id_practica,
+                            fecha: b.fecha,
+                            descripcion: b.descripcion,
+                            observaciones: b.observaciones || null,
+                            horas_realizadas: parseInt(b.horas, 10) || 4,
+                            estado_aprovacion: b.estado || 'Pendiente'
+                        }));
+                    }
+                }
+
+                // 10. Evidencias
+                if (resEvi.status === 'fulfilled' && resEvi.value.ok) {
+                    const lista = await resEvi.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Evidencia = lista.map(ev => ({
+                            id_evidencia: ev.id_evidencia,
+                            id_actividad: ev.id_bitacora || ev.id_actividad,
+                            id_practica: ev.id_practica,
+                            ruta_archivo: ev.archivo || ev.ruta_archivo
+                        }));
+                    }
+                }
+
+                // 11. Evaluaciones
+                if (resEval.status === 'fulfilled' && resEval.value.ok) {
+                    const lista = await resEval.value.json();
+                    if (Array.isArray(lista)) {
+                        almacenMemoria.Evaluacion = lista.map(ev => {
+                            const docTu = limpiarTextoCliente(ev.documento_tu || ev.documento);
+                            return {
+                                id_evaluacion: ev.id_evaluacion,
+                                id_practica: ev.id_practica,
+                                documento: docTu,
+                                documento_tu: docTu,
+                                calificacion: parseFloat(ev.calificacion),
+                                observaciones: ev.observaciones,
+                                fecha_evaluacion: ev.fecha || ev.fecha_evaluacion
+                            };
                         });
                     }
                 }
-            } catch (e) {}
 
-            if (huboCambios) {
-                this.saveAll(datos);
+                window.dispatchEvent(new CustomEvent('db:sincronizado'));
+                return true;
+            } catch (_) {
+                return false;
+            } finally {
+                sincronizacionEnCurso = null;
             }
+        })();
 
-            // Disparar evento para que las interfaces reactivas se actualicen en pantalla
-            window.dispatchEvent(new CustomEvent('db:sincronizado'));
-            return true;
-        } catch (e) {
-            return false;
-        }
+        return sincronizacionEnCurso;
     },
 
     /**
-     * Retorna el arreglo de registros correspondiente a una tabla específica.
-     * @param {string} nombreTabla - Nombre de la entidad (ej: 'Estudiante', 'Practica').
+     * Consulta el informe consolidado en tiempo real orquestado por el servidor
+     * directamente desde Supabase PostgreSQL.
+     *
+     * @async
+     * @param {Object} [filtros={}] - Filtros opcionales `{ estado, q }`.
+     * @returns {Promise<Object>} Objeto con `resumen_auditoria` y `registros`.
+     */
+    async getConsolidatedReport(filtros = {}) {
+        const params = new URLSearchParams();
+        if (filtros.estado && filtros.estado !== 'todos') params.set('estado', filtros.estado);
+        if (filtros.q) params.set('q', filtros.q);
+
+        const url = `/api/reportes/consolidado${params.toString() ? `?${params.toString()}` : ''}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+            throw new Error('No fue posible consultar el reporte consolidado desde el servidor.');
+        }
+        return await res.json();
+    },
+
+    /**
+     * Retorna todos los registros pertenecientes a una entidad cargada en memoria.
+     * @param {string} nombreTabla - Nombre de la entidad.
      * @returns {Array<Object>} Arreglo de registros.
      */
     getTable(nombreTabla) {
-        const datos = this.getAll();
-        return datos[nombreTabla] || [];
+        return almacenMemoria[nombreTabla] || [];
     },
 
     /**
-     * Inserta un nuevo registro en una tabla y dispara sincronización con la API en la nube.
-     * @param {string} nombreTabla - Nombre de la entidad destino.
-     * @param {Object} nuevoRegistro - Datos a insertar.
-     * @returns {Object} Registro insertado.
+     * Retorna las solicitudes de aspirantes en espera obtenidas del servidor.
+     * @returns {Array<Object>} Listado de solicitudes.
      */
-    insert(nombreTabla, nuevoRegistro) {
-        const datos = this.getAll();
-        if (!datos[nombreTabla]) {
-            datos[nombreTabla] = [];
-        }
-        datos[nombreTabla].push(nuevoRegistro);
-        this.saveAll(datos);
+    getSolicitudes() {
+        return almacenMemoria.Solicitudes || [];
+    },
 
-        // Sincronización asíncrona en segundo plano con la base de datos PostgreSQL en Supabase
-        try {
-            if (nombreTabla === 'Estudiante') {
-                fetch('/api/academica/estudiantes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        documento: nuevoRegistro.documento || nuevoRegistro.id_estudiante,
-                        nombre: nuevoRegistro.nombre,
-                        apellido: nuevoRegistro.apellido || '',
-                        correo: nuevoRegistro.correo,
-                        semestre: nuevoRegistro.semestre || 7,
-                        telefono: nuevoRegistro.telefono || ''
-                    })
-                }).catch(() => {});
-            } else if (nombreTabla === 'Actividad' || nombreTabla === 'Bitacora') {
-                // Determinar el id_practica real del registro
-                let idPracticaReal = nuevoRegistro.id_practica;
-                if (!idPracticaReal) {
-                    const sesionActiva = JSON.parse(sessionStorage.getItem('usuario_sesion') || '{}');
-                    const estudianteActual = sesionActiva.id_estudiante || sesionActiva.correo;
-                    const prac = (datos.Practica || []).find(p => p.id_estudiante === estudianteActual || p.id_estudiante === sesionActiva.id_estudiante);
-                    idPracticaReal = prac ? prac.id_practica : 'PRAC-001';
-                }
-                fetch('/api/bitacoras', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id_bitacora: nuevoRegistro.id_actividad || nuevoRegistro.id_bitacora,
-                        id_practica: idPracticaReal,
-                        fecha: nuevoRegistro.fecha,
-                        descripcion: nuevoRegistro.descripcion,
-                        horas: nuevoRegistro.horas_realizadas || nuevoRegistro.horas || 4,
-                        archivo: nuevoRegistro.evidencia || nuevoRegistro.archivo || ''
-                    })
-                }).catch(() => {});
-            } else if (nombreTabla === 'Tutor_Academico') {
-                fetch('/api/academica/tutores', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(nuevoRegistro)
-                }).catch(() => {});
-            } else if (nombreTabla === 'Institucion') {
-                fetch('/api/academica/instituciones', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(nuevoRegistro)
-                }).catch(() => {});
-            } else if (nombreTabla === 'Practica') {
-                fetch('/api/academica/practicas', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id_practica: nuevoRegistro.id_practica,
-                        fecha_ini: nuevoRegistro.fecha_inicio || nuevoRegistro.fecha_ini || '2026-02-01',
-                        fecha_fin: nuevoRegistro.fecha_fin || '2026-06-15',
-                        horas_cumplidas: nuevoRegistro.horas_cumplidas || 0,
-                        estado: nuevoRegistro.estado || 'En Curso',
-                        nombre_prac: nuevoRegistro.nombre_prac || 'Práctica Pedagógica Integral',
-                        documento: nuevoRegistro.id_estudiante || nuevoRegistro.documento || '1098234501',
-                        documento_tu: nuevoRegistro.documento || nuevoRegistro.documento_tu || 'DOC-1098234',
-                        id_institucion: nuevoRegistro.id_institucion || 'INST-01',
-                        id_tipo: nuevoRegistro.id_tipo || 'TP-01'
-                    })
-                }).catch(() => {});
-            } else if (nombreTabla === 'Evaluacion') {
-                fetch('/api/seguimiento/evaluaciones', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(nuevoRegistro)
-                }).catch(() => {});
+    /**
+     * Radica una nueva solicitud directamente en Supabase vía `POST /api/solicitudes`.
+     * @async
+     * @param {Object} solicitud - Datos de la postulación.
+     * @returns {Promise<Object>} Solicitud persistida.
+     */
+    async createSolicitud(solicitud) {
+        const res = await fetch('/api/solicitudes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(solicitud)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'Error al radicar la solicitud en el servidor.');
+        }
+        await this.syncWithBackend();
+        return data;
+    },
+
+    /**
+     * Elimina una solicitud procesada directamente en Supabase vía `DELETE /api/solicitudes/:id`.
+     * @async
+     * @param {string} idSolicitud - ID o correo de la solicitud.
+     * @returns {Promise<boolean>} Verdadero si se eliminó correctamente.
+     */
+    async deleteSolicitud(idSolicitud) {
+        const res = await fetch(`/api/solicitudes/${encodeURIComponent(idSolicitud)}`, {
+            method: 'DELETE'
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Error al eliminar la solicitud.');
+        }
+        await this.syncWithBackend();
+        return true;
+    },
+
+    /**
+     * Inserta un registro enviándolo directamente a la API REST conectada a Supabase
+     * y recarga las colecciones en memoria tras confirmación del servidor.
+     *
+     * @async
+     * @param {string} nombreTabla - Entidad destino.
+     * @param {Object} nuevoRegistro - Objeto de datos a persistir.
+     * @returns {Promise<Object>} Registro confirmado por PostgreSQL.
+     */
+    async insert(nombreTabla, nuevoRegistro) {
+        if (!almacenMemoria[nombreTabla]) almacenMemoria[nombreTabla] = [];
+
+        let url = '';
+        let payload = nuevoRegistro;
+
+        if (nombreTabla === 'Estudiante') {
+            url = '/api/academica/estudiantes';
+            payload = {
+                documento: nuevoRegistro.documento || nuevoRegistro.id_estudiante,
+                id_estudiante: nuevoRegistro.id_estudiante || nuevoRegistro.documento,
+                nombre: nuevoRegistro.nombre,
+                apellido: nuevoRegistro.apellido || '',
+                correo: nuevoRegistro.correo,
+                semestre: normalizarSemestreCliente(nuevoRegistro.semestre),
+                telefono: nuevoRegistro.telefono || '',
+                clave: nuevoRegistro.clave || nuevoRegistro.password || 'estudiante123'
+            };
+        } else if (nombreTabla === 'Actividad' || nombreTabla === 'Bitacora') {
+            url = '/api/bitacoras';
+            let idPracticaReal = nuevoRegistro.id_practica;
+            if (!idPracticaReal) {
+                const sesionActiva = this.getSession() || {};
+                const estudianteActual = sesionActiva.id_estudiante || sesionActiva.documento;
+                const prac = (almacenMemoria.Practica || []).find(p =>
+                    p.id_estudiante === estudianteActual || p.documento_estudiante === estudianteActual
+                );
+                idPracticaReal = prac ? prac.id_practica : 'PRAC-001';
             }
-        } catch (error) {
-            // Failsafe silencioso para garantizar operatividad offline
+            payload = {
+                id_bitacora: nuevoRegistro.id_actividad || nuevoRegistro.id_bitacora,
+                id_practica: idPracticaReal,
+                fecha: nuevoRegistro.fecha,
+                descripcion: nuevoRegistro.descripcion,
+                horas: nuevoRegistro.horas_realizadas || nuevoRegistro.horas || 4,
+                archivo: nuevoRegistro.evidencia || nuevoRegistro.archivo || ''
+            };
+        } else if (nombreTabla === 'Evidencia') {
+            // La evidencia se registra conjuntamente en POST /api/bitacoras; evitar duplicados
+            almacenMemoria.Evidencia.push(nuevoRegistro);
+            return nuevoRegistro;
+        } else if (nombreTabla === 'Tutor_Academico') {
+            url = '/api/academica/tutores';
+            const docTu = limpiarTextoCliente(nuevoRegistro.documento_tu || nuevoRegistro.documento);
+            payload = {
+                documento_tu: docTu,
+                documento: docTu,
+                nombre: nuevoRegistro.nombre,
+                correo: nuevoRegistro.correo,
+                especialidad: nuevoRegistro.especialidad || 'Pedagogía y Didáctica',
+                telefono: nuevoRegistro.telefono || '',
+                clave: nuevoRegistro.clave || nuevoRegistro.password || 'docente123'
+            };
+        } else if (nombreTabla === 'Institucion') {
+            url = '/api/academica/instituciones';
+            const nomInst = limpiarTextoCliente(nuevoRegistro.nombre_colegio || nuevoRegistro.nombre);
+            payload = {
+                id_institucion: nuevoRegistro.id_institucion,
+                nombre: nomInst,
+                nombre_colegio: nomInst,
+                direccion: nuevoRegistro.direccion,
+                correo: nuevoRegistro.correo,
+                contacto: nuevoRegistro.contacto || nuevoRegistro.telefono || '',
+                telefono: nuevoRegistro.telefono || nuevoRegistro.contacto || '',
+                clave: nuevoRegistro.clave || nuevoRegistro.password || 'colegio123'
+            };
+        } else if (nombreTabla === 'Convenio') {
+            url = '/api/academica/convenios';
+        } else if (nombreTabla === 'Coordinador') {
+            url = '/api/academica/coordinadores';
+        } else if (nombreTabla === 'Practica') {
+            url = '/api/academica/practicas';
+            const estRelacionado = (almacenMemoria.Estudiante || []).find(e =>
+                e.id_estudiante === nuevoRegistro.id_estudiante || e.documento === nuevoRegistro.documento_estudiante || e.documento === nuevoRegistro.id_estudiante
+            );
+            payload = {
+                id_practica: nuevoRegistro.id_practica,
+                fecha_ini: nuevoRegistro.fecha_inicio || nuevoRegistro.fecha_ini || '2026-02-01',
+                fecha_fin: nuevoRegistro.fecha_fin || '2026-06-15',
+                horas_cumplidas: nuevoRegistro.horas_cumplidas || 0,
+                horas_objetivo: nuevoRegistro.horas_objetivo || 80,
+                estado: nuevoRegistro.estado || 'En Curso',
+                nombre_prac: nuevoRegistro.nombre_prac || 'Práctica Pedagógica Integral',
+                documento: estRelacionado ? estRelacionado.documento : (nuevoRegistro.documento_estudiante || nuevoRegistro.id_estudiante),
+                id_estudiante: nuevoRegistro.id_estudiante,
+                documento_tu: nuevoRegistro.documento_tu || nuevoRegistro.documento || 'DOC-1098234',
+                id_institucion: nuevoRegistro.id_institucion || 'INST-01',
+                id_tipo: nuevoRegistro.id_tipo || 'TP-01',
+                validado_institucion: Boolean(nuevoRegistro.validado_institucion)
+            };
+        } else if (nombreTabla === 'Evaluacion') {
+            url = '/api/seguimiento/evaluaciones';
+            payload = {
+                ...nuevoRegistro,
+                documento_tu: nuevoRegistro.documento_tu || nuevoRegistro.documento
+            };
         }
 
-        return nuevoRegistro;
+        if (!url) return nuevoRegistro;
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || `Error al guardar en ${nombreTabla}`);
+        }
+        await this.syncWithBackend();
+        return data;
     },
 
     /**
-     * Actualiza un registro existente buscando por su campo identificador clave.
-     * @param {string} nombreTabla - Entidad a modificar.
-     * @param {string} campoClave - Nombre del campo clave (ej: 'id_estudiante', 'id_practica').
-     * @param {*} valorClave - Valor del identificador.
-     * @param {Object} camposActualizados - Nuevos valores a combinar.
-     * @returns {Object|boolean} Registro modificado o false si no fue encontrado.
+     * Actualiza un registro directamente en Supabase vía API REST y refresca la vista.
+     *
+     * @async
+     * @param {string} nombreTabla - Entidad objetivo.
+     * @param {string} campoClave - Campo identificador.
+     * @param {*} valorClave - Valor clave primaria.
+     * @param {Object} camposActualizados - Campos a actualizar.
+     * @returns {Promise<Object|boolean>} Registro actualizado.
      */
-    update(nombreTabla, campoClave, valorClave, camposActualizados) {
-        const datos = this.getAll();
-        if (!datos[nombreTabla]) return false;
-        const indice = datos[nombreTabla].findIndex(item => item[campoClave] === valorClave);
-        if (indice !== -1) {
-            datos[nombreTabla][indice] = { ...datos[nombreTabla][indice], ...camposActualizados };
-            this.saveAll(datos);
+    async update(nombreTabla, campoClave, valorClave, camposActualizados) {
+        let url = '';
+        let payload = { ...camposActualizados };
 
-            // Sincronización en segundo plano con el Backend y Supabase
-            try {
-                if (nombreTabla === 'Actividad' || nombreTabla === 'Bitacora') {
-                    fetch(`/api/seguimiento/bitacoras/${valorClave}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(camposActualizados)
-                    }).catch(() => {});
-                } else if (nombreTabla === 'Estudiante') {
-                    fetch(`/api/academica/estudiantes/${valorClave}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(camposActualizados)
-                    }).catch(() => {});
-                }
-            } catch (error) {}
-
-            return datos[nombreTabla][indice];
+        if (nombreTabla === 'Actividad' || nombreTabla === 'Bitacora') {
+            url = `/api/seguimiento/bitacoras/${encodeURIComponent(valorClave)}`;
+        } else if (nombreTabla === 'Estudiante') {
+            const est = this.findBy('Estudiante', campoClave, valorClave);
+            const docReal = (est && est.documento) || valorClave;
+            url = `/api/academica/estudiantes/${encodeURIComponent(docReal)}`;
+        } else if (nombreTabla === 'Tutor_Academico') {
+            const tut = this.findBy('Tutor_Academico', 'documento_tu', valorClave) || this.findBy('Tutor_Academico', 'documento', valorClave);
+            const docTu = (tut && (tut.documento_tu || tut.documento)) || valorClave;
+            url = `/api/academica/tutores/${encodeURIComponent(docTu)}`;
+        } else if (nombreTabla === 'Institucion') {
+            url = `/api/academica/instituciones/${encodeURIComponent(valorClave)}`;
+            if (payload.nombre_colegio && !payload.nombre) payload.nombre = payload.nombre_colegio;
+        } else if (nombreTabla === 'Convenio') {
+            url = `/api/academica/convenios/${encodeURIComponent(valorClave)}`;
+        } else if (nombreTabla === 'Practica') {
+            url = `/api/academica/practicas/${encodeURIComponent(valorClave)}`;
+            if (payload.documento && !payload.documento_tu) {
+                payload.documento_tu = payload.documento;
+            }
+            if (payload.id_estudiante) {
+                const est = this.findBy('Estudiante', 'id_estudiante', payload.id_estudiante) || this.findBy('Estudiante', 'documento', payload.id_estudiante);
+                if (est) payload.documento_estudiante = est.documento;
+            }
         }
-        return false;
+
+        if (!url) return false;
+
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || `Error al actualizar en ${nombreTabla}`);
+        }
+        await this.syncWithBackend();
+        return data;
     },
 
     /**
-     * Elimina un registro de una tabla por su identificador clave.
-     * @param {string} nombreTabla - Entidad de la cual eliminar.
-     * @param {string} campoClave - Nombre del campo identificador.
-     * @param {*} valorClave - Valor único a eliminar.
-     * @returns {boolean} Verdadero si fue eliminado, falso si no existía.
+     * Elimina un registro directamente en Supabase vía API REST y refresca la vista.
+     *
+     * @async
+     * @param {string} nombreTabla - Entidad objetivo.
+     * @param {string} campoClave - Nombre del campo clave primaria.
+     * @param {*} valorClave - Valor identificador a eliminar.
+     * @returns {Promise<boolean>} Verdadero si se eliminó.
      */
-    delete(nombreTabla, campoClave, valorClave) {
-        const datos = this.getAll();
-        if (!datos[nombreTabla]) return false;
-        const longitudOriginal = datos[nombreTabla].length;
-        datos[nombreTabla] = datos[nombreTabla].filter(item => item[campoClave] !== valorClave);
-        if (datos[nombreTabla].length !== longitudOriginal) {
-            this.saveAll(datos);
-
-            // Sincronización de borrado con la nube
-            try {
-                if (nombreTabla === 'Estudiante') {
-                    fetch(`/api/academica/estudiantes/${valorClave}`, { method: 'DELETE' }).catch(() => {});
-                } else if (nombreTabla === 'Institucion') {
-                    fetch(`/api/academica/instituciones/${valorClave}`, { method: 'DELETE' }).catch(() => {});
-                }
-            } catch (error) {}
-
-            return true;
+    async delete(nombreTabla, campoClave, valorClave) {
+        let url = '';
+        if (nombreTabla === 'Estudiante') {
+            const est = this.findBy('Estudiante', campoClave, valorClave)
+                || this.findBy('Estudiante', 'documento', valorClave)
+                || this.findBy('Estudiante', 'id_estudiante', valorClave);
+            const docReal = (est && (est.documento || est.id_estudiante)) || valorClave;
+            url = `/api/academica/estudiantes/${encodeURIComponent(docReal)}`;
+        } else if (nombreTabla === 'Tutor_Academico') {
+            const tut = this.findBy('Tutor_Academico', 'documento_tu', valorClave)
+                || this.findBy('Tutor_Academico', 'documento', valorClave);
+            const docTu = (tut && (tut.documento_tu || tut.documento)) || valorClave;
+            url = `/api/academica/tutores/${encodeURIComponent(docTu)}`;
+        } else if (nombreTabla === 'Institucion') {
+            url = `/api/academica/instituciones/${encodeURIComponent(valorClave)}`;
+        } else if (nombreTabla === 'Convenio') {
+            url = `/api/academica/convenios/${encodeURIComponent(valorClave)}`;
+        } else if (nombreTabla === 'Practica') {
+            url = `/api/academica/practicas/${encodeURIComponent(valorClave)}`;
+        } else if (nombreTabla === 'Solicitudes') {
+            return await this.deleteSolicitud(valorClave);
         }
-        return false;
+
+        if (!url) return false;
+
+        const res = await fetch(url, { method: 'DELETE' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(data.error || `Error al eliminar en ${nombreTabla}`);
+        }
+        await this.syncWithBackend();
+        return data;
     },
 
     /**
-     * Busca el primer registro que coincida con un campo y valor específico.
+     * Busca el primer registro que coincida con un campo y valor.
+     * Soporta coincidencia unificada para `documento`/`documento_tu` y `nombre`/`nombre_colegio`.
      * @param {string} nombreTabla - Entidad donde buscar.
      * @param {string} campo - Nombre del atributo.
      * @param {*} valor - Valor buscado.
-     * @returns {Object|null} Objeto encontrado o null.
+     * @returns {Object|null} Registro encontrado o null.
      */
     findBy(nombreTabla, campo, valor) {
-        const tabla = this.getTable(nombreTabla);
-        return tabla.find(item => item[campo] === valor) || null;
+        const lista = this.getTable(nombreTabla);
+        return lista.find(item => {
+            if (item[campo] === valor) return true;
+            if (nombreTabla === 'Tutor_Academico' && (campo === 'documento' || campo === 'documento_tu')) {
+                return item.documento_tu === valor || item.documento === valor;
+            }
+            if (nombreTabla === 'Institucion' && (campo === 'nombre' || campo === 'nombre_colegio')) {
+                return item.nombre_colegio === valor || item.nombre === valor;
+            }
+            return false;
+        }) || null;
     },
 
     /**
-     * Filtra y retorna todos los registros que coincidan con un campo y valor.
+     * Filtra y retorna los registros que coincidan con un campo y valor.
      * @param {string} nombreTabla - Entidad a filtrar.
      * @param {string} campo - Nombre del atributo.
      * @param {*} valor - Valor a comparar.
-     * @returns {Array<Object>} Arreglo con los registros coincidentes.
+     * @returns {Array<Object>} Arreglo filtrado.
      */
     filterBy(nombreTabla, campo, valor) {
-        const tabla = this.getTable(nombreTabla);
-        return tabla.filter(item => item[campo] === valor);
+        return this.getTable(nombreTabla).filter(item => {
+            if (item[campo] === valor) return true;
+            if (nombreTabla === 'Practica' && (campo === 'documento' || campo === 'documento_tu')) {
+                return item.documento_tu === valor || item.documento === valor;
+            }
+            return false;
+        });
     },
 
     // ========================================================================
@@ -654,148 +670,50 @@ const DB = {
     // ========================================================================
 
     /**
-     * Autentica credenciales contra la base de datos y genera la sesión activa.
-     * @param {string} correo - Correo institucional UDI.
-     * @param {string} password - Contraseña ingresada.
-     * @param {string} rol - Rol seleccionado ('estudiante', 'docente', 'coordinador', 'director', 'institucion').
-     * @returns {Object} Resultado con indicador success, datos de usuario y URL de redirección.
+     * Autentica las credenciales ingresadas contra el backend conectado a Supabase
+     * y almacena la sesión activa del usuario.
+     *
+     * @async
+     * @param {string} correo - Correo electrónico institucional.
+     * @param {string} password - Contraseña del usuario.
+     * @param {string} rol - Rol ('estudiante', 'docente', 'coordinador', 'director', 'institucion').
+     * @returns {Promise<{success: boolean, user?: Object, redirectUrl?: string, message?: string}>}
      */
-    login(correo, password, rol) {
-        const datos = this.getAll();
-        let usuarioValido = null;
-        let urlDestino = '';
+    async login(correo, password, rol) {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo, password, rol })
+        });
+        const resultado = await res.json();
 
-        const correoLimpio = String(correo || '').trim().toLowerCase();
-        const claveLimpia = String(password || '').trim();
-
-        if (rol === 'director') {
-            const director = (datos.Coordinador || []).find(c => 
-                c.correo.toLowerCase() === correoLimpio && c.clave === claveLimpia && c.id_coordinador.startsWith('DIR')
-            );
-            if (director) {
-                usuarioValido = {
-                    id: director.id_coordinador,
-                    nombre: director.nombre,
-                    correo: director.correo,
-                    rol: 'director',
-                    departamento: director.departamento
-                };
-                urlDestino = 'views/dashboard.html';
-            }
-        } else if (rol === 'coordinador') {
-            const coordinador = (datos.Coordinador || []).find(c => 
-                c.correo.toLowerCase() === correoLimpio && c.clave === claveLimpia && !c.id_coordinador.startsWith('DIR')
-            );
-            if (coordinador) {
-                usuarioValido = {
-                    id: coordinador.id_coordinador,
-                    nombre: coordinador.nombre,
-                    correo: coordinador.correo,
-                    rol: 'coordinador',
-                    departamento: coordinador.departamento
-                };
-                urlDestino = 'views/coordinador.html';
-            }
-        } else if (rol === 'docente') {
-            const tutor = (datos.Tutor_Academico || []).find(t => 
-                t.correo.toLowerCase() === correoLimpio && t.clave === claveLimpia
-            );
-            if (tutor) {
-                usuarioValido = {
-                    id: tutor.documento,
-                    documento: tutor.documento,
-                    nombre: tutor.nombre,
-                    correo: tutor.correo,
-                    rol: 'docente',
-                    especialidad: tutor.especialidad
-                };
-                urlDestino = 'views/docente.html';
-            }
-        } else if (rol === 'estudiante') {
-            // 1. Validar primero si el aspirante tiene una solicitud pendiente de aprobación
-            try {
-                const solicitudes = JSON.parse(localStorage.getItem('solicitudes_aspirantes')) || [];
-                const solicitudEnEspera = solicitudes.find(s => 
-                    String(s.correo || '').trim().toLowerCase() === correoLimpio && (s.estado === 'Pendiente' || !s.estado)
-                );
-                if (solicitudEnEspera) {
-                    return {
-                        success: false,
-                        message: `Acceso restringido: Tu solicitud de inscripción para ${solicitudEnEspera.nombre} está en estado de ESPERA (Pendiente de Aprobación).\n\nEl Coordinador de Práctica debe revisar y aceptar tu solicitud antes de que puedas iniciar sesión.`
-                    };
-                }
-            } catch (e) {}
-
-            // 2. Buscar en la tabla oficial de Estudiantes matriculados
-            const estudiante = (datos.Estudiante || []).find(e => 
-                e.correo.toLowerCase() === correoLimpio && e.clave === claveLimpia
-            );
-            if (estudiante) {
-                usuarioValido = {
-                    id: estudiante.id_estudiante,
-                    id_estudiante: estudiante.id_estudiante,
-                    documento: estudiante.documento,
-                    nombre: estudiante.nombre,
-                    correo: estudiante.correo,
-                    rol: 'estudiante',
-                    semestre: estudiante.semestre
-                };
-                urlDestino = 'views/estudiante.html';
-            } else {
-                // Verificar si el correo existe pero la contraseña no coincide
-                const correoCoincide = (datos.Estudiante || []).some(e => e.correo.toLowerCase() === correoLimpio);
-                if (correoCoincide) {
-                    return { success: false, message: 'Contraseña incorrecta. Por favor verifica tu clave.' };
-                }
-                return { 
-                    success: false, 
-                    message: 'Estudiante no registrado o aún no aprobado por el Coordinador de Prácticas.' 
-                };
-            }
-        } else if (rol === 'institucion') {
-            const institucion = (datos.Institucion || []).find(i => 
-                i.correo.toLowerCase() === correoLimpio && i.clave === claveLimpia
-            );
-            if (institucion) {
-                usuarioValido = {
-                    id: institucion.id_institucion,
-                    id_institucion: institucion.id_institucion,
-                    nombre: institucion.nombre_colegio,
-                    correo: institucion.correo,
-                    rol: 'institucion',
-                    direccion: institucion.direccion
-                };
-                urlDestino = 'views/institucion.html';
-            }
+        if (resultado.success && resultado.user) {
+            localStorage.setItem('SIGP_SESION_ACTIVA', JSON.stringify(resultado.user));
+            localStorage.setItem('sesion_usuario', resultado.user.correo);
+            localStorage.setItem('sesion_rol', resultado.user.rol);
+            localStorage.setItem('sesion_nombre', resultado.user.nombre);
         }
 
-        if (usuarioValido) {
-            localStorage.setItem('SIGP_SESION_ACTIVA', JSON.stringify(usuarioValido));
-            localStorage.setItem('sesion_usuario', usuarioValido.correo);
-            localStorage.setItem('sesion_rol', usuarioValido.rol);
-            localStorage.setItem('sesion_nombre', usuarioValido.nombre);
-            return { success: true, user: usuarioValido, redirectUrl: urlDestino };
-        }
-
-        return { success: false, message: 'Credenciales inválidas para el rol académico seleccionado.' };
+        return resultado;
     },
 
     /**
-     * Obtiene el objeto de sesión del usuario actualmente autenticado.
-     * @returns {Object|null} Objeto con datos del usuario en sesión o null.
+     * Obtiene el objeto de sesión del usuario autenticado actualmente.
+     * @returns {Object|null} Datos de sesión o null si no hay sesión.
      */
     getSession() {
         try {
             const sesionSerializada = localStorage.getItem('SIGP_SESION_ACTIVA');
             return sesionSerializada ? JSON.parse(sesionSerializada) : null;
-        } catch (error) {
+        } catch (_) {
             return null;
         }
     },
 
     /**
-     * Cierra la sesión activa y redirige al portal de login.
-     * @param {string} [rutaRedireccion='../index.html'] - Destino tras el cierre.
+     * Cierra la sesión actual del navegador y redirige al login.
+     * @param {string} [rutaRedireccion='../index.html'] - Ruta de retorno.
+     * @returns {void}
      */
     logout(rutaRedireccion = '../index.html') {
         localStorage.removeItem('SIGP_SESION_ACTIVA');
@@ -806,10 +724,10 @@ const DB = {
     },
 
     /**
-     * Guardia de seguridad que protege vistas validando roles autorizados.
-     * @param {string|Array<string>} rolesEsperados - Roles que tienen acceso a la vista.
-     * @param {string} [rutaRetorno='../index.html'] - Ruta hacia donde expulsar si no está autorizado.
-     * @returns {Object|null} Objeto de sesión válido o null si es rechazado.
+     * Guardia de control de acceso por rol para las vistas protegidas.
+     * @param {string|Array<string>} rolesEsperados - Roles autorizados.
+     * @param {string} [rutaRetorno='../index.html'] - Ruta de redirección si falla.
+     * @returns {Object|null} Sesión autorizada o null.
      */
     requireRole(rolesEsperados, rutaRetorno = '../index.html') {
         const sesion = this.getSession();
@@ -828,11 +746,18 @@ const DB = {
     }
 };
 
-// Inicialización inmediata al importar el script
+/**
+ * Ciclo de vida automático del cliente REST:
+ *  - Limpia cachés locales obsoletas al cargar el script (`DB.init()`).
+ *  - Sincroniza todas las colecciones contra Supabase en carga inicial, `DOMContentLoaded` y `focus`.
+ */
 DB.init();
 if (typeof window !== 'undefined') {
     DB.syncWithBackend();
     window.addEventListener('DOMContentLoaded', () => {
+        DB.syncWithBackend();
+    });
+    window.addEventListener('focus', () => {
         DB.syncWithBackend();
     });
 }
